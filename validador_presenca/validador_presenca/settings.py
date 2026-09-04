@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'checkin',
+    'apps.checkin',
+    'apps.validator',
 ]
 
 MIDDLEWARE = [
