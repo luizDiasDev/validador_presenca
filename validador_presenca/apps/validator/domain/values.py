@@ -24,4 +24,4 @@ class ValidationResponseStorage:
     weight: float
     reason: str = ""
 
-#---NOTA: Se for testar, testa via Django Shell que é melhor, tem que importar desse jeito: from validator.domain.values import ValidationResponseStorage
+#---NOTA: Se for testar, testa via Django Shell que é melhor, tem que importar desse jeito: from apps.validator.domain.values import ValidationResponseStorage

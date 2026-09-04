@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class ValidatorConfig(AppConfig):
-    name = 'validator'
+    name = 'apps.validator'
