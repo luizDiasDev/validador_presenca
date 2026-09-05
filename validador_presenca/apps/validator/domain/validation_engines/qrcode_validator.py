@@ -6,14 +6,17 @@ class QrCodeValidator(ValidatorModel):
     weight = 0.3
     block = True
 
-    def validate(self, factor_result: str):
-        factor_result
+    def __init__(self, cache_qrtokens):
+        self.cache_qrtokens = cache_qrtokens
+
+    def validate(self, factor_parameter: str):
+        token_exists =  self.cache_qrtokens.exists(factor_parameter)
 
         return FactorResult(
             name = self.name,
-            passed = False,
+            passed = bool(token_exists),
             block = self.block,
-            score = 0.0,
+            score = 1.0 if token_exists else 0.0,
             weight = self.weight,
-            reason = ""
+            reason = "" if token_exists else "Token inválido ou expirado"
         )
