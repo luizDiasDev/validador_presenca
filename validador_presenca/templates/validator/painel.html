@@ -1,11 +1,171 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Presença</title>
+    <title>Histórico de Presença</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:...&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style type="text/tailwindcss">
+        @theme {
+            --color-navy-deep: #0F1B2E;
+            --color-navy: #17263D;
+            --color-gold: #C9962C;
+            --color-creme: #F7F3EA;
+            --color-tan: #E9DEC4;
+            --color-ink: #1F2A3C;
+            --font-display: 'Cinzel', serif;
+        }
+        body {
+            font-family: 'Inter',
+            sans-serif; 
+        }
+    </style>
 </head>
-<body>
-    <h1>Teste de lista de presença</h1>
+<body class="bg-creme min-h-screen flex">
+
+    <aside class="w-60 bg-navy-deep flex-shrink-0">
+
+        <div class="flex flex-col h-full py-6 px-4">
+
+        <!-- Logo -->
+        <div class="flex items-center gap-2 px-2 mb-8">
+            <div class="w-15 h-15 flex items-center justify-center text-navy-deep flex-shrink-0">
+                <img src="{% static 'images/logo_bege.svg' %}" alt="Logo Adsum">
+            </div>
+            <span class="text-white font-bold text-sm tracking-wide">ADSUM</span>
+        </div>
+
+        <!-- Menu -->
+        <nav class="space-y-1.5 text-sm flex-1">
+            <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                <i data-lucide="book-open" class="w-4 h-4"></i> Minhas Turmas
+            </a>
+            <a href="#" class="flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-lg bg-gold text-navy-deep font-semibold">
+                <span class="flex items-center gap-2.5"><i data-lucide="clipboard-list" class="w-4 h-4"></i> Histórico de Presença</span>
+                <span class="w-1.5 h-1.5 rounded-full bg-navy-deep"></span>
+            </a>
+            <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                <i data-lucide="video" class="w-4 h-4"></i> Chamada ao vivo
+            </a>
+            <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                <i data-lucide="users" class="w-4 h-4"></i> Gestão de Alunos
+            </a>
+            <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                <i data-lucide="settings" class="w-4 h-4"></i> Configurar Chamada
+            </a>
+            <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                <i data-lucide="alert-triangle" class="w-4 h-4"></i> Pendências
+            </a>
+            <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Dashboard BI
+            </a>
+            <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                <i data-lucide="shield-check" class="w-4 h-4"></i> Central de Privacidade
+            </a>
+        </nav>
+
+        <!-- Perfil -->
+        <div class="border-t border-white/10 pt-4 flex items-center justify-between px-2">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center text-gold text-xs font-semibold">AH</div>
+                <div class="leading-tight">
+                    <div class="text-white text-xs font-medium">Prof. Alessandro</div>
+                    <div class="text-white/40 text-[10px]">Internet das Coisas</div>
+                </div>
+            </div>
+            <i data-lucide="log-out" class="w-4 h-4 text-white/40"></i>
+        </div>
+
+    </div>
+    </aside>
+
+    <!-- Divisoria do Menu lateral -->
+    <div class="w-6 bg-navy-deep">
+        <img src="{% static 'images/divisao.svg' %}" alt="Divisao">
+    </div>
+
+    <div class="flex-1 p-8">
+
+        <h1 class="text-3xl font-bold underline">Teste de lista de presença</h1>
+
+        <table>
+            <tr>
+                <th>Aluno</th>
+                <th>Hora do Registro</th>
+                <th>QR</th>
+                <th>Token</th>
+                <th>Facial</th>
+                <th>Live</th>
+                <th>Score</th>
+                <th>Resultado</th>
+                <th>Motivo</th>
+            </tr>
+            <tr>
+                <td>Luiz Eduardo Dias</td>
+                <td>19:18</td>
+                <td>True</td>
+                <td>True</td>
+                <td>0.92</td>
+                <td>True</td>
+                <td>0.91</td>
+                <td>Aprovado</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>Luiz Eduardo Dias</td>
+                <td>19:18</td>
+                <td>True</td>
+                <td>True</td>
+                <td>0.92</td>
+                <td>True</td>
+                <td>0.91</td>
+                <td>Aprovado</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>Luiz Eduardo Dias</td>
+                <td>19:18</td>
+                <td>True</td>
+                <td>True</td>
+                <td>0.92</td>
+                <td>True</td>
+                <td>0.91</td>
+                <td>Aprovado</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>Luiz Eduardo Dias</td>
+                <td>19:18</td>
+                <td>True</td>
+                <td>True</td>
+                <td>0.92</td>
+                <td>True</td>
+                <td>0.91</td>
+                <td>Aprovado</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>Luiz Eduardo Dias</td>
+                <td>19:18</td>
+                <td>True</td>
+                <td>True</td>
+                <td>0.92</td>
+                <td>True</td>
+                <td>0.91</td>
+                <td>Aprovado</td>
+                <td></td>
+            </tr>
+        </table>
+
+    </div>
+
+    <!-- Rodar script dos icones -->
+    <script>lucide.createIcons();</script>
 </body>
 </html>
