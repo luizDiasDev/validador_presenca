@@ -28,7 +28,8 @@
     </style>
 </head>
 <body class="bg-creme min-h-screen flex">
-
+    
+    <!-- Menu lateral -->
     <aside class="w-60 bg-navy-deep flex-shrink-0">
 
         <div class="flex flex-col h-full py-6 px-4">
@@ -90,78 +91,170 @@
         <img src="{% static 'images/divisao.svg' %}" alt="Divisao">
     </div>
 
+    <!-- Body das paginas -->
     <div class="flex-1 p-8">
 
-        <h1 class="text-3xl font-bold underline">Teste de lista de presença</h1>
+        <!-- Breadcrumb -->
+        <div class="text-xs text-ink/40 tracking-wide mb-4">
+            AMBIENTE DO PROFESSOR <span class="mx-1">/</span> <span class="text-ink font-medium">Histórico de Presença</span>
+        </div>
 
-        <table>
-            <tr>
-                <th>Aluno</th>
-                <th>Hora do Registro</th>
-                <th>QR</th>
-                <th>Token</th>
-                <th>Facial</th>
-                <th>Live</th>
-                <th>Score</th>
-                <th>Resultado</th>
-                <th>Motivo</th>
-            </tr>
-            <tr>
-                <td>Luiz Eduardo Dias</td>
-                <td>19:18</td>
-                <td>True</td>
-                <td>True</td>
-                <td>0.92</td>
-                <td>True</td>
-                <td>0.91</td>
-                <td>Aprovado</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>Luiz Eduardo Dias</td>
-                <td>19:18</td>
-                <td>True</td>
-                <td>True</td>
-                <td>0.92</td>
-                <td>True</td>
-                <td>0.91</td>
-                <td>Aprovado</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>Luiz Eduardo Dias</td>
-                <td>19:18</td>
-                <td>True</td>
-                <td>True</td>
-                <td>0.92</td>
-                <td>True</td>
-                <td>0.91</td>
-                <td>Aprovado</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>Luiz Eduardo Dias</td>
-                <td>19:18</td>
-                <td>True</td>
-                <td>True</td>
-                <td>0.92</td>
-                <td>True</td>
-                <td>0.91</td>
-                <td>Aprovado</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>Luiz Eduardo Dias</td>
-                <td>19:18</td>
-                <td>True</td>
-                <td>True</td>
-                <td>0.92</td>
-                <td>True</td>
-                <td>0.91</td>
-                <td>Aprovado</td>
-                <td></td>
-            </tr>
-        </table>
+        <!-- Card principal -->
+        <div class="bg-white rounded-2xl p-6">
+
+            <div class="flex items-center justify-between mb-6">
+                <h1 class="font-[family-name:var(--font-display)] text-3xl font-bold text-navy">
+                    INTERNET DAS COISAS
+                </h1>
+                <div class="flex items-center gap-2">
+                    <button class="flex items-center gap-2 bg-gold text-navy-deep text-xs font-semibold px-4 py-2.5 rounded-lg">
+                        <i data-lucide="scan-line" class="w-4 h-4"></i> INICIAR CHAMADA
+                    </button>
+                    <button class="flex items-center gap-2 bg-navy text-white text-xs font-semibold px-4 py-2.5 rounded-lg">
+                        <i data-lucide="filter" class="w-4 h-4"></i> 21/08/2024
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cards de estatística -->
+            <div class="grid grid-cols-3 gap-4 mb-6">
+
+                <div class="bg-creme rounded-xl p-4">
+                    <div class="flex items-center justify-between text-[10px] font-semibold text-ink/40 tracking-wide mb-2">
+                        MATRICULADOS <i data-lucide="users" class="w-4 h-4"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-navy">45</div>
+                </div>
+
+                <div class="bg-green-50 rounded-xl p-4">
+                    <div class="flex items-center justify-between text-[10px] font-semibold text-green-700 tracking-wide mb-2">
+                        PRESENÇAS <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="text-3xl font-bold text-green-700">38</div>
+                        <span class="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">84.4% Quórum</span>
+                    </div>
+                </div>
+
+                <div class="bg-red-50 rounded-xl p-4">
+                    <div class="flex items-center justify-between text-[10px] font-semibold text-red-700 tracking-wide mb-2">
+                        FALTAS <i data-lucide="user-x" class="w-4 h-4"></i>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="text-3xl font-bold text-red-700">03</div>
+                        <span class="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">6.7% Falta</span>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- Tabela -->
+            <div class="border border-ink/10 rounded-xl overflow-hidden">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-tan text-ink/50 text-[10px] tracking-wide">
+                            <th class="text-left font-semibold py-3 px-4">Aluno</th>
+                            <th class="text-left font-semibold py-3">Hora do Registro</th>
+                            <th class="text-center font-semibold py-3">QR</th>
+                            <th class="text-center font-semibold py-3">Token</th>
+                            <th class="text-center font-semibold py-3">Facial</th>
+                            <th class="text-center font-semibold py-3">Live</th>
+                            <th class="text-center font-semibold py-3">Score</th>
+                            <th class="text-left font-semibold py-3">Resultado</th>
+                            <th class="text-left font-semibold py-3 px-4">Motivo</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-ink/5">
+
+                        <tr class="hover:bg-creme/40">
+                            <td class="py-3 px-4 font-medium text-ink">Luiz Eduardo Dias</td>
+                            <td class="py-3 text-ink/60">19:18</td>
+                            <td class="py-3 text-center text-green-600">✓</td>
+                            <td class="py-3 text-center text-green-600">✓</td>
+                            <td class="py-3 text-center text-ink/70">0.92</td>
+                            <td class="py-3 text-center text-green-600">✓</td>
+                            <td class="py-3 text-center font-medium text-ink">0.91</td>
+                            <td class="py-3">
+                                <span class="text-green-700 bg-green-50 text-[11px] font-medium px-2.5 py-1 rounded-full">Aprovado</span>
+                            </td>
+                            <td class="py-3 px-4 text-ink/30">—</td>
+                        </tr>
+
+                        <tr class="hover:bg-creme/40">
+                            <td class="py-3 px-4 font-medium text-ink">Fabrício R. Souza</td>
+                            <td class="py-3 text-ink/60">19:19</td>
+                            <td class="py-3 text-center text-green-600">✓</td>
+                            <td class="py-3 text-center text-green-600">✓</td>
+                            <td class="py-3 text-center text-ink/70">0.88</td>
+                            <td class="py-3 text-center text-green-600">✓</td>
+                            <td class="py-3 text-center font-medium text-ink">0.90</td>
+                            <td class="py-3">
+                                <span class="text-green-700 bg-green-50 text-[11px] font-medium px-2.5 py-1 rounded-full">Aprovado</span>
+                            </td>
+                            <td class="py-3 px-4 text-ink/30">—</td>
+                        </tr>
+
+                        <tr class="hover:bg-creme/40">
+                            <td class="py-3 px-4 font-medium text-ink">Ana Carolina Melo</td>
+                            <td class="py-3 text-ink/60">19:20</td>
+                            <td class="py-3 text-center text-green-600">✓</td>
+                            <td class="py-3 text-center text-green-600">✓</td>
+                            <td class="py-3 text-center text-ink/70">0.58</td>
+                            <td class="py-3 text-center text-green-600">✓</td>
+                            <td class="py-3 text-center font-medium text-ink">0.66</td>
+                            <td class="py-3">
+                                <span class="text-amber-700 bg-amber-50 text-[11px] font-medium px-2.5 py-1 rounded-full">Pendente</span>
+                            </td>
+                            <td class="py-3 px-4 text-ink/50 text-xs">Score em faixa de revisão manual</td>
+                        </tr>
+
+                        <tr class="hover:bg-creme/40">
+                            <td class="py-3 px-4 font-medium text-ink">Bruno Tavares Lima</td>
+                            <td class="py-3 text-ink/60">19:21</td>
+                            <td class="py-3 text-center text-red-500">✕</td>
+                            <td class="py-3 text-center text-green-600">✓</td>
+                            <td class="py-3 text-center text-ink/70">0.31</td>
+                            <td class="py-3 text-center text-green-600">✓</td>
+                            <td class="py-3 text-center font-medium text-ink">0.42</td>
+                            <td class="py-3">
+                                <span class="text-red-700 bg-red-50 text-[11px] font-medium px-2.5 py-1 rounded-full">Rejeitado</span>
+                            </td>
+                            <td class="py-3 px-4 text-ink/50 text-xs">QR expirado</td>
+                        </tr>
+
+                        <tr class="hover:bg-creme/40">
+                            <td class="py-3 px-4 font-medium text-ink">Camila Ferreira Dias</td>
+                            <td class="py-3 text-ink/60">19:22</td>
+                            <td class="py-3 text-center text-green-600">✓</td>
+                            <td class="py-3 text-center text-green-600">✓</td>
+                            <td class="py-3 text-center text-ink/70">0.94</td>
+                            <td class="py-3 text-center text-green-600">✓</td>
+                            <td class="py-3 text-center font-medium text-ink">0.91</td>
+                            <td class="py-3">
+                                <span class="text-green-700 bg-green-50 text-[11px] font-medium px-2.5 py-1 rounded-full">Aprovado</span>
+                            </td>
+                            <td class="py-3 px-4 text-ink/30">—</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Rodapé -->
+            <div class="flex items-center justify-between mt-4 text-xs text-ink/50">
+                <span>Exibindo 1–5 de 45 discentes matriculados (Página 1 de 9)</span>
+
+                <div class="flex items-center gap-1.5">
+                    <button class="px-3 py-1.5 rounded-lg text-ink/30 cursor-not-allowed">Anterior</button>
+                    <button class="w-7 h-7 flex items-center justify-center rounded-lg bg-navy text-white font-medium">1</button>
+                    <button class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-ink/5">2</button>
+                    <button class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-ink/5">3</button>
+                    <button class="px-3 py-1.5 rounded-lg bg-navy text-white font-medium">PRÓXIMA</button>
+                </div>
+            </div>
+
+        </div>
 
     </div>
 
