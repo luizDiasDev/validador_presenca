@@ -16,8 +16,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('checkin/',include('apps.checkin.urls'))
+    path('', RedirectView.as_view(pattern_name='validator:painel')),
+    path('checkin/', include('apps.checkin.urls')),
+    path('validator/', include('apps.validator.urls'))
 ]
