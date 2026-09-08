@@ -1,0 +1,73 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="{{ ttl_s }}">
+    <title>QR Demo Adsum</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <style type="text/tailwindcss">
+        @theme {
+            --color-navy-deep: #0F1B2E;
+            --color-navy: #17263D;
+            --color-gold: #C9962C;
+            --color-creme: #F7F3EA;
+            --color-tan: #E9DEC4;
+            --color-ink: #1F2A3C;
+            --font-display: 'Cinzel', serif;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-creme min-h-screen flex items-center justify-center p-6">
+
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-sm border border-tan/50 p-8 text-center">
+
+        <h1 class="font-display text-2xl text-navy-deep mb-1">Adsum</h1>
+        <p class="text-sm text-ink/60 mb-6">QR Code rotativo</p>
+
+        <div class="inline-block p-4 bg-white border-2 border-tan rounded-xl mb-6">
+            <img src="data:image/png;base64,{{ qr_image }}" alt="QR Code" class="w-64 h-64 block">
+        </div>
+
+        <div class="text-xs text-ink/60 mb-4 space-y-1">
+            <p>Sessão <span class="text-navy-deep font-semibold">{{ sessao_id }}</span> · Máquina <span class="text-navy-deep font-semibold">{{ maquina_id }}</span></p>
+            <p class="font-mono">Token: {{ token|slice:":20" }}…</p>
+        </div>
+
+        <div class="inline-block bg-gold/10 text-navy-deep text-xs font-medium px-3 py-1.5 rounded-full mb-6">
+            Atualiza a cada {{ ttl_s }}s
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="token" value="{{ token }}">
+            <button type="submit"
+                class="w-full bg-navy-deep hover:bg-navy text-creme font-semibold py-3 px-4 rounded-lg transition">
+                Simular scan
+            </button>
+        </form>
+
+        {% if resultado %}
+            <div class="mt-5 p-3 bg-gold/20 border border-gold/40 text-navy-deep text-sm rounded-lg text-left">
+                <p class="font-semibold">Token consumido</p>
+                <p class="text-xs mt-1">Sessão {{ resultado.sessao_id }}  Máquina {{ resultado.maquina_id }}</p>
+            </div>
+        {% elif request.method == "POST" %}
+            <div class="mt-5 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg text-left">
+                <p class="font-semibold">Token inválido</p>
+                <p class="text-xs mt-1">Já usado, expirado ou nunca existiu.</p>
+            </div>
+        {% endif %}
+
+    </div>
+
+</body>
+</html>
