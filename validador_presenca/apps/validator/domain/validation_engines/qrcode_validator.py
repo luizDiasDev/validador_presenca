@@ -9,7 +9,7 @@ class QrCodeValidator(ValidatorModel):
     def __init__(self, cache_qrtokens):
         self.cache_qrtokens = cache_qrtokens
 
-    def validate(self, factor_parameter: str):
+    def validate(self, factor_parameter: str)  -> FactorResult:
         token_exists =  self.cache_qrtokens.exists(factor_parameter)
 
         return FactorResult(

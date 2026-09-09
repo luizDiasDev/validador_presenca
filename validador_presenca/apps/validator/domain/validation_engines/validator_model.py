@@ -6,6 +6,6 @@ class ValidatorModel(ABC):
     weight: float
     block: bool
 
-    @abstractmethod # a seta aqui serve para demosntrar o padrão que a resposta desse metodo irá seguir, ma snão é uma regra e nem trava nada.
-    def validate(self, factor_result: str) -> FactorResult:
+    @abstractmethod
+    def validate(self, factor_parameter: str) -> FactorResult:
         raise NotImplementedError

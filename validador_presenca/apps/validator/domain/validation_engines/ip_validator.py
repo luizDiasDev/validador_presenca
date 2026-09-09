@@ -6,8 +6,8 @@ class IpValidator(ValidatorModel):
     weight = 0.3
     block = False
 
-    def validate(self, factor_result: str):
-        factor_result
+    def validate(self, factor_parameter: str) -> FactorResult:
+        factor_parameter
 
         return FactorResult(
             name = self.name,
