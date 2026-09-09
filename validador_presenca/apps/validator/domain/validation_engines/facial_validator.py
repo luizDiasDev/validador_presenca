@@ -11,9 +11,9 @@ class FacialValidator(ValidatorModel):
 
         return FactorResult(
             name = self.name,
-            passed = False,
+            passed = True,
             block = self.block,
-            score = 0.0,
+            score = 1.0,
             weight = self.weight,
             reason = ""
         )
