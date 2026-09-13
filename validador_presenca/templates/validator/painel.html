@@ -27,7 +27,7 @@
         }
     </style>
 </head>
-<body class="bg-creme min-h-screen flex">
+<body class="bg-creme h-screen overflow-hidden flex">
     
     <!-- Menu lateral -->
     <aside class="w-60 bg-navy-deep flex-shrink-0">
@@ -91,7 +91,7 @@
     </div>
 
     <!-- Body das paginas -->
-    <div class="flex-1 p-8">
+    <div class="flex-1 p-8 overflow-y-auto">
 
         <!-- Card principal -->
         <div class="bg-white rounded-2xl p-6">
@@ -116,32 +116,30 @@
             <!-- Cards de estatística -->
             <div class="grid grid-cols-3 gap-4 mb-6">
 
-                <div class="bg-creme rounded-xl p-4">
+                <a href="{% url 'validator:painel' %}"  class="bg-creme rounded-xl p-4 hover:bg-tan">
                     <div class="flex items-center justify-between text-[10px] font-semibold text-ink/40 tracking-wide mb-2">
                         MATRICULADOS <i data-lucide="users" class="w-4 h-4"></i>
                     </div>
-                    <div class="text-3xl font-bold text-navy">45</div>
-                </div>
+                    <div class="text-3xl font-bold text-navy">{{ total }}</div>
+                </a>
 
-                <div class="bg-green-50 rounded-xl p-4">
+                <a href="{% url 'validator:painel' %}?status=APPROVED" class="bg-green-50 rounded-xl p-4 hover:bg-green-100">
                     <div class="flex items-center justify-between text-[10px] font-semibold text-green-700 tracking-wide mb-2">
                         PRESENÇAS <i data-lucide="check-circle-2" class="w-4 h-4"></i>
                     </div>
                     <div class="flex items-center gap-2">
-                        <div class="text-3xl font-bold text-green-700">38</div>
-                        <span class="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">84.4% Quórum</span>
+                        <div class="text-3xl font-bold text-green-700">{{ approved }}</div>
                     </div>
-                </div>
+                </a>
 
-                <div class="bg-red-50 rounded-xl p-4">
+                <a href="{% url 'validator:painel' %}?status=REJECTED"  class="bg-red-50 rounded-xl p-4 hover:bg-red-100">
                     <div class="flex items-center justify-between text-[10px] font-semibold text-red-700 tracking-wide mb-2">
                         FALTAS <i data-lucide="user-x" class="w-4 h-4"></i>
                     </div>
                     <div class="flex items-center gap-2">
-                        <div class="text-3xl font-bold text-red-700">03</div>
-                        <span class="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">6.7% Falta</span>
+                        <div class="text-3xl font-bold text-red-700">{{ rejected }}</div>
                     </div>
-                </div>
+                </a>
 
             </div>
 
@@ -190,7 +188,7 @@
             
             <!-- Rodapé -->
             <div class="flex items-center justify-between mt-4 text-xs text-ink/50">
-                <span>Exibindo 1–5 de 45 discentes matriculados (Página 1 de 9)</span>
+                <span>Exibindo {{ total }}</span>
 
                 <div class="flex items-center gap-1.5">
                     <button class="px-3 py-1.5 rounded-lg text-ink/30 cursor-not-allowed">Anterior</button>
