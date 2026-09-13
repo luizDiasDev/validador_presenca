@@ -162,12 +162,12 @@
                     <tbody class="divide-y divide-ink/5">
                         {% for register in registers %}
                             <tr class="hover:bg-creme/40">
-                                <td class="py-3 px-4 font-medium text-ink">{{register.id}}</td>
-                                <td class="py-3 text-ink/60">{{ register.data_criacao|date:"H:i"}}</td>
-                                <td class="py-3 text-center text-green-600">-</td>
-                                <td class="py-3 text-center text-green-600">-</td>
+                                <td class="py-3 px-4 font-medium text-ink/70">{{register.id}}</td>
+                                <td class="py-3 text-ink/70">{{ register.data_criacao|date:"H:i"}}</td>
+                                <td class="py-3 text-center text-ink/70">-</td>
+                                <td class="py-3 text-center text-ink/70">-</td>
                                 <td class="py-3 text-center text-ink/70">{{ register.score_facial }}</td>
-                                <td class="py-3 text-center text-green-600">{{ register.score_vida }}</td>
+                                <td class="py-3 text-center text-ink/70">{{ register.score_vida }}</td>
                                 <td class="py-3 text-center font-medium text-ink">{{ register.score_final }}</td>
                                 <td class="py-3">
                                     <span class="text-[11px] font-medium px-2.5 py-1 rounded-full
