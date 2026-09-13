@@ -51,7 +51,7 @@
                 <span class="flex items-center gap-2.5"><i data-lucide="clipboard-list" class="w-4 h-4"></i> Histórico de Presença</span>
                 <span class="w-1.5 h-1.5 rounded-full bg-navy-deep"></span>
             </a>
-            <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+            <a href="{% url 'checkin:qr_demo' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                 <i data-lucide="video" class="w-4 h-4"></i> Chamada ao vivo
             </a>
             <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
@@ -107,12 +107,15 @@
                     INTERNET DAS COISAS
                 </h1>
                 <div class="flex items-center gap-2">
-                    <button class="flex items-center gap-2 bg-gold text-navy-deep text-xs font-semibold px-4 py-2.5 rounded-lg">
+                    <a href="{% url 'checkin:qr_demo' %}" class="flex items-center gap-2 bg-gold text-navy-deep text-xs font-semibold px-4 py-2.5 rounded-lg hover:bg-gold/80">
                         <i data-lucide="scan-line" class="w-4 h-4"></i> INICIAR CHAMADA
-                    </button>
-                    <button class="flex items-center gap-2 bg-navy text-white text-xs font-semibold px-4 py-2.5 rounded-lg">
-                        <i data-lucide="filter" class="w-4 h-4"></i> 21/08/2024
-                    </button>
+                    </a>
+                    <a href="{% url 'validator:painel' %}" class="flex items-center gap-2 bg-navy text-white text-xs font-semibold px-4 py-2.5 rounded-lg hover:bg-navy-deep transition-colors">
+                        <i data-lucide="filter" class="w-4 h-4"></i>
+                    </a>
+                    <a href="{% url 'validator:painel' %}" class="flex items-center gap-2 bg-navy text-white text-xs font-semibold px-4 py-2.5 rounded-lg hover:bg-navy-deep transition-colors">
+                        <i data-lucide="refresh-ccw" class="w-4 h-4"></i>
+                    </a>
                 </div>
             </div>
 
@@ -166,77 +169,27 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-ink/5">
-
-                        <tr class="hover:bg-creme/40">
-                            <td class="py-3 px-4 font-medium text-ink">Luiz Eduardo Dias</td>
-                            <td class="py-3 text-ink/60">19:18</td>
-                            <td class="py-3 text-center text-green-600">✓</td>
-                            <td class="py-3 text-center text-green-600">✓</td>
-                            <td class="py-3 text-center text-ink/70">0.92</td>
-                            <td class="py-3 text-center text-green-600">✓</td>
-                            <td class="py-3 text-center font-medium text-ink">0.91</td>
-                            <td class="py-3">
-                                <span class="text-green-700 bg-green-50 text-[11px] font-medium px-2.5 py-1 rounded-full">Aprovado</span>
-                            </td>
-                            <td class="py-3 px-4 text-ink/30">—</td>
-                        </tr>
-
-                        <tr class="hover:bg-creme/40">
-                            <td class="py-3 px-4 font-medium text-ink">Fabrício R. Souza</td>
-                            <td class="py-3 text-ink/60">19:19</td>
-                            <td class="py-3 text-center text-green-600">✓</td>
-                            <td class="py-3 text-center text-green-600">✓</td>
-                            <td class="py-3 text-center text-ink/70">0.88</td>
-                            <td class="py-3 text-center text-green-600">✓</td>
-                            <td class="py-3 text-center font-medium text-ink">0.90</td>
-                            <td class="py-3">
-                                <span class="text-green-700 bg-green-50 text-[11px] font-medium px-2.5 py-1 rounded-full">Aprovado</span>
-                            </td>
-                            <td class="py-3 px-4 text-ink/30">—</td>
-                        </tr>
-
-                        <tr class="hover:bg-creme/40">
-                            <td class="py-3 px-4 font-medium text-ink">Ana Carolina Melo</td>
-                            <td class="py-3 text-ink/60">19:20</td>
-                            <td class="py-3 text-center text-green-600">✓</td>
-                            <td class="py-3 text-center text-green-600">✓</td>
-                            <td class="py-3 text-center text-ink/70">0.58</td>
-                            <td class="py-3 text-center text-green-600">✓</td>
-                            <td class="py-3 text-center font-medium text-ink">0.66</td>
-                            <td class="py-3">
-                                <span class="text-amber-700 bg-amber-50 text-[11px] font-medium px-2.5 py-1 rounded-full">Pendente</span>
-                            </td>
-                            <td class="py-3 px-4 text-ink/50 text-xs">Score em faixa de revisão manual</td>
-                        </tr>
-
-                        <tr class="hover:bg-creme/40">
-                            <td class="py-3 px-4 font-medium text-ink">Bruno Tavares Lima</td>
-                            <td class="py-3 text-ink/60">19:21</td>
-                            <td class="py-3 text-center text-red-500">✕</td>
-                            <td class="py-3 text-center text-green-600">✓</td>
-                            <td class="py-3 text-center text-ink/70">0.31</td>
-                            <td class="py-3 text-center text-green-600">✓</td>
-                            <td class="py-3 text-center font-medium text-ink">0.42</td>
-                            <td class="py-3">
-                                <span class="text-red-700 bg-red-50 text-[11px] font-medium px-2.5 py-1 rounded-full">Rejeitado</span>
-                            </td>
-                            <td class="py-3 px-4 text-ink/50 text-xs">QR expirado</td>
-                        </tr>
-
-                        <tr class="hover:bg-creme/40">
-                            <td class="py-3 px-4 font-medium text-ink">Camila Ferreira Dias</td>
-                            <td class="py-3 text-ink/60">19:22</td>
-                            <td class="py-3 text-center text-green-600">✓</td>
-                            <td class="py-3 text-center text-green-600">✓</td>
-                            <td class="py-3 text-center text-ink/70">0.94</td>
-                            <td class="py-3 text-center text-green-600">✓</td>
-                            <td class="py-3 text-center font-medium text-ink">0.91</td>
-                            <td class="py-3">
-                                <span class="text-green-700 bg-green-50 text-[11px] font-medium px-2.5 py-1 rounded-full">Aprovado</span>
-                            </td>
-                            <td class="py-3 px-4 text-ink/30">—</td>
-                        </tr>
-
+                        {% for register in registers %}
+                            <tr class="hover:bg-creme/40">
+                                <td class="py-3 px-4 font-medium text-ink">-</td>
+                                <td class="py-3 text-ink/60">{{ register.data_criacao|date:"H:i"}}</td>
+                                <td class="py-3 text-center text-green-600">-</td>
+                                <td class="py-3 text-center text-green-600">-</td>
+                                <td class="py-3 text-center text-ink/70">{{ register.score_facial }}</td>
+                                <td class="py-3 text-center text-green-600">{{ register.score_vida }}</td>
+                                <td class="py-3 text-center font-medium text-ink">{{ register.score_final }}</td>
+                                <td class="py-3">
+                                    <span class="text-[11px] font-medium px-2.5 py-1 rounded-full
+                                        {% if register.status == 'APPROVED' %}text-green-700 bg-green-50
+                                        {% else %}text-red-700 bg-red-50{% endif %}">
+                                        {{ register.status }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 text-ink/30">{{ register.motivo|default:"-" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="9" class="py-6 text-center text-ink/40">Nenhum registro ainda.</td></tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
