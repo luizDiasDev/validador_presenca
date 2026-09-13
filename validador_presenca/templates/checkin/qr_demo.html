@@ -14,8 +14,8 @@
 
     <style type="text/tailwindcss">
         @theme {
-            --color-navy-deep: #0F1B2E;
-            --color-navy: #17263D;
+            --color-dark-blue: #0F1B2E;
+            --color-light-blue: #17263D;
             --color-gold: #C9962C;
             --color-creme: #F7F3EA;
             --color-tan: #E9DEC4;
@@ -30,13 +30,13 @@
 <body class="bg-creme h-screen overflow-hidden flex">
     
     <!-- Menu lateral -->
-    <aside class="w-60 bg-navy-deep flex-shrink-0">
+    <aside class="w-60 bg-dark-blue flex-shrink-0">
 
         <div class="flex flex-col h-full py-6 px-4">
 
         <!-- Logo -->
         <div class="flex items-center gap-2 px-2 mb-8">
-            <div class="w-15 h-15 flex items-center justify-center text-navy-deep flex-shrink-0">
+            <div class="w-15 h-15 flex items-center justify-center text-dark-blue flex-shrink-0">
                 <img src="{% static 'images/logo_bege.svg' %}" alt="Logo Adsum">
             </div>
             <h1 class="font-display font-bold text-2xl text-creme mb-1">ADSUM</h1>
@@ -50,7 +50,7 @@
             <a href="{% url 'validator:painel' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                 <i data-lucide="clipboard-list" class="w-4 h-4"></i> Histórico de Presença
             </a>
-            <a href="{% url 'checkin:qr_demo' %}" class="flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-lg bg-gold text-navy-deep font-semibold">
+            <a href="{% url 'checkin:qr_demo' %}" class="flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-lg bg-gold text-dark-blue font-semibold">
                 <span class="flex items-center gap-2.5"><i data-lucide="video" class="w-4 h-4"></i> Chamada ao vivo</span>
             </a>
             <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
@@ -86,7 +86,7 @@
     </aside>
 
     <!-- Divisoria do Menu lateral -->
-    <div class="w-6 bg-navy-deep">
+    <div class="w-6 bg-dark-blue">
         <img src="{% static 'images/divisao.svg' %}" alt="Divisao">
     </div>
 
@@ -102,11 +102,11 @@
                 </div>
 
                 <div class="text-xs text-ink/60 mb-4 space-y-1">
-                    <p>Sessão <span class="text-navy-deep font-semibold">{{ sessao_id }}</span> · Máquina <span class="text-navy-deep font-semibold">{{ maquina_id }}</span></p>
+                    <p>Sessão <span class="text-dark-blue font-semibold">{{ sessao_id }}</span> · Máquina <span class="text-dark-blue font-semibold">{{ maquina_id }}</span></p>
                     <p class="font-mono">Token: {{ token|slice:":20" }}…</p>
                 </div>
 
-                <div class="inline-block bg-gold/10 text-navy-deep text-xs font-medium px-3 py-1.5 rounded-full mb-6">
+                <div class="inline-block bg-gold/10 text-dark-blue text-xs font-medium px-3 py-1.5 rounded-full mb-6">
                     Atualiza a cada {{ ttl_s }}s
                 </div>
 
@@ -114,13 +114,13 @@
                     {% csrf_token %}
                     <input type="hidden" name="token" value="{{ token }}">
                     <button type="submit"
-                        class="w-full bg-navy-deep hover:bg-navy text-creme font-semibold py-3 px-4 rounded-lg transition">
+                        class="w-full bg-dark-blue hover:bg-light-blue text-creme font-semibold py-3 px-4 rounded-lg transition">
                         Simular scan
                     </button>
                 </form>
 
                 {% if resultado %}
-                    <div class="mt-5 p-3 bg-gold/20 border border-gold/40 text-navy-deep text-sm rounded-lg text-left">
+                    <div class="mt-5 p-3 bg-gold/20 border border-gold/40 text-dark-blue text-sm rounded-lg text-left">
                         <p class="font-semibold">Token consumido</p>
                         <p class="text-xs mt-1">Sessão {{ resultado.sessao_id }}  Máquina {{ resultado.maquina_id }}</p>
                     </div>
