@@ -17,14 +17,14 @@ class Engine():
 
         if blocked_valitadors:
             blocked_reasons = "; ".join([blocked.reason for blocked in blocked_valitadors])
-            return Verdict.REJECTED, validator_result_list, blocked_reasons
+            return Verdict.REJECTED, validator_result_list, 0.0, blocked_reasons
         else:
             weight_sum = sum(validator.weight for validator in validator_result_list)
             final_score = sum(validator.score * validator.weight for validator in validator_result_list) / weight_sum
 
             if final_score >= self.APPROVE_LIMIT:
-                return Verdict.APPROVED, validator_result_list, ""
+                return Verdict.APPROVED, validator_result_list, final_score, ""
             elif final_score >= self.REVIEW_LIMIT:
-                return Verdict.PENDING, validator_result_list, "Score final abaixo da faixa de aprovação, requer revisão manual"
+                return Verdict.PENDING, validator_result_list, final_score, "Score final abaixo da faixa de aprovação, requer revisão manual"
             else:
-                return Verdict.REJECTED, validator_result_list, "Score final abaixo do mínimo permitido"
+                return Verdict.REJECTED, validator_result_list, final_score, "Score final abaixo do mínimo permitido"

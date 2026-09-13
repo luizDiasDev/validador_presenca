@@ -4,6 +4,7 @@ import qrcode
 from django.core.cache import cache
 from django.shortcuts import render
 from apps.checkin.domain.services.qr_service import QrTokenService
+from apps.validator.domain.case import try_checkin
 
 
 def qr_demo(request):
@@ -14,6 +15,13 @@ def qr_demo(request):
     if request.method == "POST":
         token = request.POST.get("token", "")
         resultado = svc.consumir(token)
+
+        results_pack = {
+            "qr_code": resultado is not None,
+        }
+
+        try_checkin(results_pack=results_pack)
+        
 
     # Gera novo QR
     sessao_id = int(request.GET.get("sessao", 1))
