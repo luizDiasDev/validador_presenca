@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 
     <style type="text/tailwindcss">
         @theme {
@@ -26,48 +27,114 @@
         }
     </style>
 </head>
-<body class="bg-creme min-h-screen flex items-center justify-center p-6">
+<body class="bg-creme min-h-screen flex">
+    
+    <!-- Menu lateral -->
+    <aside class="w-60 bg-navy-deep flex-shrink-0">
 
-    <div class="w-full max-w-md bg-white rounded-2xl shadow-sm border border-tan/50 p-8 text-center">
+        <div class="flex flex-col h-full py-6 px-4">
 
-        <h1 class="font-display text-2xl text-navy-deep mb-1">Adsum</h1>
-        <p class="text-sm text-ink/60 mb-6">QR Code rotativo</p>
-
-        <div class="inline-block p-4 bg-white border-2 border-tan rounded-xl mb-6">
-            <img src="data:image/png;base64,{{ qr_image }}" alt="QR Code" class="w-64 h-64 block">
-        </div>
-
-        <div class="text-xs text-ink/60 mb-4 space-y-1">
-            <p>Sessão <span class="text-navy-deep font-semibold">{{ sessao_id }}</span> · Máquina <span class="text-navy-deep font-semibold">{{ maquina_id }}</span></p>
-            <p class="font-mono">Token: {{ token|slice:":20" }}…</p>
-        </div>
-
-        <div class="inline-block bg-gold/10 text-navy-deep text-xs font-medium px-3 py-1.5 rounded-full mb-6">
-            Atualiza a cada {{ ttl_s }}s
-        </div>
-
-        <form method="post">
-            {% csrf_token %}
-            <input type="hidden" name="token" value="{{ token }}">
-            <button type="submit"
-                class="w-full bg-navy-deep hover:bg-navy text-creme font-semibold py-3 px-4 rounded-lg transition">
-                Simular scan
-            </button>
-        </form>
-
-        {% if resultado %}
-            <div class="mt-5 p-3 bg-gold/20 border border-gold/40 text-navy-deep text-sm rounded-lg text-left">
-                <p class="font-semibold">Token consumido</p>
-                <p class="text-xs mt-1">Sessão {{ resultado.sessao_id }}  Máquina {{ resultado.maquina_id }}</p>
+        <!-- Logo -->
+        <div class="flex items-center gap-2 px-2 mb-8">
+            <div class="w-15 h-15 flex items-center justify-center text-navy-deep flex-shrink-0">
+                <img src="{% static 'images/logo_bege.svg' %}" alt="Logo Adsum">
             </div>
-        {% elif request.method == "POST" %}
-            <div class="mt-5 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg text-left">
-                <p class="font-semibold">Token inválido</p>
-                <p class="text-xs mt-1">Já usado, expirado ou nunca existiu.</p>
+            <h1 class="font-display font-bold text-2xl text-creme mb-1">ADSUM</h1>
+        </div>
+
+        <!-- Menu -->
+        <nav class="space-y-1.5 text-sm flex-1">
+            <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                <i data-lucide="book-open" class="w-4 h-4"></i> Minhas Turmas
+            </a>
+            <a href="{% url 'validator:painel' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                <i data-lucide="clipboard-list" class="w-4 h-4"></i> Histórico de Presença
+            </a>
+            <a href="{% url 'checkin:qr_demo' %}" class="flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-lg bg-gold text-navy-deep font-semibold">
+                <span class="flex items-center gap-2.5"><i data-lucide="video" class="w-4 h-4"></i> Chamada ao vivo</span>
+            </a>
+            <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                <i data-lucide="users" class="w-4 h-4"></i> Gestão de Alunos
+            </a>
+            <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                <i data-lucide="settings" class="w-4 h-4"></i> Configurar Chamada
+            </a>
+            <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                <i data-lucide="alert-triangle" class="w-4 h-4"></i> Pendências
+            </a>
+            <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Dashboard BI
+            </a>
+            <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                <i data-lucide="shield-check" class="w-4 h-4"></i> Central de Privacidade
+            </a>
+        </nav>
+
+        <!-- Perfil -->
+        <div class="border-t border-white/10 pt-4 flex items-center justify-between px-2">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center text-gold text-xs font-semibold">AH</div>
+                <div class="leading-tight">
+                    <div class="text-white text-xs font-medium">Prof. Alessandro</div>
+                    <div class="text-white/40 text-[10px]">Internet das Coisas</div>
+                </div>
             </div>
-        {% endif %}
+            <i data-lucide="log-out" class="w-4 h-4 text-white/40"></i>
+        </div>
 
     </div>
+    </aside>
 
+    <!-- Divisoria do Menu lateral -->
+    <div class="w-6 bg-navy-deep">
+        <img src="{% static 'images/divisao.svg' %}" alt="Divisao">
+    </div>
+
+    <!-- Body das paginas -->
+    <div class="flex-1 p-8">
+        <div class="flex-1 p-8 flex items-center justify-center">
+            <div class="w-full max-w-md bg-white rounded-2xl shadow-sm border border-tan/50 p-8 text-center">
+                
+                <p class="text-sm text-ink/60 mb-6">QR Code rotativo</p>
+
+                <div class="inline-block p-4 bg-white border-2 border-tan rounded-xl mb-6">
+                    <img src="data:image/png;base64,{{ qr_image }}" alt="QR Code" class="w-64 h-64 block">
+                </div>
+
+                <div class="text-xs text-ink/60 mb-4 space-y-1">
+                    <p>Sessão <span class="text-navy-deep font-semibold">{{ sessao_id }}</span> · Máquina <span class="text-navy-deep font-semibold">{{ maquina_id }}</span></p>
+                    <p class="font-mono">Token: {{ token|slice:":20" }}…</p>
+                </div>
+
+                <div class="inline-block bg-gold/10 text-navy-deep text-xs font-medium px-3 py-1.5 rounded-full mb-6">
+                    Atualiza a cada {{ ttl_s }}s
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="token" value="{{ token }}">
+                    <button type="submit"
+                        class="w-full bg-navy-deep hover:bg-navy text-creme font-semibold py-3 px-4 rounded-lg transition">
+                        Simular scan
+                    </button>
+                </form>
+
+                {% if resultado %}
+                    <div class="mt-5 p-3 bg-gold/20 border border-gold/40 text-navy-deep text-sm rounded-lg text-left">
+                        <p class="font-semibold">Token consumido</p>
+                        <p class="text-xs mt-1">Sessão {{ resultado.sessao_id }}  Máquina {{ resultado.maquina_id }}</p>
+                    </div>
+                {% elif request.method == "POST" %}
+                    <div class="mt-5 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg text-left">
+                        <p class="font-semibold">Token inválido</p>
+                        <p class="text-xs mt-1">Já usado, expirado ou nunca existiu.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Rodar script dos icones -->
+    <script>lucide.createIcons();</script>
 </body>
 </html>

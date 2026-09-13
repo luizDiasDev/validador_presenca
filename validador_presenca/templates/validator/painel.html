@@ -39,7 +39,7 @@
             <div class="w-15 h-15 flex items-center justify-center text-navy-deep flex-shrink-0">
                 <img src="{% static 'images/logo_bege.svg' %}" alt="Logo Adsum">
             </div>
-            <span class="text-white font-bold text-sm tracking-wide">ADSUM</span>
+            <h1 class="font-display font-bold text-2xl text-creme mb-1">ADSUM</h1>
         </div>
 
         <!-- Menu -->
@@ -47,9 +47,8 @@
             <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                 <i data-lucide="book-open" class="w-4 h-4"></i> Minhas Turmas
             </a>
-            <a href="#" class="flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-lg bg-gold text-navy-deep font-semibold">
+            <a href="{% url 'validator:painel' %}" class="flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-lg bg-gold text-navy-deep font-semibold">
                 <span class="flex items-center gap-2.5"><i data-lucide="clipboard-list" class="w-4 h-4"></i> Histórico de Presença</span>
-                <span class="w-1.5 h-1.5 rounded-full bg-navy-deep"></span>
             </a>
             <a href="{% url 'checkin:qr_demo' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                 <i data-lucide="video" class="w-4 h-4"></i> Chamada ao vivo
@@ -93,11 +92,6 @@
 
     <!-- Body das paginas -->
     <div class="flex-1 p-8">
-
-        <!-- Breadcrumb -->
-        <div class="text-xs text-ink/40 tracking-wide mb-4">
-            AMBIENTE DO PROFESSOR <span class="mx-1">/</span> <span class="text-ink font-medium">Histórico de Presença</span>
-        </div>
 
         <!-- Card principal -->
         <div class="bg-white rounded-2xl p-6">
