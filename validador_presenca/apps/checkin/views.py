@@ -1,4 +1,5 @@
 import base64
+import hashlib
 import io
 import qrcode
 from django.core.cache import cache
@@ -16,8 +17,22 @@ def qr_demo(request):
         token = request.POST.get("token", "")
         resultado = svc.consumir(token)
 
+        # hash para auditoria
+        qr_token_hash = hashlib.sha256(token.encode()).hexdigest() if token else ""
+
+        # dado chumbado, virá depois quando o PWA for desenvolvido
+        aluno_id = int(request.GET.get("aluno",1))
+
+        sessao_id = resultado.sessao_id if resultado else None
+        maquina_id = resultado.maquina_id if resultado else None
+
+        # informações que serão úteis no PresencaRecord
         results_pack = {
             "qr_code": resultado is not None,
+            "qr_token_hash": qr_token_hash,
+            "sessao_id": sessao_id,
+            "maquina_id": maquina_id,
+            "aluno_id": aluno_id
         }
 
         try_checkin(results_pack=results_pack)

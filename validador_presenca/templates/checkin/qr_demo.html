@@ -102,12 +102,7 @@
                 </div>
 
                 <div class="text-xs text-ink/60 mb-4 space-y-1">
-                    <p>Sessão <span class="text-dark-blue font-semibold">{{ sessao_id }}</span> · Máquina <span class="text-dark-blue font-semibold">{{ maquina_id }}</span></p>
-                    <p class="font-mono">Token: {{ token|slice:":20" }}…</p>
-                </div>
-
-                <div class="inline-block bg-gold/10 text-dark-blue text-xs font-medium px-3 py-1.5 rounded-full mb-6">
-                    Atualiza a cada {{ ttl_s }}s
+                    <p>Sessão <span class="text-dark-blue font-semibold">{{ sessao_id }}</span> - Máquina <span class="text-dark-blue font-semibold">{{ maquina_id }}</span></p>
                 </div>
 
                 <form method="post">
