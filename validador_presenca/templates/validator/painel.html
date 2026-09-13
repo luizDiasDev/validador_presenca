@@ -165,7 +165,7 @@
                     <tbody class="divide-y divide-ink/5">
                         {% for register in registers %}
                             <tr class="hover:bg-creme/40">
-                                <td class="py-3 px-4 font-medium text-ink">-</td>
+                                <td class="py-3 px-4 font-medium text-ink">{{register.id}}</td>
                                 <td class="py-3 text-ink/60">{{ register.data_criacao|date:"H:i"}}</td>
                                 <td class="py-3 text-center text-green-600">-</td>
                                 <td class="py-3 text-center text-green-600">-</td>

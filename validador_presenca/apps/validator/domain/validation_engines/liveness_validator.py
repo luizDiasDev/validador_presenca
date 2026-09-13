@@ -2,7 +2,7 @@ from .validator_model import ValidatorModel
 from ..values.factor_result import FactorResult
 
 class LivenessValidator(ValidatorModel):
-    name = "liveless"
+    name = "liveness"
     weight = 0.2
     block = True
 
