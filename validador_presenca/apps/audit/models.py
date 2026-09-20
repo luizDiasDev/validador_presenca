@@ -9,6 +9,9 @@ class AuditLog(models.Model):
     acao = models.CharField(max_length=50)
     tabela = models.CharField(max_length=50)
     linha_tabela_id = models.BigIntegerField()
+    payload =  models.JSONField()
+    hash_anterior = models.CharField(64)
+    hash_atual = models.CharField(64)
 
     class Meta:
         db_table  = "log_auditoria"
