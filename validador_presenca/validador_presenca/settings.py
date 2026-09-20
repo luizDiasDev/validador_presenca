@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'apps.checkin',
     'apps.validator',
+    'apps.audit',
 ]
 
 MIDDLEWARE = [
