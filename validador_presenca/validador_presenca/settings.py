@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'apps.checkin',
     'apps.validator',
     'apps.audit',
+    'apps.institution',
 ]
 
 MIDDLEWARE = [

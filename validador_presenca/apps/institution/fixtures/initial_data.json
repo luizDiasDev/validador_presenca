@@ -1,0 +1,49 @@
+[
+  {
+    "model": "institution.institution",
+    "pk": 1,
+    "fields": {
+      "nome": "Universidade de Mogi das Cruzes",
+      "cnpj": "54303514000185",
+      "data_criacao": "2026-09-20T00:00:00Z",
+      "data_atualizacao": "2026-09-20T00:00:00Z"
+    }
+  },
+  {
+    "model": "institution.campus",
+    "pk": 1,
+    "fields": {
+      "instituicao": 1,
+      "nome": "Campus Sede - Mogi das Cruzes",
+      "latitude": "-23.5169621",
+      "longitude": "-46.1826845",
+      "raio_metros": 300,
+      "data_criacao": "2026-09-20T00:00:00Z",
+      "data_atualizacao": "2026-09-20T00:00:00Z"
+    }
+  },
+  {
+    "model": "institution.room",
+    "pk": 1,
+    "fields": {
+      "campus": 1,
+      "codigo": "1226",
+      "nome": "Sala 1226 - Bloco Tecnológico",
+      "data_criacao": "2026-09-20T00:00:00Z",
+      "data_atualizacao": "2026-09-20T00:00:00Z"
+    }
+  },
+  {
+    "model": "institution.machine",
+    "pk": 1,
+    "fields": {
+      "sala": 1,
+      "apelido": "PC-01",
+      "codigo_pareamento": "1226",
+      "ip": null,
+      "visto_em": null,
+      "data_criacao": "2026-09-20T00:00:00Z",
+      "data_atualizacao": "2026-09-20T00:00:00Z"
+    }
+  }
+]
