@@ -3,6 +3,7 @@ from .validation_engines.qrcode_validator import QrCodeValidator
 from .validation_engines.manual_token_validator import ManualTokenValidator
 from .validation_engines.facial_validator import FacialValidator
 from .validation_engines.liveness_validator import LivenessValidator
+from .validation_engines.geo_validator import GeoValidator
 
 def buid_engine():
 
@@ -11,4 +12,5 @@ def buid_engine():
         ManualTokenValidator(),
         FacialValidator(),
         LivenessValidator(),
+        GeoValidator(),
     ])
