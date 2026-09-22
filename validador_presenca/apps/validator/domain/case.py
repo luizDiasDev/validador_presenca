@@ -9,7 +9,7 @@ def try_checkin(results_pack: dict):
     PresencaRecord.objects.create(
         score_facial=next(result.score for result in results if result.name == "facial"),
         score_vida=next(result.score for result in results if result.name == "liveness"),
-        geo_valida=True,
+        geo_valida=results_pack.get("geo_valida", False),
         score_final=final_score,
         aprovado=(veredict.value == "APPROVED"),
         status=veredict.value,
