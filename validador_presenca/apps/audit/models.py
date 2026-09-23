@@ -10,8 +10,8 @@ class AuditLog(models.Model):
     tabela = models.CharField(max_length=50)
     linha_tabela_id = models.BigIntegerField()
     payload =  models.JSONField()
-    hash_anterior = models.CharField(64)
-    hash_atual = models.CharField(64)
+    hash_anterior = models.CharField(max_length=64)
+    hash_atual = models.CharField(max_length=64)
 
     class Meta:
         db_table  = "log_auditoria"
