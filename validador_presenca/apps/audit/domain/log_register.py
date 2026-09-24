@@ -12,10 +12,12 @@ class LogResister:
 
         payload = data_log.get("payload", {})
 
+        now = timezone.now()
+
         new_hash = self._calculate_hash(
             last_hash=last_hash,
             payload=payload,
-            time =  str(timezone.now())
+            time =  str(now)
         )
 
         AuditLog.objects.create(
@@ -26,7 +28,8 @@ class LogResister:
             linha_tabela_id = data_log.get("linha_tabela_id", 0),
             payload = payload,
             hash_anterior = last_hash,
-            hash_atual = new_hash
+            hash_atual = new_hash,
+            ocorrido_em =now
         )
 
     def _calculate_hash(self, last_hash, payload, time):

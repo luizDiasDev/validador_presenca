@@ -4,7 +4,7 @@ from django.db import models
 
 class AuditLog(models.Model):
     autor_id = models.IntegerField()
-    ocorrido_em = models.DateTimeField(auto_now_add=True)
+    ocorrido_em = models.DateTimeField()
     origem = models.CharField(max_length=50)
     acao = models.CharField(max_length=50)
     tabela = models.CharField(max_length=50)
