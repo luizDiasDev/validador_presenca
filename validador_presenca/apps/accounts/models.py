@@ -2,8 +2,25 @@ from django.db import models
 
 # Create your models here.
 
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, UserManager
 from apps.institution.models import Institution
+
+class UsuarioManager(UserManager):
+    def create_user(self, email=None, password=None, **extra_fields):
+        return super().create_user(
+            username = email,
+            email = email,
+            password = password,
+            **extra_fields
+        )
+
+    def create_superuser(self, email=None, password=None, **extra_fields):
+        return super().create_superuser(
+            username = email,
+            email = email,
+            password = password,
+            **extra_fields
+        )
 
 class Usuario(AbstractUser):
     email = models.EmailField(unique=True)
@@ -16,6 +33,8 @@ class Usuario(AbstractUser):
         blank =True,
     )
     totp_cifrado = models.BinaryField(null=True, blank=True)
+
+    objects = UsuarioManager()
 
     USERNAME_FIELD =  "email"
     REQUIRED_FIELDS = []
