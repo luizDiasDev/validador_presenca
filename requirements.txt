@@ -25,3 +25,7 @@ fakeredis==2.37.1
 
 # Geolocalização
 geopy==2.5.0
+
+# Criptografia
+
+argon2-cffi==25.1.0
