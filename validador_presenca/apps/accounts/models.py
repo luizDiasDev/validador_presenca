@@ -6,6 +6,7 @@ from django.contrib.auth.models import AbstractUser
 from apps.institution.models import Institution
 
 class Usuario(AbstractUser):
+    email = models.EmailField(unique=True)
     instituicao = models.ForeignKey(
         Institution,
         on_delete = models.PROTECT,
