@@ -11,6 +11,8 @@ class Usuario(AbstractUser):
         on_delete=models.PROTECT,
         db_column="instituicao_id",
         related_name="usuarios",
+        null=True,
+        blank=True,
     )
     totp_cifrado = models.BinaryField(null=True, blank=True)
 
