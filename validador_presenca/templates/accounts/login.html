@@ -84,6 +84,12 @@
                     <p class="text-red-600 text-sm mb-4 text-center">Email ou senha inválidos.</p>
                 {% endif %}
 
+                {% if messages %}
+                    {% for message in messages %}
+                        <p class="text-amber-600 text-sm mb-4 text-center">{{ message }}</p>
+                    {% endfor %}
+                {% endif %}
+
                 <form method="post" class="space-y-4">
                     {% csrf_token %}
                     
