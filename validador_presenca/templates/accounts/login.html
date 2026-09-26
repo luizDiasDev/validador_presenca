@@ -21,21 +21,37 @@
         }
         body { font-family: 'Inter', sans-serif; }
 
-        .fundo-grego {
+        .faixa-grego {
+            position: absolute;
+            left: -400px;
+            right: -400px;
+            height: 34%;
             background-color: #0F1B2E;
-            background-repeat: repeat;
-            background-size: 80px 80px;
-            background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='80'%20height='80'%20viewBox='0%200%2080%2080'%3E%3Crect%20width='80'%20height='80'%20fill='%230F1B2E'/%3E%3Crect%20width='40'%20height='40'%20fill='%23C9962C'/%3E%3Crect%20x='40'%20y='40'%20width='40'%20height='40'%20fill='%23C9962C'/%3E%3Cg%20fill='none'%20stroke-width='6'%20stroke-linecap='square'%3E%3Cpath%20stroke='%230F1B2E'%20d='M8%208%20H32%20V20%20H16%20V32'/%3E%3Cpath%20stroke='%23C9962C'%20d='M48%208%20H72%20V20%20H56%20V32'/%3E%3Cpath%20stroke='%230F1B2E'%20d='M48%2048%20H72%20V60%20H56%20V72'/%3E%3Cpath%20stroke='%23C9962C'%20d='M8%2048%20H32%20V60%20H16%20V72'/%3E%3C/g%3E%3C/svg%3E");
-            animation: deslizar-grego 12s linear infinite;
+            background-repeat: repeat-x;
+            background-size: 1630px auto;
+            background-image: url("{% static 'images/meandro.svg' %}");
         }
 
-        @keyframes deslizar-grego {
+        .faixa-1 { top: 0; animation: mover-esquerda 100s linear infinite; }
+        .faixa-2 { top: 34%; animation: mover-direita 100s linear infinite; }
+        .faixa-3 { top: 68%; animation: mover-esquerda 100s linear infinite; }
+
+        @keyframes mover-esquerda {
             from { background-position: 0 0; }
-            to   { background-position: 80px 80px; }
+            to   { background-position: -1630px 0; }
+        }
+
+        @keyframes mover-direita {
+            from { background-position: 0 0; }
+            to   { background-position: 1630px 0; }
         }
 
         @media (prefers-reduced-motion: reduce) {
-            .fundo-grego { animation: none; }
+            .faixa-grego { animation: none; }
+        }
+
+        .sombra-login {
+            filter: drop-shadow(-40px 10px 12px rgba(0, 0, 0, 0.315));
         }
     </style>
 </head>
@@ -43,50 +59,21 @@
 
     <div class="min-h-screen flex flex-col md:flex-row">
 
-        <!-- Lado esquerdo: padrão decorativo animado + emblema -->
+        <!-- Lado esquerdo: BackGround -->
         <div class="relative w-full md:w-1/2 min-h-[280px] md:min-h-screen overflow-hidden">
 
-            <div class="absolute inset-0 fundo-grego"></div>
+            <div class="faixa-grego faixa-1"></div>
+            <div class="faixa-grego faixa-2"></div>
+            <div class="faixa-grego faixa-3"></div>
 
-            <!-- Emblema -->
+            <!-- Logo -->
             <div class="absolute inset-0 flex items-center justify-center p-10">
-                <div class="bg-creme rounded-[42%_58%_55%_45%/45%_40%_60%_55%] shadow-xl w-56 h-56 md:w-72 md:h-72 flex items-center justify-center p-6">
-                    <svg viewBox="0 0 200 200" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                        <g fill="#17263D">
-                            <!-- ramo esquerdo -->
-                            <path d="M60 40 C40 55, 32 90, 40 130 C44 145, 52 158, 62 165
-                                     C56 150, 52 130, 56 112 C48 118, 40 122, 34 120
-                                     C42 112, 48 100, 48 88 C40 92, 32 92, 28 86
-                                     C38 82, 46 74, 48 64 C40 66, 33 64, 30 58
-                                     C40 56, 50 48, 60 40 Z"/>
-                            <!-- ramo direito (espelhado) -->
-                            <path d="M140 40 C160 55, 168 90, 160 130 C156 145, 148 158, 138 165
-                                     C144 150, 148 130, 144 112 C152 118, 160 122, 166 120
-                                     C158 112, 152 100, 152 88 C160 92, 168 92, 172 86
-                                     C162 82, 154 74, 152 64 C160 66, 167 64, 170 58
-                                     C160 56, 150 48, 140 40 Z"/>
-                            <!-- corpo/cabeça da coruja -->
-                            <ellipse cx="100" cy="118" rx="46" ry="40"/>
-                            <path d="M58 100 C64 74, 82 58, 100 58 C118 58, 136 74, 142 100
-                                     C130 90, 116 84, 100 84 C84 84, 70 90, 58 100 Z"/>
-                            <!-- orelhas -->
-                            <path d="M66 66 C60 50, 62 38, 70 30 C68 44, 70 56, 76 64 Z"/>
-                            <path d="M134 66 C140 50, 138 38, 130 30 C132 44, 130 56, 124 64 Z"/>
-                        </g>
-                        <!-- olhos -->
-                        <circle cx="82" cy="112" r="19" fill="#F7F3EA"/>
-                        <circle cx="118" cy="112" r="19" fill="#F7F3EA"/>
-                        <circle cx="82" cy="112" r="9" fill="#17263D"/>
-                        <circle cx="118" cy="112" r="9" fill="#17263D"/>
-                        <!-- bico -->
-                        <path d="M94 130 L100 140 L106 130 C102 134, 98 134, 94 130 Z" fill="#17263D"/>
-                    </svg>
-                </div>
+                <img src="{% static 'images/logo_bg.svg' %}" alt="Logo Adsum" class = "sombra-login">
             </div>
         </div>
 
         <!-- Lado direito: formulário -->
-        <div class="w-full md:w-1/2 flex items-center justify-center bg-[#F5F5F4] p-8">
+        <div class="w-full md:w-1/2 flex items-center justify-center bg-[#F5F5F4] p-8 sombra-login">
             <div class="w-full max-w-sm">
 
                 <h1 class="font-[family-name:var(--font-display)] text-3xl md:text-4xl font-semibold text-navy-deep text-center leading-tight mb-8">
@@ -108,7 +95,7 @@
 
                     <div>
                         <label for="senha" class="block text-sm text-ink/70 mb-1">Senha</label>
-                        <input type="password" id="senha" name="password" value="12345678"
+                        <input type="password" id="senha" name="password"
                                class="w-full px-4 py-2.5 rounded-lg border border-ink/10 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-navy/30">
                     </div>
 
