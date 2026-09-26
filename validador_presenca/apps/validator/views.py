@@ -1,8 +1,10 @@
 from django.shortcuts import render
 from .models import PresencaRecord
+from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 
+@login_required
 def painel(request):
     status_filter = request.GET.get("status")
 

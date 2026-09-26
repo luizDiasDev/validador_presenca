@@ -6,8 +6,10 @@ from django.core.cache import cache
 from django.shortcuts import render
 from apps.checkin.domain.services.qr_service import QrTokenService
 from apps.validator.domain.case import try_checkin
+from django.contrib.auth.decorators import login_required
 
 
+@login_required
 def qr_demo(request):
     svc = QrTokenService(cache=cache)
 
