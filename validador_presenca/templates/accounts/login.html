@@ -1,0 +1,118 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <style type="text/tailwindcss">
+        @theme {
+            --color-navy-deep: #0F1B2E;
+            --color-navy: #17263D;
+            --color-gold: #C9962C;
+            --color-creme: #F7F3EA;
+            --color-ink: #1F2A3C;
+            --font-display: 'Cinzel', serif;
+        }
+        body { font-family: 'Inter', sans-serif; }
+
+        .faixa-grego {
+            position: absolute;
+            left: -400px;
+            right: -400px;
+            height: 34%;
+            background-color: #0F1B2E;
+            background-repeat: repeat-x;
+            background-size: 1630px auto;
+            background-image: url("{% static 'images/meandro.svg' %}");
+        }
+
+        .faixa-1 { top: 0; animation: mover-esquerda 100s linear infinite; }
+        .faixa-2 { top: 34%; animation: mover-direita 100s linear infinite; }
+        .faixa-3 { top: 68%; animation: mover-esquerda 100s linear infinite; }
+
+        @keyframes mover-esquerda {
+            from { background-position: 0 0; }
+            to   { background-position: -1630px 0; }
+        }
+
+        @keyframes mover-direita {
+            from { background-position: 0 0; }
+            to   { background-position: 1630px 0; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .faixa-grego { animation: none; }
+        }
+
+        .sombra-login {
+            filter: drop-shadow(-40px 10px 12px rgba(0, 0, 0, 0.315));
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <div class="min-h-screen flex flex-col md:flex-row">
+
+        <!-- Lado esquerdo: BackGround -->
+        <div class="relative w-full md:w-1/2 min-h-[280px] md:min-h-screen overflow-hidden">
+
+            <div class="faixa-grego faixa-1"></div>
+            <div class="faixa-grego faixa-2"></div>
+            <div class="faixa-grego faixa-3"></div>
+
+            <!-- Logo -->
+            <div class="absolute inset-0 flex items-center justify-center p-10">
+                <img src="{% static 'images/logo_bg.svg' %}" alt="Logo Adsum" class = "sombra-login">
+            </div>
+        </div>
+
+        <!-- Lado direito: formulário -->
+        <div class="w-full md:w-1/2 flex items-center justify-center bg-[#F5F5F4] p-8 sombra-login">
+            <div class="w-full max-w-sm">
+
+                <h1 class="font-[family-name:var(--font-display)] text-3xl md:text-4xl font-semibold text-navy-deep text-center leading-tight mb-8">
+                    Bem-vindo(a) ao<br>ADSUM
+                </h1>
+
+                {% if form.errors %}
+                    <p class="text-red-600 text-sm mb-4 text-center">Email ou senha inválidos.</p>
+                {% endif %}
+
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+                    
+                    <div>
+                        <label for="email" class="block text-sm text-ink/70 mb-1">E-mail</label>
+                        <input type="email" id="email" name="username" placeholder="nome@umc.br"
+                               class="w-full px-4 py-2.5 rounded-lg border border-ink/10 bg-white text-sm placeholder:text-ink/30 focus:outline-none focus:ring-2 focus:ring-navy/30">
+                    </div>
+
+                    <div>
+                        <label for="senha" class="block text-sm text-ink/70 mb-1">Senha</label>
+                        <input type="password" id="senha" name="password"
+                               class="w-full px-4 py-2.5 rounded-lg border border-ink/10 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-navy/30">
+                    </div>
+
+                    <button type="submit"
+                            class="w-full bg-navy-deep hover:bg-navy text-white font-medium py-2.5 rounded-lg transition-colors mt-2">
+                        Entrar
+                    </button>
+
+                    <p class="text-right text-sm text-ink/70">
+                        <a href="#" class="hover:text-navy-deep hover:underline">Esqueceu a senha?</a>
+                    </p>
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

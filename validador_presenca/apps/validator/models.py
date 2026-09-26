@@ -12,7 +12,7 @@ class PresencaRecord(models.Model):
     aprovado =  models.BooleanField()
     status = models.CharField(max_length=20)
     origem = models.CharField(max_length=50)
-    revisado_por = models.IntegerField()
+    revisado_por = models.IntegerField(null=True, blank=True)
     motivo = models.TextField()
     data_revisao = models.DateTimeField(null=True, blank=True)
     data_decisao = models.DateTimeField(null=True, blank=True)
