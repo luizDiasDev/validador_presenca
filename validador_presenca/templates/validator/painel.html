@@ -78,7 +78,12 @@
                     <div class="text-white text-xs font-medium">Acesso Professor</div>
                 </div>
             </div>
-            <i data-lucide="log-out" class="w-4 h-4 text-white/40"></i>
+            <form method="post" action="{% url 'accounts:logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="flex items-center gap-2.5 text-white/40 hover:text-white/70">
+                    <i data-lucide="log-out" class="w-4 h-4 text-white/40 hover:text-white/70 cursor-pointer"></i>
+                </button>
+            </form>
         </div>
 
     </div>
