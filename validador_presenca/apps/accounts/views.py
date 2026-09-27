@@ -7,7 +7,7 @@ import qrcode
 import io
 import base64
 from django.contrib.auth import login
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView, LogoutView
 from apps.audit.domain.log_register import LogRegister
 
 class AdsumLoginView(LoginView):
@@ -34,6 +34,18 @@ class AdsumLoginView(LoginView):
         })
         return super().form_invalid(form)
 
+class AdsumLogoutView(LogoutView):
+    def post(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            LogRegister().register({
+                "autor_id": request.user.id,
+                "origem": "accounts",
+                "acao": "LOGOUT",
+                "tabela": "usuario",
+                "linha_tabela_id": request.user.id,
+                "payload": {"email": request.user.email},
+            })
+        return super().post(request, *args, **kwargs)
 
 def csrf_failure(request, reason=""):
     messages.error(request, "Sua sessão expirou. Tente novamente.")
