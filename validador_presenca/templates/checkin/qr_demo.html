@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="{{ ttl_s }}">
     <title>QR Demo Adsum</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,10 +24,16 @@
         body {
             font-family: 'Inter', sans-serif;
         }
+        #qr-image {
+            transition: opacity 0.2s ease;
+        }
+        #qr-image.refreshing {
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body class="bg-creme h-screen overflow-hidden flex">
-    
+
     <!-- Menu lateral -->
     <aside class="w-60 bg-dark-blue flex-shrink-0">
 
@@ -94,40 +99,139 @@
     <div class="flex-1 p-8 overflow-y-auto">
         <div class="flex-1 p-8 flex items-center justify-center">
             <div class="w-full max-w-md bg-white rounded-2xl shadow-sm border border-tan/50 p-8 text-center">
-                
+
                 <p class="text-sm text-ink/60 mb-6">QR Code rotativo</p>
 
                 <div class="inline-block p-4 bg-white border-2 border-tan rounded-xl mb-6">
-                    <img src="data:image/png;base64,{{ qr_image }}" alt="QR Code" class="w-64 h-64 block">
+                    <img id="qr-image" src="data:image/png;base64,{{ qr_image }}" alt="QR Code" class="w-64 h-64 block">
                 </div>
 
                 <div class="text-xs text-ink/60 mb-4 space-y-1">
                     <p>Sessão <span class="text-dark-blue font-semibold">{{ sessao_id }}</span> - Máquina <span class="text-dark-blue font-semibold">{{ maquina_id }}</span></p>
                 </div>
 
+                <!-- Aviso sobre localização -->
+                <p id="geo-aviso" class="text-xs text-ink/60 mb-3">
+                    Permita o acesso à sua localização quando o navegador solicitar.
+                </p>
+
                 <form method="post">
                     {% csrf_token %}
-                    <input type="hidden" name="token" value="{{ token }}">
-                    <button type="submit"
-                        class="w-full bg-dark-blue hover:bg-light-blue text-creme font-semibold py-3 px-4 rounded-lg transition">
+                    <input type="hidden" name="token" id="input-token" value="{{ token }}">
+                    <input type="hidden" name="lat" id="input-lat" value="">
+                    <input type="hidden" name="lon" id="input-lon" value="">
+                    <button type="submit" id="btn-simular" disabled
+                        class="w-full bg-dark-blue hover:bg-light-blue text-creme font-semibold py-3 px-4 rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-dark-blue">
                         Simular scan
                     </button>
                 </form>
 
-                {% if resultado %}
-                    <div class="mt-5 p-3 bg-gold/20 border border-gold/40 text-dark-blue text-sm rounded-lg text-left">
-                        <p class="font-semibold">Token consumido</p>
-                        <p class="text-xs mt-1">Sessão {{ resultado.sessao_id }}  Máquina {{ resultado.maquina_id }}</p>
-                    </div>
-                {% elif request.method == "POST" %}
-                    <div class="mt-5 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg text-left">
-                        <p class="font-semibold">Token inválido</p>
-                        <p class="text-xs mt-1">Já usado, expirado ou nunca existiu.</p>
-                    </div>
-                {% endif %}
+                <!-- Area de resultados -->
+                <div id="result-area">
+                    {% if resultado %}
+                        <div class="mt-5 p-3 bg-gold/20 border border-gold/40 text-dark-blue text-sm rounded-lg text-left">
+                            <p class="font-semibold">Token consumido</p>
+                            <p class="text-xs mt-1">Sessão {{ resultado.sessao_id }}  Máquina {{ resultado.maquina_id }}</p>
+                        </div>
+                    {% elif request.method == "POST" %}
+                        <div class="mt-5 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg text-left">
+                            <p class="font-semibold">Token inválido</p>
+                            <p class="text-xs mt-1">Já usado, expirado ou nunca existiu.</p>
+                        </div>
+                    {% endif %}
+
+                    {% if geo_resultado.valida %}
+                        <div class="mt-3 p-3 bg-green-50 border border-green-200 text-green-800 text-sm rounded-lg text-left">
+                            <p class="font-semibold">Localização confirmada</p>
+                            <p class="text-xs mt-1">Distância: {{ geo_resultado.distancia_m }}m</p>
+                        </div>
+                    {% elif geo_resultado %}
+                        <div class="mt-3 p-3 bg-red-50 border border-red-200 text-red-800 text-sm rounded-lg text-left">
+                            <p class="font-semibold">Localização fora do raio</p>
+                            <p class="text-xs mt-1">Distância: {{ geo_resultado.distancia_m }}m</p>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Pede geolocalização, preenche o form e libera o botão -->
+    <script>
+        const aviso = document.getElementById("geo-aviso");
+        const inputLat = document.getElementById("input-lat");
+        const inputLon = document.getElementById("input-lon");
+        const btnSimular = document.getElementById("btn-simular");
+
+        function aplicarCoord(lat, lon) {
+            inputLat.value = lat;
+            inputLon.value = lon;
+            btnSimular.disabled = false;
+            aviso.classList.add("hidden");
+        }
+
+        const cached = sessionStorage.getItem("adsum_geo_coords");
+        if (cached) {
+            try {
+                const { lat, lon } = JSON.parse(cached);
+                aplicarCoord(lat, lon);
+            } catch (e) {
+                sessionStorage.removeItem("adsum_geo_coords");
+            }
+        }
+
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    aplicarCoord(pos.coords.latitude, pos.coords.longitude);
+                    sessionStorage.setItem("adsum_geo_coords", JSON.stringify({
+                        lat: pos.coords.latitude,
+                        lon: pos.coords.longitude,
+                    }));
+                },
+                () => {
+                    if (!inputLat.value) {
+                        aviso.textContent = "Você precisa liberar a localização pra registrar presença.";
+                        aviso.classList.remove("text-ink/60");
+                        aviso.classList.add("text-red-700");
+                    }
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+            );
+        }
+    </script>
+
+    <!-- Atualiza o QR e area de resultado a cada TTL segundos sem recarregar a pagina -->
+    <script>
+        const qrImage = document.getElementById("qr-image");
+        const inputToken = document.getElementById("input-token");
+
+        async function refreshQR() {
+            try {
+                qrImage.classList.add("refreshing");
+                const resp = await fetch(window.location.pathname);
+                const html = await resp.text();
+                const doc = new DOMParser().parseFromString(html, "text/html");
+
+                const newImg = doc.getElementById("qr-image");
+                const newTokenInput = doc.getElementById("input-token");
+                const newResultArea = doc.getElementById("result-area");
+                const currentResultArea = document.getElementById("result-area");
+
+                if (newImg) qrImage.src = newImg.src;
+                if (newTokenInput) inputToken.value = newTokenInput.value;
+                if (newResultArea && currentResultArea) {
+                    currentResultArea.innerHTML = newResultArea.innerHTML;
+                }
+            } catch (err) {
+                console.error("Erro ao atualizar QR:", err);
+            } finally {
+                qrImage.classList.remove("refreshing");
+            }
+        }
+
+        setInterval(refreshQR, {{ ttl_s|default:5 }} * 1000);
+    </script>
 
     <!-- Rodar script dos icones -->
     <script>lucide.createIcons();</script>
