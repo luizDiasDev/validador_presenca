@@ -26,7 +26,7 @@ def qr_demo(request):
         qr_token_hash = hashlib.sha256(token.encode()).hexdigest() if token else ""
 
         # dado chumbado, virá depois quando o PWA for desenvolvido
-        aluno_id = int(request.GET.get("aluno",1))
+        aluno_id = request.user.id
 
         sessao_id = resultado.sessao_id if resultado else None
         maquina_id = resultado.maquina_id if resultado else None

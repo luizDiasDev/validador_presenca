@@ -7,7 +7,8 @@ import qrcode
 import io
 import base64
 from django.contrib.auth import login
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView, LogoutView
+from apps.audit.domain.log_register import LogRegister
 
 class AdsumLoginView(LoginView):
     template_name = "accounts/login.html"
@@ -22,6 +23,29 @@ class AdsumLoginView(LoginView):
         self.request.session["read_2fa_user"] = user.id
         return redirect("accounts:read_totp")
 
+    def form_invalid(self, form):
+        LogRegister().register({
+            "autor_id": 0,
+            "origem": "accounts",
+            "acao": "LOGIN_FALHA",
+            "tabela": "usuario",
+            "linha_tabela_id": 0,
+            "payload": {"email_tentado": self.request.POST.get("username", "")},
+        })
+        return super().form_invalid(form)
+
+class AdsumLogoutView(LogoutView):
+    def post(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            LogRegister().register({
+                "autor_id": request.user.id,
+                "origem": "accounts",
+                "acao": "LOGOUT",
+                "tabela": "usuario",
+                "linha_tabela_id": request.user.id,
+                "payload": {"email": request.user.email},
+            })
+        return super().post(request, *args, **kwargs)
 
 def csrf_failure(request, reason=""):
     messages.error(request, "Sua sessão expirou. Tente novamente.")
@@ -48,8 +72,27 @@ def config_totp(request):
             user.totp_ativo = True
             user.save(update_fields=["totp_ativo"])
             del request.session["config_2fa_user"]
+
+            LogRegister().register({
+                "autor_id": user.id,
+                "origem": "accounts",
+                "acao": "TOTP_CONFIGURADO",
+                "tabela": "usuario",
+                "linha_tabela_id": user.id,
+                "payload": {"email": user.email},
+            })
+
             login(request, user)
             return redirect("validator:painel")
+
+        LogRegister().register({
+            "autor_id": user.id,
+            "origem": "accounts",
+            "acao": "TOTP_CONFIG_FALHA",
+            "tabela": "usuario",
+            "linha_tabela_id": user.id,
+            "payload": {"email": user.email},
+        })
         
         messages.error(request, "Código inválido. Tente novamente.")
 
@@ -77,8 +120,27 @@ def read_totp(request):
 
         if totp_auth.verify_code(user, code):
             del request.session["read_2fa_user"]
+
+            LogRegister().register({
+                "autor_id": user.id,
+                "origem": "accounts",
+                "acao": "LOGIN_SUCESSO",
+                "tabela": "usuario",
+                "linha_tabela_id": user.id,
+                "payload": {"email": user.email},
+            })
+
             login(request, user)
             return redirect("validator:painel")
+
+        LogRegister().register({
+            "autor_id": user.id,
+            "origem": "accounts",
+            "acao": "TOTP_FALHA",
+            "tabela": "usuario",
+            "linha_tabela_id": user.id,
+            "payload": {"email": user.email},
+        })
         
         messages.error(request, "Código incorreto.")
 

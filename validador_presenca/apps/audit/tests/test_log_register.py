@@ -2,13 +2,13 @@ import hashlib
 import json
 import pytest
 
-from apps.audit.domain.log_register import LogResister
+from apps.audit.domain.log_register import LogRegister
 from apps.audit.models import AuditLog
 
 
 @pytest.mark.django_db
 def test_first_log():
-    LogResister().register({
+    LogRegister().register({
         "autor_id": 1,
         "origem": "teste",
         "acao": "CRIADO",
@@ -24,7 +24,7 @@ def test_first_log():
 
 @pytest.mark.django_db
 def test_second_hash():
-    LogResister().register({
+    LogRegister().register({
         "autor_id": 1,
         "origem": "teste",
         "acao": "CRIADO",
@@ -34,7 +34,7 @@ def test_second_hash():
     })
     primeiro_log = AuditLog.objects.first()
 
-    LogResister().register({
+    LogRegister().register({
         "autor_id": 1,
         "origem": "teste",
         "acao": "REVISADO",
@@ -48,7 +48,7 @@ def test_second_hash():
 
 @pytest.mark.django_db
 def test_validate_hash():
-    LogResister().register({
+    LogRegister().register({
         "autor_id": 1,
         "origem": "teste",
         "acao": "CRIADO",

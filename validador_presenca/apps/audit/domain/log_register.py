@@ -4,7 +4,7 @@ import hashlib
 import json
 
 
-class LogResister:
+class LogRegister:
 
     def register(self, data_log: dict):
         last_log = AuditLog.objects.order_by("-id").first()
