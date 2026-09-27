@@ -113,6 +113,27 @@
                     <p class="text-right text-sm text-ink/70">
                         <a href="#" class="hover:text-navy-deep hover:underline">Esqueceu a senha?</a>
                     </p>
+
+                    <!-- checkbox de aceite obrigatório + links -->
+                    <div class="pt-3 border-t border-ink/10 mt-3">
+                        <label class="flex items-start gap-2 text-xs text-ink/70 cursor-pointer">
+                            <input type="checkbox" name="aceite_termos" id="aceite_termos" required
+                                class="mt-0.5 accent-navy-deep">
+                            <span>
+                                Li e aceito a
+                                <a href="{% url 'privacy:politica_privacidade' %}" class="text-navy-deep hover:underline font-semibold">Política de Privacidade</a>
+                                e o
+                                <a href="{% url 'privacy:termo_uso' %}" class="text-navy-deep hover:underline font-semibold">Termo de Uso</a>.
+                            </span>
+                        </label>
+
+                        <!-- exibe erro se o form falhou por causa do checkbox -->
+                        {% if form.aceite_termos.errors %}
+                            <p class="text-red-600 text-xs mt-2">
+                                {{ form.aceite_termos.errors.0 }}
+                            </p>
+                        {% endif %}
+                    </div>
                 </form>
 
             </div>
