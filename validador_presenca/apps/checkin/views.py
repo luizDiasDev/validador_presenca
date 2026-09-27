@@ -8,8 +8,10 @@ from apps.checkin.domain.services.qr_service import QrTokenService
 from apps.validator.domain.case import try_checkin
 from apps.institution.domain.services.geolocation_service import GeolocationService
 from apps.institution.models import Campus
+from django.contrib.auth.decorators import login_required
 
 
+@login_required
 def qr_demo(request):
     svc = QrTokenService(cache=cache)
 

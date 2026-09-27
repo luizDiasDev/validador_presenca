@@ -130,6 +130,16 @@ PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.PBKDF2PasswordHasher",
 ]
 
+SESSION_COOKIE_AGE = 1800
+
+SESSION_SAVE_EVERY_REQUEST = True
+
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+CSRF_FAILURE_VIEW = "apps.accounts.views.csrf_failure"
+
+TOTP_ENCRYPTION_KEY = os.environ.get("TOTP_ENCRYPTION_KEY")
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.1/topics/i18n/

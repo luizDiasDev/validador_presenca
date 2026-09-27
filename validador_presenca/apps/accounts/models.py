@@ -33,6 +33,7 @@ class Usuario(AbstractUser):
         blank =True,
     )
     totp_cifrado = models.BinaryField(null=True, blank=True)
+    totp_ativo = models.BooleanField(default=False)
 
     objects = UsuarioManager()
 
