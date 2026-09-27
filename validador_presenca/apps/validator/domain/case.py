@@ -1,6 +1,6 @@
 from .factory import buid_engine
 from apps.validator.models import PresencaRecord
-from apps.audit.domain.log_register import LogResister
+from apps.audit.domain.log_register import LogRegister
 
 
 def try_checkin(results_pack: dict):
@@ -18,7 +18,7 @@ def try_checkin(results_pack: dict):
         motivo=reason,
     )
 
-    LogResister().register({
+    LogRegister().register({
         "autor_id": results_pack.get("aluno_id"),
         "origem": "checkin",
         "acao": veredict.value,
