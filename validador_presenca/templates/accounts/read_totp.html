@@ -1,0 +1,47 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificação</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+        @theme {
+            --color-navy-deep: #0F1B2E;
+            --color-navy: #17263D;
+            --color-ink: #1F2A3C;
+            --font-display: 'Cinzel', serif;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="min-h-screen bg-[#F5F5F4] flex items-center justify-center p-8">
+    <div class="w-full max-w-sm bg-white rounded-2xl p-8 shadow-sm">
+        <h1 class="font-[family-name:var(--font-display)] text-2xl font-semibold text-navy-deep text-center mb-2">
+            Verificação em Duas Etapas
+        </h1>
+        <p class="text-sm text-ink/60 text-center mb-6">
+            Digite o código do seu app autenticador.
+        </p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <p class="text-red-600 text-sm mb-4 text-center">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <input type="text" name="code" maxlength="6" inputmode="numeric"
+                   class="w-full px-4 py-2.5 rounded-lg border border-ink/10 bg-white text-sm text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-navy/30">
+            <button type="submit"
+                    class="w-full bg-navy-deep hover:bg-navy text-white font-medium py-2.5 rounded-lg transition-colors">
+                Confirmar
+            </button>
+        </form>
+    </div>
+</body>
+</html>
