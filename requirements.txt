@@ -31,3 +31,6 @@ geopy==2.5.0
 argon2-cffi==25.1.0
 pyotp==2.10.0
 cryptography==50.0.1
+
+# Termo
+markdown==3.11
