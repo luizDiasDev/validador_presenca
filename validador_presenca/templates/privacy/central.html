@@ -1,0 +1,157 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central de Privacidade - Adsum</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style type="text/tailwindcss">
+        @theme {
+            --color-dark-blue: #0F1B2E;
+            --color-light-blue: #17263D;
+            --color-gold: #C9962C;
+            --color-creme: #F7F3EA;
+            --color-tan: #E9DEC4;
+            --color-ink: #1F2A3C;
+            --font-display: 'Cinzel', serif;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-creme h-screen overflow-hidden flex">
+
+    <!-- Menu lateral -->
+    <aside class="w-60 bg-dark-blue flex-shrink-0">
+        <div class="flex flex-col h-full py-6 px-4">
+
+            <!-- Logo -->
+            <div class="flex items-center gap-2 px-2 mb-8">
+                <div class="w-15 h-15 flex items-center justify-center text-dark-blue flex-shrink-0">
+                    <img src="{% static 'images/logo_bege.svg' %}" alt="Logo Adsum">
+                </div>
+                <h1 class="font-display font-bold text-2xl text-creme mb-1">ADSUM</h1>
+            </div>
+
+            <!-- Menu -->
+            <nav class="space-y-1.5 text-sm flex-1">
+                <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="book-open" class="w-4 h-4"></i> Minhas Turmas
+                </a>
+                <a href="{% url 'validator:painel' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="clipboard-list" class="w-4 h-4"></i> Histórico de Presença
+                </a>
+                <a href="{% url 'checkin:qr_demo' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="video" class="w-4 h-4"></i> Chamada ao vivo
+                </a>
+                <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="users" class="w-4 h-4"></i> Gestão de Alunos
+                </a>
+                <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="settings" class="w-4 h-4"></i> Configurar Chamada
+                </a>
+                <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="alert-triangle" class="w-4 h-4"></i> Pendências
+                </a>
+                <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Dashboard BI
+                </a>
+                <a href="{% url 'privacy:central' %}" class="flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-lg bg-gold text-dark-blue font-semibold">
+                    <span class="flex items-center gap-2.5"><i data-lucide="shield-check" class="w-4 h-4"></i> Central de Privacidade</span>
+                </a>
+            </nav>
+
+            <!-- Perfil -->
+            <div class="border-t border-white/10 pt-4 flex items-center justify-between px-2">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center text-gold text-xs font-semibold">{{ request.user.first_name|slice:":1"|default:"U" }}</div>
+                    <div class="leading-tight">
+                        <div class="text-white text-xs font-medium">{{ request.user.get_full_name|default:request.user.email }}</div>
+                    </div>
+                </div>
+                <form method="post" action="{% url 'accounts:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="flex items-center gap-2.5 text-white/40 hover:text-white/70">
+                        <i data-lucide="log-out" class="w-4 h-4 cursor-pointer"></i>
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </aside>
+
+    <!-- Divisoria do Menu lateral -->
+    <div class="w-6 bg-dark-blue">
+        <img src="{% static 'images/divisao.svg' %}" alt="Divisao">
+    </div>
+
+    <!-- Body -->
+    <div class="flex-1 p-8 overflow-y-auto">
+
+        <div class="max-w-5xl mx-auto">
+
+            <div class="mb-8">
+                <h1 class="font-[family-name:var(--font-display)] text-3xl font-bold text-light-blue mb-2">CENTRAL DE PRIVACIDADE</h1>
+                <p class="text-sm text-ink/60">Tudo relacionado aos seus dados e direitos LGPD.</p>
+            </div>
+
+            <p class="text-xs text-ink/50 uppercase tracking-wider font-semibold mb-3">Documentos oficiais</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+
+                <a href="{% url 'privacy:politica_privacidade' %}" class="block p-6 bg-white rounded-2xl shadow-sm border border-tan/50 hover:border-dark-blue transition">
+                    <div class="flex items-start gap-3 mb-3">
+                        <div>
+                            <h3 class="text-base font-semibold text-ink mb-1">Política de Privacidade</h3>
+                            <p class="text-xs text-ink/60 leading-relaxed">Quais dados coletamos, por quê e por quanto tempo. Suas garantias como titular.</p>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{% url 'privacy:termo_uso' %}" class="block p-6 bg-white rounded-2xl shadow-sm border border-tan/50 hover:border-dark-blue transition">
+                    <div class="flex items-start gap-3 mb-3">
+                        <div>
+                            <h3 class="text-base font-semibold text-ink mb-1">Termo de Uso</h3>
+                            <p class="text-xs text-ink/60 leading-relaxed">Regras de uso do Adsum. Direitos e deveres de todos os usuários.</p>
+                        </div>
+                    </div>
+                </a>
+
+            </div>
+
+            <p class="text-xs text-ink/50 uppercase tracking-wider font-semibold mb-3">Meus direitos como titular</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <a href="{% url 'privacy:solicitar_direito' %}" class="block p-6 bg-dark-blue rounded-2xl shadow-sm border border-dark-blue hover:bg-light-blue transition">
+                    <div class="flex items-start gap-3 mb-3">
+                        <div>
+                            <h3 class="text-base font-semibold text-creme mb-1">Fazer solicitação</h3>
+                            <p class="text-xs text-creme/70 leading-relaxed">Revogar consentimento, excluir conta, exportar ou corrigir seus dados.</p>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{% url 'privacy:minhas_solicitacoes' %}" class="block p-6 bg-white rounded-2xl shadow-sm border border-tan/50 hover:border-dark-blue transition">
+                    <div class="flex items-start gap-3 mb-3">
+                        <div>
+                            <h3 class="text-base font-semibold text-ink mb-1">Minhas solicitações</h3>
+                            <p class="text-xs text-ink/60 leading-relaxed">Acompanhe o status das solicitações que você já fez.</p>
+                        </div>
+                    </div>
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>lucide.createIcons();</script>
+</body>
+</html>
