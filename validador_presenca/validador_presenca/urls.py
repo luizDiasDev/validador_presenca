@@ -24,4 +24,5 @@ urlpatterns = [
     path('checkin/', include('apps.checkin.urls')),
     path('validator/', include('apps.validator.urls')),
     path("accounts/", include("apps.accounts.urls")),
+    path("privacidade/", include("apps.privacy.urls")),
 ]
