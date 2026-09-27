@@ -6,6 +6,8 @@ from django.core.cache import cache
 from django.shortcuts import render
 from apps.checkin.domain.services.qr_service import QrTokenService
 from apps.validator.domain.case import try_checkin
+from apps.institution.domain.services.geolocation_service import GeolocationService
+from apps.institution.models import Campus
 from django.contrib.auth.decorators import login_required
 
 
@@ -15,6 +17,7 @@ def qr_demo(request):
 
     # Simula scan consome token
     resultado = None
+    geo_resultado = None
     if request.method == "POST":
         token = request.POST.get("token", "")
         resultado = svc.consumir(token)
@@ -28,13 +31,33 @@ def qr_demo(request):
         sessao_id = resultado.sessao_id if resultado else None
         maquina_id = resultado.maquina_id if resultado else None
 
+        lat_raw = request.POST.get("lat", "")
+        lon_raw = request.POST.get("lon", "")
+        campus_id = 1 # vai ser dinâmico depois quando vier da sessão
+
+        geo_valida = False
+        geo_motivo = "Localização não fornecida pelo aluno"
+
+        if lat_raw and lon_raw:
+            try:
+                lat = float(lat_raw)
+                lon = float(lon_raw)
+                geo_svc = GeolocationService()
+                geo_resultado = geo_svc.validate(lat, lon, campus_id)
+                geo_valida = geo_resultado.valida
+                geo_motivo = geo_resultado.motivo
+            except (ValueError, Campus.DoesNotExist):
+                geo_motivo = "Coordenada inválida ou campus não encontrado"
+
         # informações que serão úteis no PresencaRecord
         results_pack = {
             "qr_code": resultado is not None,
             "qr_token_hash": qr_token_hash,
             "sessao_id": sessao_id,
             "maquina_id": maquina_id,
-            "aluno_id": aluno_id
+            "aluno_id": aluno_id,
+            "geo_valida": geo_valida,
+            "geo_motivo": geo_motivo,
         }
 
         try_checkin(results_pack=results_pack)
@@ -58,5 +81,6 @@ def qr_demo(request):
         "ttl_s": qr.ttl_s,
         "qr_image": qr_image_b64,
         "resultado": resultado,
+        "geo_resultado": geo_resultado,
     }
     return render(request, "checkin/qr_demo.html", contexto)
