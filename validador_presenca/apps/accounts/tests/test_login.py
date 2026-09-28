@@ -33,6 +33,7 @@ def test_wrong_password_does_not_login_and_logs_LOGIN_FALHA(db, usuario_sem_totp
     response = client.post(reverse("accounts:login"), {
         "username": "aluno.teste@umc.br",
         "password": "senha-errada",
+        "aceite_termos": "on",
     })
 
     assert response.status_code == 200  # form_invalid renderiza a mesma página
@@ -47,6 +48,7 @@ def test_first_login_without_totp_redirects_to_config(usuario_sem_totp):
     response = client.post(reverse("accounts:login"), {
         "username": "aluno.teste@umc.br",
         "password": "SenhaForte123",
+        "aceite_termos": "on",
     })
 
     assert response.status_code == 302
@@ -58,6 +60,7 @@ def test_configuring_totp_with_correct_code_activates_user_and_logs_in(usuario_s
     client.post(reverse("accounts:login"), {
         "username": "aluno.teste@umc.br",
         "password": "SenhaForte123",
+        "aceite_termos": "on",
     })
 
     client.get(reverse("accounts:config_totp"))
@@ -83,6 +86,7 @@ def test_login_with_totp_already_active_asks_for_read_code(usuario_com_totp):
     response = client.post(reverse("accounts:login"), {
         "username": "professor.teste@umc.br",
         "password": "SenhaForte123",
+        "aceite_termos": "on",
     })
 
     assert response.status_code == 302
@@ -94,6 +98,7 @@ def test_read_totp_wrong_code_logs_TOTP_FALHA(usuario_com_totp):
     client.post(reverse("accounts:login"), {
         "username": "professor.teste@umc.br",
         "password": "SenhaForte123",
+        "aceite_termos": "on",
     })
 
     client.post(reverse("accounts:read_totp"), {"code": "000000"})
@@ -108,6 +113,7 @@ def test_logout_logs_and_ends_session(usuario_com_totp):
     client.post(reverse("accounts:login"), {
         "username": "professor.teste@umc.br",
         "password": "SenhaForte123",
+        "aceite_termos": "on",
     })
     codigo = pyotp.TOTP(usuario_com_totp.segredo_em_texto_puro).now()
     client.post(reverse("accounts:read_totp"), {"code": codigo})
