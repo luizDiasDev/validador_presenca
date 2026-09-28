@@ -16,6 +16,8 @@ class AdsumLoginView(LoginView):
     def form_valid(self, form):
         user = form.get_user()
 
+        self.request.session["aceite_termos_dado"] = True  # repassa aceite pro signal do privacy processar após o login TOTP
+
         if not user.totp_ativo:
             self.request.session["config_2fa_user"] = user.id
             return redirect("accounts:config_totp")
