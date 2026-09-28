@@ -8,7 +8,8 @@ def registrar_aceite_no_login(sender, request, user, **kwargs):
     if not request:
         return
 
-    if request.POST.get("aceite_termos") != "on":
+    # só registra se o form de login validou a checkbox (sinalizado pela session)
+    if not request.session.get("aceite_termos_dado"):
         return
 
     for termo in Termo.objects.filter(ativo=True):
@@ -31,3 +32,6 @@ def registrar_aceite_no_login(sender, request, user, **kwargs):
                 "contexto": "login_form",
             },
         )
+
+    # limpa a flag após login para evitar novo registro em logins seguintes
+    request.session.pop("aceite_termos_dado", None)
