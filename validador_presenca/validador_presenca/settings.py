@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'apps.audit',
     'apps.institution',
     'apps.accounts',
+    'apps.privacy',
 ]
 
 MIDDLEWARE = [
