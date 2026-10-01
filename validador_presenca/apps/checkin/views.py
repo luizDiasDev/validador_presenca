@@ -7,6 +7,7 @@ from django.shortcuts import render
 from apps.checkin.domain.services.qr_service import QrTokenService
 from apps.validator.domain.case import try_checkin
 from apps.institution.domain.services.geolocation_service import GeolocationService
+from apps.institution.domain.services.geocoding_service import GeocodingService
 from apps.institution.models import Campus
 from django.contrib.auth.decorators import login_required
 
@@ -18,6 +19,7 @@ def qr_demo(request):
     # Simula scan consome token
     resultado = None
     geo_resultado = None
+    endereco_aluno = None
     if request.method == "POST":
         token = request.POST.get("token", "")
         resultado = svc.consumir(token)
@@ -37,17 +39,19 @@ def qr_demo(request):
 
         geo_valida = False
         geo_motivo = "Localização não fornecida pelo aluno"
-
+    
         if lat_raw and lon_raw:
             try:
                 lat = float(lat_raw)
                 lon = float(lon_raw)
                 geo_svc = GeolocationService()
                 geo_resultado = geo_svc.validate(lat, lon, campus_id)
+                endereco_decoding = GeocodingService()
+                endereco_aluno = endereco_decoding.translate_location(lat_raw,lon_raw)
                 geo_valida = geo_resultado.valida
                 geo_motivo = geo_resultado.motivo
             except (ValueError, Campus.DoesNotExist):
-                geo_motivo = "Coordenada inválida ou campus não encontrado"
+                geo_motivo = f"Coordenada inválida ou campus não encontrado"
 
         # informações que serão úteis no PresencaRecord
         results_pack = {
@@ -82,5 +86,6 @@ def qr_demo(request):
         "qr_image": qr_image_b64,
         "resultado": resultado,
         "geo_resultado": geo_resultado,
+        "endereco_aluno": endereco_aluno,
     }
     return render(request, "checkin/qr_demo.html", contexto)
