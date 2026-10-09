@@ -78,13 +78,17 @@
         <!-- Perfil -->
         <div class="border-t border-white/10 pt-4 flex items-center justify-between px-2">
             <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center text-gold text-xs font-semibold">AH</div>
+                <div class="w-8 h-8 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center text-gold text-xs font-semibold">{{ request.user.first_name|slice:":1"|default:"U" }}</div>
                 <div class="leading-tight">
-                    <div class="text-white text-xs font-medium">Prof. Alessandro</div>
-                    <div class="text-white/40 text-[10px]">Internet das Coisas</div>
+                    <div class="text-white text-xs font-medium">{{ request.user.get_full_name|default:request.user.email }}</div>
                 </div>
             </div>
-            <i data-lucide="log-out" class="w-4 h-4 text-white/40"></i>
+            <form method="post" action="{% url 'accounts:logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="flex items-center gap-2.5 text-white/40 hover:text-white/70">
+                    <i data-lucide="log-out" class="w-4 h-4 text-white/40 hover:text-white/70 cursor-pointer"></i>
+                </button>
+            </form>
         </div>
 
     </div>

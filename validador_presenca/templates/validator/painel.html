@@ -73,9 +73,9 @@
         <!-- Perfil -->
         <div class="border-t border-white/10 pt-4 flex items-center justify-between px-2">
             <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center text-gold text-xs font-semibold">PA</div>
+                <div class="w-8 h-8 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center text-gold text-xs font-semibold">{{ request.user.first_name|slice:":1"|default:"U" }}</div>
                 <div class="leading-tight">
-                    <div class="text-white text-xs font-medium">Acesso Professor</div>
+                    <div class="text-white text-xs font-medium">{{ request.user.get_full_name|default:request.user.email }}</div>
                 </div>
             </div>
             <form method="post" action="{% url 'accounts:logout' %}">
