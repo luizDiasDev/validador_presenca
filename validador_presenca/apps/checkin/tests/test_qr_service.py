@@ -1,4 +1,3 @@
-import time
 import fakeredis
 import pytest
 from apps.checkin.domain.services.qr_service import QrTokenService
@@ -35,6 +34,9 @@ def test_consumir_token_ficticio_retorna_none(svc):
 
 def test_consumir_token_expirado_retorna_none(svc):
     qr = svc.gerar(sessao_id=1, maquina_id=4, ttl_s=2)
-    time.sleep(3)
+    assert svc.cache.ttl(qr.token) == 2
+
+    # força o vencimento na hora, no lugar de esperar o TTL passar
+    svc.cache.expire(qr.token, 0)
 
     assert svc.consumir(qr.token) is None
