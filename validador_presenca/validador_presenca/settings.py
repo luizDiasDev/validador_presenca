@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'apps.institution',
     'apps.accounts',
     'apps.privacy',
+    'apps.biometrics',
 ]
 
 MIDDLEWARE = [
