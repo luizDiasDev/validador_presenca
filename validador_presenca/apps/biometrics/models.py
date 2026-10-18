@@ -14,7 +14,7 @@ class Biometria(models.Model):
     algoritmo_usado = models.CharField(max_length=50)
     dimensao = models.PositiveSmallIntegerField()
     qtd_amostras = models.PositiveSmallIntegerField(default=1)
-    data_cadastro = models.DateTimeField(auto_now_add=True)
+    data_criacao = models.DateTimeField(auto_now_add=True)
     data_atualizacao = models.DateTimeField(auto_now=True)
 
     class Meta:
