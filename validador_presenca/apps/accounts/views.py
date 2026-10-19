@@ -9,6 +9,7 @@ import base64
 from django.contrib.auth import login
 from django.contrib.auth.views import LoginView, LogoutView
 from apps.audit.domain.log_register import LogRegister
+from django.conf import settings
 
 class AdsumLoginView(LoginView):
     template_name = "accounts/login.html"
@@ -61,7 +62,7 @@ def config_totp(request):
 
     user = Usuario.objects.get(id=user_id)
 
-    totp_auth = TotpAuth(cipher=Cipher())
+    totp_auth = TotpAuth(cipher=Cipher(settings.TOTP_ENCRYPTION_KEY))
 
     if not user.totp_cifrado:
         totp_auth.create_secret(user)
@@ -115,7 +116,7 @@ def read_totp(request):
 
     user = Usuario.objects.get(id=user_id)
 
-    totp_auth  = TotpAuth(cipher=Cipher())
+    totp_auth  = TotpAuth(cipher=Cipher(settings.TOTP_ENCRYPTION_KEY))
 
     if request.method == "POST":
         code = request.POST.get("code")

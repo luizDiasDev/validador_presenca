@@ -2,6 +2,7 @@ import pyotp
 
 from apps.accounts.domain.cipher import Cipher
 from apps.accounts.domain.totp_auth import TotpAuth
+from django.conf import settings
 
 
 class UsuarioFalso:
@@ -12,7 +13,7 @@ class UsuarioFalso:
 
 
 def test_create_secret_fills_user_totp_cifrado():
-    totp_auth = TotpAuth(cipher=Cipher())
+    totp_auth = TotpAuth(cipher=Cipher(settings.TOTP_ENCRYPTION_KEY))
     usuario = UsuarioFalso()
 
     totp_auth.create_secret(usuario)
@@ -22,7 +23,7 @@ def test_create_secret_fills_user_totp_cifrado():
 
 
 def test_create_uri_contains_email_and_system_name():
-    totp_auth = TotpAuth(cipher=Cipher())
+    totp_auth = TotpAuth(cipher=Cipher(settings.TOTP_ENCRYPTION_KEY))
     usuario = UsuarioFalso()
     totp_auth.create_secret(usuario)
 
@@ -33,7 +34,7 @@ def test_create_uri_contains_email_and_system_name():
 
 
 def test_verify_code_accepts_correct_code():
-    totp_auth = TotpAuth(cipher=Cipher())
+    totp_auth = TotpAuth(cipher=Cipher(settings.TOTP_ENCRYPTION_KEY))
     usuario = UsuarioFalso()
     segredo = totp_auth.create_secret(usuario)
 
@@ -43,7 +44,7 @@ def test_verify_code_accepts_correct_code():
 
 
 def test_verify_code_rejects_wrong_code():
-    totp_auth = TotpAuth(cipher=Cipher())
+    totp_auth = TotpAuth(cipher=Cipher(settings.TOTP_ENCRYPTION_KEY))
     usuario = UsuarioFalso()
     totp_auth.create_secret(usuario)
 
@@ -51,7 +52,7 @@ def test_verify_code_rejects_wrong_code():
 
 
 def test_verify_code_without_totp_configured_returns_false():
-    totp_auth = TotpAuth(cipher=Cipher())
+    totp_auth = TotpAuth(cipher=Cipher(settings.TOTP_ENCRYPTION_KEY))
     usuario = UsuarioFalso()  # totp_cifrado continua None
 
     assert totp_auth.verify_code(usuario, "123456") is False
