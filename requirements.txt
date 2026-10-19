@@ -35,3 +35,6 @@ cryptography==50.0.1
 
 # Termo
 markdown==3.11
+
+#Biometria
+numpy==2.5.4
