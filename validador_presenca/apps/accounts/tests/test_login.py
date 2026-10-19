@@ -7,6 +7,7 @@ from apps.accounts.models import Usuario
 from apps.accounts.domain.cipher import Cipher
 from apps.accounts.domain.totp_auth import TotpAuth
 from apps.audit.models import AuditLog
+from django.conf import settings
 
 
 @pytest.fixture
@@ -18,7 +19,7 @@ def usuario_sem_totp(db):
 def usuario_com_totp(db):
     usuario = Usuario.objects.create_user(email="professor.teste@umc.br", password="SenhaForte123")
 
-    segredo = TotpAuth(cipher=Cipher()).create_secret(usuario)
+    segredo = TotpAuth(cipher=Cipher(settings.TOTP_ENCRYPTION_KEY)).create_secret(usuario)
     usuario.totp_ativo = True
     usuario.save(update_fields=["totp_cifrado", "totp_ativo"])
 
@@ -66,7 +67,7 @@ def test_configuring_totp_with_correct_code_activates_user_and_logs_in(usuario_s
     client.get(reverse("accounts:config_totp"))
 
     usuario_sem_totp.refresh_from_db()
-    segredo = Cipher().decrypt(bytes(usuario_sem_totp.totp_cifrado))
+    segredo = Cipher(settings.TOTP_ENCRYPTION_KEY).decrypt_text(bytes(usuario_sem_totp.totp_cifrado))
     codigo = pyotp.TOTP(segredo).now()
 
     response = client.post(reverse("accounts:config_totp"), {"code": codigo})
