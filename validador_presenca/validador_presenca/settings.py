@@ -142,6 +142,8 @@ CSRF_FAILURE_VIEW = "apps.accounts.views.csrf_failure"
 
 TOTP_ENCRYPTION_KEY = os.environ.get("TOTP_ENCRYPTION_KEY")
 
+BIOMETRIC_ENCRYPTION_KEY = os.environ.get("BIOMETRIC_ENCRYPTION_KEY")
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.1/topics/i18n/
