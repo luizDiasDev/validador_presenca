@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'apps.accounts',
     'apps.privacy',
     'apps.biometrics',
+    'apps.teacher_panel',
 ]
 
 MIDDLEWARE = [
