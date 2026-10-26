@@ -4,6 +4,14 @@ from django.db import models
 
 class ChamadaSession(models.Model):
     # Definindo FK
+    aula = models.ForeignKey(
+        "teacher_panel.Aula",
+        on_delete=models.PROTECT,
+        db_column="aula_id",
+        related_name="sessoes_chamada",
+        null=True,
+        blank=True,
+    )
     sala = models.ForeignKey(
         "institution.Room",
         on_delete=models.PROTECT,
@@ -38,4 +46,5 @@ class ChamadaSession(models.Model):
 
     # Como vai retornar
     def __str__(self):
-        return f"Sessão Chamada #{self.pk}. Abre em: ({self.abre_em:%d/%m %H:%M}). Fecha em ({self.fecha_em:%d/%m %H:%M})"
+        aula_nome = f" - {self.aula.disciplina.nome}" if self.aula else ""
+        return f"Sessão Chamada #{self.pk} (Seq {self.sequencia}){aula_nome} [{self.abre_em:%d/%m %H:%M}]"

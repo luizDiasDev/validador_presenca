@@ -38,3 +38,7 @@ markdown==3.11
 
 #Biometria
 numpy==2.5.4
+
+# Railway
+gunicorn==26.2.0
+whitenoise==6.12.0

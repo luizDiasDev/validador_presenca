@@ -3,7 +3,9 @@ import hashlib
 import io
 import qrcode
 from django.core.cache import cache
+from django.http import JsonResponse
 from django.shortcuts import render
+from apps.checkin.domain.services.chamada_service import ChamadaService
 from apps.checkin.domain.services.qr_service import QrTokenService
 from apps.validator.domain.case import try_checkin
 from apps.institution.domain.services.geolocation_service import GeolocationService
@@ -89,3 +91,25 @@ def qr_demo(request):
         "endereco_aluno": endereco_aluno,
     }
     return render(request, "checkin/qr_demo.html", contexto)
+
+# Endpoint de pooling para o Pyside6
+def status_sessao_sala(request, sala_id: int):
+    service = ChamadaService()
+    sessao = service.sessao_aberta_da_sala(sala_id)
+
+    if not sessao:
+        return JsonResponse({
+            "ativa": False,
+            "mensagem": "Nenhuma chamada em andamento para esta sala.",
+        })
+
+    disciplina_nome = sessao.aula.disciplina.nome if sessao.aula else "Chamada Manual"
+
+    return JsonResponse({
+        "ativa": True,
+        "sessao_id": sessao.id,
+        "sequencia": sessao.sequencia,
+        "disciplina": disciplina_nome,
+        "abre_em": sessao.abre_em.isoformat(),
+        "fecha_em": sessao.fecha_em.isoformat(),
+    })
