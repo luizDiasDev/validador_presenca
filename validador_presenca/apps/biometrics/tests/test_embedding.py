@@ -1,64 +1,117 @@
 import numpy as np
 import pytest
 
-from apps.biometrics.domain import embedding as emb
+from apps.biometrics.domain.embedding import (
+    InvalidEmbeddingError,
+    average_embedding,
+    bytes_to_embedding,
+    cosine_similarity,
+    embedding_to_bytes,
+    validate_and_normalize,
+)
 
-DIM = 512
-
-
-def test_validar_normaliza_o_vetor():
-    vetor = np.full(DIM, 3.0)
-
-    resultado = emb.validar(vetor, DIM)
-
-    assert resultado.dtype == np.float32
-    assert np.linalg.norm(resultado) == pytest.approx(1.0, abs=1e-5)
+EMBEDDING_SIZE = 512
 
 
-@pytest.mark.parametrize("vetor", [
-    np.ones(DIM - 1),          # tamanho errado
-    np.ones((2, DIM)),         # dimensão errada
-    np.zeros(DIM),             # vetor nulo
-    np.full(DIM, np.nan),      # NaN
-    np.full(DIM, np.inf),      # infinito
-    ["a"] * DIM,               # não numérico
-    None,                      # ausente
-])
-def test_validar_recusa_vetores_invalidos(vetor):
-    with pytest.raises(emb.EmbeddingInvalido):
-        emb.validar(vetor, DIM)
+def random_vector(seed: int) -> np.ndarray:
+    return np.random.default_rng(seed).normal(size=EMBEDDING_SIZE)
 
 
-def test_media_normalizada_devolve_vetor_unitario_proximo_das_amostras():
-    base = np.random.default_rng(1).normal(size=DIM)
-    amostras = [base + 0.05 * np.random.default_rng(i).normal(size=DIM) for i in range(5)]
+# ---------- validate_and_normalize ----------
 
-    media = emb.media_normalizada(amostras, DIM)
+def test_returns_vector_with_length_one_pointing_the_same_way():
+    vector = np.full(EMBEDDING_SIZE, 3.0)
 
-    assert np.linalg.norm(media) == pytest.approx(1.0, abs=1e-5)
-    assert emb.similaridade_cosseno(media, emb.validar(base, DIM)) > 0.95
+    normalized = validate_and_normalize(vector, EMBEDDING_SIZE)
 
-
-def test_media_normalizada_recusa_lista_vazia():
-    with pytest.raises(emb.EmbeddingInvalido):
-        emb.media_normalizada([], DIM)
+    assert np.linalg.norm(normalized) == pytest.approx(1.0, abs=1e-6)
+    
+    assert np.allclose(normalized, normalized[0])
 
 
-def test_similaridade_cosseno_de_vetores_iguais_e_opostos():
-    v = emb.validar(np.random.default_rng(2).normal(size=DIM), DIM)
+def test_accepts_plain_python_list_like_the_json_sends():
+    normalized = validate_and_normalize([1.0] * EMBEDDING_SIZE, EMBEDDING_SIZE)
 
-    assert emb.similaridade_cosseno(v, v) == pytest.approx(1.0, abs=1e-5)
-    assert emb.similaridade_cosseno(v, -v) == pytest.approx(-1.0, abs=1e-5)
-
-
-def test_bytes_ida_e_volta_preserva_o_vetor():
-    v = emb.validar(np.random.default_rng(3).normal(size=DIM), DIM)
-
-    de_volta = emb.de_bytes(emb.para_bytes(v), DIM)
-
-    assert np.allclose(v, de_volta)
+    assert normalized.dtype == np.float32
+    assert normalized.shape == (EMBEDDING_SIZE,)
 
 
-def test_de_bytes_recusa_tamanho_inesperado():
-    with pytest.raises(emb.EmbeddingInvalido):
-        emb.de_bytes(b"\x00" * 16, DIM)
+@pytest.mark.parametrize("invalid_vector", [
+    np.ones(EMBEDDING_SIZE - 1),          # tamanho errado
+    np.ones((2, EMBEDDING_SIZE)),         # lista de listas
+    np.zeros(EMBEDDING_SIZE),             # vetor zerado (sem direção)
+    np.full(EMBEDDING_SIZE, np.nan),      # NaN
+    np.full(EMBEDDING_SIZE, np.inf),      # infinito
+    ["a"] * EMBEDDING_SIZE,               # não numérico
+    None,                                 # nada enviado
+], ids=["wrong_size", "nested_list", "all_zeros", "nan", "infinite", "text", "none"])
+def test_rejects_invalid_vectors(invalid_vector):
+    with pytest.raises(InvalidEmbeddingError):
+        validate_and_normalize(invalid_vector, EMBEDDING_SIZE)
+
+
+# ---------- average_embedding ----------
+
+def test_average_has_length_one_and_stays_close_to_the_samples():
+    base_face = random_vector(1)
+    
+    samples = [base_face + 0.05 * random_vector(seed) for seed in range(10, 15)]
+
+    template = average_embedding(samples, EMBEDDING_SIZE)
+
+    assert np.linalg.norm(template) == pytest.approx(1.0, abs=1e-6)
+    for sample in samples:
+        assert cosine_similarity(template, validate_and_normalize(sample, EMBEDDING_SIZE)) > 0.99
+
+
+def test_average_rejects_empty_list():
+    with pytest.raises(InvalidEmbeddingError):
+        average_embedding([], EMBEDDING_SIZE)
+
+
+def test_average_rejects_when_any_sample_is_broken():
+    samples = [random_vector(1), np.full(EMBEDDING_SIZE, np.nan)]
+
+    with pytest.raises(InvalidEmbeddingError):
+        average_embedding(samples, EMBEDDING_SIZE)
+
+
+# ---------- cosine_similarity ----------
+
+def test_cosine_is_one_for_same_vector_and_minus_one_for_opposite():
+    vector = validate_and_normalize(random_vector(2), EMBEDDING_SIZE)
+
+    assert cosine_similarity(vector, vector) == pytest.approx(1.0, abs=1e-6)
+    assert cosine_similarity(vector, -vector) == pytest.approx(-1.0, abs=1e-6)
+
+
+def test_cosine_is_close_to_zero_for_unrelated_vectors():
+    first = validate_and_normalize(random_vector(3), EMBEDDING_SIZE)
+    second = validate_and_normalize(random_vector(4), EMBEDDING_SIZE)
+
+    assert abs(cosine_similarity(first, second)) < 0.2
+
+
+# ---------- embedding_to_bytes / bytes_to_embedding ----------
+
+def test_bytes_round_trip_keeps_the_vector():
+    vector = validate_and_normalize(random_vector(5), EMBEDDING_SIZE)
+
+    raw_bytes = embedding_to_bytes(vector)
+    restored = bytes_to_embedding(raw_bytes, EMBEDDING_SIZE)
+
+    assert len(raw_bytes) == EMBEDDING_SIZE * 4 
+    assert np.array_equal(restored, vector)
+
+
+def test_restored_vector_can_be_modified():
+    restored = bytes_to_embedding(embedding_to_bytes(np.ones(EMBEDDING_SIZE)), EMBEDDING_SIZE)
+
+    restored[0] = 2.0 
+
+    assert restored[0] == 2.0
+
+
+def test_bytes_with_unexpected_size_are_rejected():
+    with pytest.raises(InvalidEmbeddingError):
+        bytes_to_embedding(b"\x00" * 100, EMBEDDING_SIZE)

@@ -3,6 +3,24 @@ from django.db import models
 # Create your models here.
 
 class ChamadaSession(models.Model):
+    # Definindo FK
+    sala = models.ForeignKey(
+        "institution.Room",
+        on_delete=models.PROTECT,
+        db_column="sala_id",
+        related_name="sessoes_chamada",
+        null=True,
+        blank=True,
+    )
+    professor = models.ForeignKey(
+        "accounts.Professor",
+        on_delete=models.PROTECT,
+        db_column="professor_id",
+        related_name="sessoes_chamada",
+        null=True,
+        blank=True,
+    )
+
     # Definindo Colunas
     sequencia = models.IntegerField(default=1)
     abre_em = models.DateTimeField()
