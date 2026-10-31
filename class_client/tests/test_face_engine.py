@@ -21,7 +21,7 @@ def fake_insightface_face(**overrides):
 
 
 def test_converts_every_field():
-    reading = FaceEngine._to_face_reading(fake_insightface_face())
+    reading = FaceEngine._to_face_model(fake_insightface_face())
 
     assert reading.embedding.shape == (512,)
     assert reading.detection_score == pytest.approx(0.88)
@@ -32,26 +32,26 @@ def test_converts_every_field():
 
 
 def test_normalizes_embedding_when_library_does_not():
-    reading = FaceEngine._to_face_reading(fake_insightface_face(normed_embedding=None))
+    reading = FaceEngine._to_face_model(fake_insightface_face(normed_embedding=None))
 
     assert np.linalg.norm(reading.embedding) == pytest.approx(1.0, abs=1e-6)
 
 
 def test_missing_liveness_becomes_unavailable():
-    reading = FaceEngine._to_face_reading(fake_insightface_face(liveness=None))
+    reading = FaceEngine._to_face_model(fake_insightface_face(liveness=None))
 
     assert reading.live_status == LIVENESS_STATUS_UNAVAILABLE
     assert reading.live_score is None
 
 
 def test_unknown_liveness_status_becomes_unavailable():
-    reading = FaceEngine._to_face_reading(fake_insightface_face(liveness={"status": "weird"}))
+    reading = FaceEngine._to_face_model(fake_insightface_face(liveness={"status": "weird"}))
 
     assert reading.live_status == LIVENESS_STATUS_UNAVAILABLE
 
 
 def test_missing_head_pose_leaves_angles_empty():
-    reading = FaceEngine._to_face_reading(fake_insightface_face(pose=None))
+    reading = FaceEngine._to_face_model(fake_insightface_face(pose=None))
 
     assert reading.yaw is None and reading.pitch is None and reading.roll is None
 
