@@ -1,7 +1,3 @@
-"""
-Teste com o InsightFace de verdade (baixa ~280 MB na primeira vez).
-Rode com:  set ADSUM_REAL_MODELS=1  e depois  pytest -m real_models -s
-"""
 import os
 
 import numpy as np
@@ -38,7 +34,7 @@ def test_reads_one_face_with_every_field(engine, image_with_face):
     assert 0.0 <= reading.live_score <= 1.0
     assert reading.yaw is not None
     print(f"\nyaw={reading.yaw:.1f} pitch={reading.pitch:.1f} live={reading.live_score:.2f} "
-          f"largura={reading.face_width:.0f}px")
+          f"largura={reading.face_width():.0f}px")
 
 
 def test_same_image_twice_gives_cosine_close_to_one(engine, image_with_face):

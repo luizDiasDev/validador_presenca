@@ -1,4 +1,3 @@
-"""Testes da tradução InsightFace -> FaceReading, com rostos falsos (sem baixar modelo)."""
 from types import SimpleNamespace
 
 import numpy as np
