@@ -15,11 +15,13 @@ class FaceEngine:
         detection_size: tuple = (640, 640),
         use_liveness: bool = True,
         providers: tuple = ("CPUExecutionProvider",),
+        allowed_modules: tuple = ("detection", "recognition", "landmark_3d_68"),
     ):
         self.model_name = model_name
         self.detection_size = detection_size
         self.use_liveness = use_liveness
         self.providers = list(providers)
+        self.allowed_modules = list(allowed_modules)  
         self._face_analysis = None
 
     def is_loaded(self) -> bool:
@@ -28,7 +30,11 @@ class FaceEngine:
     def load(self) -> "FaceEngine":
         from insightface.app import FaceAnalysis
 
-        options = {"name": self.model_name, "providers": self.providers}
+        options = {
+            "name": self.model_name,
+            "providers": self.providers,
+            "allowed_modules": self.allowed_modules,
+        }
 
         if self.use_liveness:
             options.update(addons=["liveness"], liveness_mode="observe")
