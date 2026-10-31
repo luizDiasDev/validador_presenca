@@ -12,6 +12,7 @@ from apps.institution.domain.services.geolocation_service import GeolocationServ
 from apps.institution.domain.services.geocoding_service import GeocodingService
 from apps.institution.models import Campus
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseBadRequest, JsonResponse
 
 
 @login_required
@@ -70,8 +71,12 @@ def qr_demo(request):
         
 
     # Gera novo QR
-    sessao_id = int(request.GET.get("sessao", 1))
-    maquina_id = int(request.GET.get("maquina", 1))
+    try:
+        sessao_id = int(request.GET.get("sessao", 1))
+        maquina_id = int(request.GET.get("maquina", 1))
+    except ValueError:
+        return HttpResponseBadRequest("Parâmetros sessao e maquina devem ser números inteiros.")
+    
     qr = svc.gerar(sessao_id=sessao_id, maquina_id=maquina_id)
 
     # Renderiza QR
