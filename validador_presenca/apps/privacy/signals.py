@@ -12,7 +12,7 @@ def registrar_aceite_no_login(sender, request, user, **kwargs):
     if not request.session.get("aceite_termos_dado"):
         return
 
-    for termo in Termo.objects.filter(ativo=True):
+    for termo in Termo.objects.filter(ativo=True).exclude(tipo=Termo.TIPO_BIOMETRICO):
         ja_aceitou = AceiteTermo.objects.filter(
             usuario=user,
             termo=termo,
