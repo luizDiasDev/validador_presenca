@@ -30,10 +30,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-07(z@3(3#zv4rtr^3=u$v1-m54fzrl^b(9z60p!rs+=#nrzwuf'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Ativa debug local e desativa em produção
+DEBUG = os.environ.get("DEBUG", "True").lower() in ("true", "1", "yes")
 
-ALLOWED_HOSTS = []
+# Domínios autorizados a acessar a aplicação
+ALLOWED_HOSTS = os.environ.get(
+    "ALLOWED_HOSTS",
+    "localhost,127.0.0.1,.railway.app,.up.railway.app"
+).split(",")
 
+# Permite envio de formulários (POST/Login) via HTTPS sem dar erro 403
+CSRF_TRUSTED_ORIGINS = os.environ.get(
+    "CSRF_TRUSTED_ORIGINS",
+    "https://*.railway.app,https://*.up.railway.app,http://localhost:8000"
+).split(",")
+
+# Informa ao Django que está rodando atrás do HTTPS do Railway
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Application definition
 
@@ -51,10 +64,12 @@ INSTALLED_APPS = [
     'apps.accounts',
     'apps.privacy',
     'apps.biometrics',
+    'apps.teacher_panel',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -166,6 +181,18 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
+# Onde o collectstatic junta os arquivos para produção
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Compacta os arquivos estáticos no deploy
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration

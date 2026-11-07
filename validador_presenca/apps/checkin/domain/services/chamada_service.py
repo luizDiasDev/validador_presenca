@@ -7,7 +7,8 @@ from apps.audit.domain.log_register import LogRegister
 from apps.checkin.models import ChamadaSession
 from apps.institution.models import Room
 
-DURACAO_PADRAO_MIN = 50
+# Duração padrão que o popup do QR Code fica aberto na tela (5 minutos)
+DURACAO_PADRAO_MIN = 5
 
 
 class ChamadaJaAbertaError(Exception):
@@ -34,15 +35,25 @@ class ChamadaService:
 
     def sessao_aberta_da_sala(self, sala_id: int) -> ChamadaSession | None:
         agora = self.clock()
-        return ChamadaSession.objects.filter(
-            sala_id=sala_id,
-            abre_em__lte=agora,
-            fecha_em__gt=agora,
-        ).first()
+        return (
+            ChamadaSession.objects.select_related("aula__disciplina", "professor__usuario")
+            .filter(
+                sala_id=sala_id,
+                abre_em__lte=agora,
+                fecha_em__gt=agora,
+            )
+            .first()
+        )
 
     # Garante que se o log ou o banco falharem, desfaz tudo (rollback).
     @transaction.atomic
-    def abrir(self, sala_id: int, professor, duracao_min: int = DURACAO_PADRAO_MIN) -> ChamadaSession:
+    def abrir(
+        self,
+        sala_id: int,
+        professor,
+        aula=None,
+        duracao_min: int = DURACAO_PADRAO_MIN,
+    ) -> ChamadaSession:
         if duracao_min <= 0:
             raise ValueError("A duração da chamada deve ser maior que zero")
 
@@ -60,6 +71,7 @@ class ChamadaService:
         sessao = ChamadaSession.objects.create(
             sala_id=sala_id,
             professor=professor,
+            aula=aula,
             sequencia=sequencia,
             abre_em=agora,
             fecha_em=agora + timedelta(minutes=duracao_min),
@@ -93,6 +105,7 @@ class ChamadaService:
             "linha_tabela_id": sessao.id,
             "payload": {
                 "sala_id": sessao.sala_id,
+                "aula_id": sessao.aula_id,
                 "sequencia": sessao.sequencia,
                 "abre_em": sessao.abre_em.isoformat(),
                 "fecha_em": sessao.fecha_em.isoformat(),

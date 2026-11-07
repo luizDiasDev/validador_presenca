@@ -1,0 +1,1 @@
+web: python validador_presenca/manage.py migrate && python validador_presenca/manage.py collectstatic --noinput && gunicorn --chdir validador_presenca validador_presenca.wsgi:application --bind 0.0.0.0:$PORT

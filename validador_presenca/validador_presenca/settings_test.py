@@ -36,3 +36,6 @@ CACHES = {
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.MD5PasswordHasher",
 ]
+
+# remove o WhiteNoise nos testes (testes não precisam de arquivos estáticos)
+MIDDLEWARE = [m for m in MIDDLEWARE if "whitenoise" not in m]
