@@ -36,7 +36,9 @@ class ChamadaService:
     def sessao_aberta_da_sala(self, sala_id: int) -> ChamadaSession | None:
         agora = self.clock()
         return (
-            ChamadaSession.objects.select_related("aula__disciplina", "professor__usuario")
+            ChamadaSession.objects.select_related(
+                "aula__disciplina", "professor__usuario"
+            )
             .filter(
                 sala_id=sala_id,
                 abre_em__lte=agora,
@@ -53,6 +55,8 @@ class ChamadaService:
         professor,
         aula=None,
         duracao_min: int = DURACAO_PADRAO_MIN,
+        duracao_qr_s: int = 5,
+        tempos_cobertos: int = 1,
     ) -> ChamadaSession:
         if duracao_min <= 0:
             raise ValueError("A duração da chamada deve ser maior que zero")
@@ -73,6 +77,8 @@ class ChamadaService:
             professor=professor,
             aula=aula,
             sequencia=sequencia,
+            tempos_cobertos=tempos_cobertos,
+            duracao_qr_s=duracao_qr_s,
             abre_em=agora,
             fecha_em=agora + timedelta(minutes=duracao_min),
         )
@@ -85,7 +91,9 @@ class ChamadaService:
         sessao = ChamadaSession.objects.select_for_update().get(pk=sessao_id)
 
         if sessao.professor_id != professor.id:
-            raise ChamadaSemPermissaoError("Só o professor que abriu a chamada pode encerrá-la")
+            raise ChamadaSemPermissaoError(
+                "Só o professor que abriu a chamada pode encerrá-la"
+            )
 
         if not self.esta_aberta(sessao):
             raise ChamadaJaEncerradaError(f"A chamada #{sessao.pk} já está encerrada")
@@ -97,17 +105,20 @@ class ChamadaService:
         return sessao
 
     def _auditar(self, acao: str, sessao: ChamadaSession, professor):
-        self.log_register.register({
-            "autor_id": professor.usuario_id,
-            "origem": "checkin",
-            "acao": acao,
-            "tabela": "sessao_chamada",
-            "linha_tabela_id": sessao.id,
-            "payload": {
-                "sala_id": sessao.sala_id,
-                "aula_id": sessao.aula_id,
-                "sequencia": sessao.sequencia,
-                "abre_em": sessao.abre_em.isoformat(),
-                "fecha_em": sessao.fecha_em.isoformat(),
-            },
-        })
+        self.log_register.register(
+            {
+                "autor_id": professor.usuario_id,
+                "origem": "checkin",
+                "acao": acao,
+                "tabela": "sessao_chamada",
+                "linha_tabela_id": sessao.id,
+                "payload": {
+                    "sala_id": sessao.sala_id,
+                    "aula_id": sessao.aula_id,
+                    "sequencia": sessao.sequencia,
+                    "tempos_cobertos": sessao.tempos_cobertos,
+                    "abre_em": sessao.abre_em.isoformat(),
+                    "fecha_em": sessao.fecha_em.isoformat(),
+                },
+            }
+        )

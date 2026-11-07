@@ -31,6 +31,7 @@ class ChamadaSession(models.Model):
 
     # Definindo Colunas
     sequencia = models.IntegerField(default=1)
+    tempos_cobertos = models.PositiveSmallIntegerField(default=1)
     abre_em = models.DateTimeField()
     fecha_em = models.DateTimeField()
     duracao_qr_s = models.PositiveSmallIntegerField(default=5)
