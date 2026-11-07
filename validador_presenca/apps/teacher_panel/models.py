@@ -99,6 +99,7 @@ class Aula(models.Model):
     dia_semana = models.IntegerField(choices=DIAS_SEMANA)
     hora_inicio = models.TimeField()
     hora_fim = models.TimeField()
+    tempos_aula = models.PositiveSmallIntegerField(default=4)
     data_criacao = models.DateTimeField(auto_now_add=True)
     data_atualizacao = models.DateTimeField(auto_now=True)
 

@@ -1,0 +1,199 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pendências de Presença | ADSUM</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style type="text/tailwindcss">
+        @theme {
+            --color-dark-blue: #0F1B2E;
+            --color-light-blue: #17263D;
+            --color-gold: #C9962C;
+            --color-creme: #F7F3EA;
+            --color-tan: #E9DEC4;
+            --color-ink: #1F2A3C;
+            --font-display: 'Cinzel', serif;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-creme h-screen overflow-hidden flex">
+
+    <!-- Menu lateral -->
+    <aside class="w-60 bg-dark-blue flex-shrink-0">
+        <div class="flex flex-col h-full py-6 px-4">
+            <div class="flex items-center gap-2 px-2 mb-8">
+                <div class="w-15 h-15 flex items-center justify-center text-dark-blue flex-shrink-0">
+                    <img src="{% static 'images/logo_bege.svg' %}" alt="Logo Adsum">
+                </div>
+                <h1 class="font-display font-bold text-2xl text-creme mb-1">ADSUM</h1>
+            </div>
+
+            <nav class="space-y-1.5 text-sm flex-1">
+                <a href="{% url 'teacher_panel:turmas' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="book-open" class="w-4 h-4"></i> Minhas Turmas
+                </a>
+                <a href="{% url 'validator:painel' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="clipboard-list" class="w-4 h-4"></i> Histórico de Presença
+                </a>
+                <a href="{% url 'checkin:qr_demo' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="video" class="w-4 h-4"></i> Chamada ao vivo
+                </a>
+                <a href="{% url 'teacher_panel:turmas' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="users" class="w-4 h-4"></i> Gestão de Alunos
+                </a>
+                <a href="{% url 'teacher_panel:chamadas' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="settings" class="w-4 h-4"></i> Configurar Chamada
+                </a>
+                <a href="{% url 'teacher_panel:pendencias' %}" class="flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-lg bg-gold text-dark-blue font-semibold">
+                    <span class="flex items-center gap-2.5"><i data-lucide="alert-triangle" class="w-4 h-4"></i> Pendências</span>
+                </a>
+                <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Dashboard BI
+                </a>
+                <a href="{% url 'privacy:central' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="shield-check" class="w-4 h-4"></i> Central de Privacidade
+                </a>
+            </nav>
+
+            <div class="border-t border-white/10 pt-4 flex items-center justify-between px-2">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center text-gold text-xs font-semibold">{{ request.user.first_name|slice:":1"|default:"U" }}</div>
+                    <div class="leading-tight">
+                        <div class="text-white text-xs font-medium">{{ request.user.get_full_name|default:request.user.email }}</div>
+                    </div>
+                </div>
+                <form method="post" action="{% url 'accounts:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="flex items-center gap-2.5 text-white/40 hover:text-white/70">
+                        <i data-lucide="log-out" class="w-4 h-4 cursor-pointer"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </aside>
+
+    <div class="w-6 bg-dark-blue">
+        <img src="{% static 'images/divisao.svg' %}" alt="Divisao">
+    </div>
+
+    <!-- Conteudo principal -->
+    <div class="flex-1 p-8 overflow-y-auto space-y-6">
+
+        {% if messages %}
+            <div id="mensagens-alerta" class="space-y-2 transition-opacity duration-500">
+                {% for message in messages %}
+                    <div class="px-4 py-3 rounded-xl text-sm font-medium {% if message.tags == 'error' %}bg-red-100 text-red-800{% else %}bg-green-100 text-green-800{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="bg-white rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h1 class="font-[family-name:var(--font-display)] text-3xl font-bold text-light-blue">
+                    PENDÊNCIAS DE PRESENÇA
+                </h1>
+                <span class="bg-amber-100 text-amber-800 text-xs font-semibold px-3 py-1.5 rounded-full">
+                    {{ total_pendentes }} aguardando decisão
+                </span>
+            </div>
+
+            <div class="border border-ink/10 rounded-xl overflow-hidden mb-8">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-tan text-ink/60 text-xs">
+                            <th class="text-left font-semibold py-3 px-4">Registro</th>
+                            <th class="text-center font-semibold py-3">Hora</th>
+                            <th class="text-center font-semibold py-3">Facial</th>
+                            <th class="text-center font-semibold py-3">Vivacidade</th>
+                            <th class="text-center font-semibold py-3">Score Final</th>
+                            <th class="text-left font-semibold py-3 px-4">Decisão Manual e Justificativa</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-ink/5">
+                        {% for item in pendentes %}
+                            <tr class="hover:bg-creme/40">
+                                <td class="py-3 px-4 font-semibold text-ink">#{{ item.id }}</td>
+                                <td class="py-3 text-center text-ink/70">{{ item.data_criacao|date:"d/m H:i" }}</td>
+                                <td class="py-3 text-center text-ink/70">{{ item.score_facial }}</td>
+                                <td class="py-3 text-center text-ink/70">{{ item.score_vida }}</td>
+                                <td class="py-3 text-center font-semibold text-amber-700">{{ item.score_final }}</td>
+                                <td class="py-3 px-4">
+                                    <form method="post" action="{% url 'teacher_panel:revisar_pendencia' item.id %}" class="flex flex-wrap items-center gap-2">
+                                        {% csrf_token %}
+                                        <select name="status" class="bg-creme border border-ink/20 rounded-lg px-2.5 py-1.5 text-xs">
+                                            <option value="APPROVED">Aprovar presença</option>
+                                            <option value="REJECTED">Rejeitar (falta)</option>
+                                        </select>
+                                        <input type="text" name="motivo" placeholder="Justificativa obrigatória..." required minlength="5" class="flex-1 bg-creme border border-ink/20 rounded-lg px-3 py-1.5 text-xs">
+                                        <button type="submit" class="bg-light-blue text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-dark-blue">
+                                            Confirmar
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="6" class="py-6 text-center text-ink/40">Nenhum registro pendente no momento.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <h2 class="text-sm font-semibold text-ink/70 uppercase tracking-wide mb-3">Últimas Revisões Manuais</h2>
+            <div class="border border-ink/10 rounded-xl overflow-hidden">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-tan text-ink/60 text-xs">
+                            <th class="text-left font-semibold py-3 px-4">Registro</th>
+                            <th class="text-center font-semibold py-3">Data Revisão</th>
+                            <th class="text-center font-semibold py-3">Score Final</th>
+                            <th class="text-center font-semibold py-3">Decisão</th>
+                            <th class="text-left font-semibold py-3 px-4">Justificativa</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-ink/5">
+                        {% for rev in revisados %}
+                            <tr>
+                                <td class="py-3 px-4 font-medium text-ink">#{{ rev.id }}</td>
+                                <td class="py-3 text-center text-ink/70">{{ rev.data_revisao|date:"d/m H:i" }}</td>
+                                <td class="py-3 text-center text-ink/70">{{ rev.score_final }}</td>
+                                <td class="py-3 text-center">
+                                    <span class="text-[11px] font-medium px-2.5 py-1 rounded-full {% if rev.status == 'APPROVED' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                        {{ rev.status }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 text-ink/70">{{ rev.motivo }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="5" class="py-6 text-center text-ink/40">Nenhuma revisão manual realizada ainda.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const alerta = document.getElementById('mensagens-alerta');
+        if (alerta) {
+            setTimeout(() => {
+                alerta.classList.add('opacity-0');
+                setTimeout(() => alerta.remove(), 500);
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
