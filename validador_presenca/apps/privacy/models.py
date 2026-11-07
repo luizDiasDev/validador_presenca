@@ -13,9 +13,11 @@ class Termo(models.Model):
     )
     TIPO_POLITICA = 'politica_privacidade'
     TIPO_TERMO = 'termo_uso'
+    TIPO_BIOMETRICO = 'termo_biometrico'
     TIPO_CHOICES = [
         (TIPO_POLITICA, 'Política de Privacidade'),
         (TIPO_TERMO, 'Termo de Uso'),
+        (TIPO_BIOMETRICO, 'Termo de Consentimento Biométrico'),
     ]
     tipo = models.CharField(max_length=50, choices=TIPO_CHOICES)
     versao = models.CharField(max_length=20)

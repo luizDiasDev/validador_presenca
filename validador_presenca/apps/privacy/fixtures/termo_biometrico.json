@@ -1,0 +1,18 @@
+[
+  {
+    "model": "privacy.termo",
+    "pk": 3,
+    "fields": {
+      "instituicao": 1,
+      "tipo": "termo_biometrico",
+      "versao": "1.0",
+      "titulo": "Termo de Consentimento para Tratamento de Dados Biométricos",
+      "conteudo": "## 1. O que este termo autoriza\n\nAo aceitar este termo, você autoriza o Adsum a tratar o seu rosto para confirmar a sua identidade nos registros de presença. Sem este consentimento, o cadastro facial não é feito.\n\n## 2. Que dado é tratado\n\nO Adsum não guarda foto nem vídeo seus. A câmera do computador do laboratório captura a imagem, o programa instalado nele transforma o rosto em um vetor numérico (embedding facial) e descarta a imagem em seguida. Apenas esse vetor é enviado ao sistema e armazenado, de forma cifrada.\n\nO embedding facial é dado pessoal sensível, nos termos dos artigos 5º, inciso II, e 11 da LGPD.\n\n## 3. Finalidade e base legal\n\nO dado é usado somente para duas verificações: se o rosto diante da câmera corresponde ao seu cadastro e se há uma pessoa real diante da câmera (prova de vida). Nenhuma outra finalidade é permitida.\n\nA base legal é o seu consentimento específico e destacado (artigo 11, inciso I, da LGPD), dado por este aceite, separado do aceite do login.\n\n## 4. Como o dado é protegido\n\nO embedding é cifrado antes de ser gravado, com chave própria, separada das demais chaves do sistema. Os acessos relevantes ficam registrados no log de auditoria encadeado do Adsum. O dado não é compartilhado com terceiros nem usado para qualquer outro fim.\n\n## 5. Por quanto tempo o dado é mantido\n\nO embedding é mantido enquanto o consentimento estiver vigente. Ele é apagado quando você revogar o consentimento, pedir a exclusão da conta ou encerrar o vínculo com a instituição.\n\n## 6. Como revogar\n\nVocê pode revogar este consentimento a qualquer momento, pela Central de Privacidade do Adsum, no pedido de revogação de consentimento biométrico. Ao atender o pedido, o sistema apaga o seu embedding. O encarregado responde em até 15 dias, conforme o artigo 19 da LGPD.\n\nSem o cadastro facial, o registro automático de presença por reconhecimento facial não fica disponível. Procure o professor ou a coordenação para saber a alternativa prevista pela instituição.\n\n## 7. Contato\n\nEncarregado (DPO): Fabrício Rocha de Souza. Canal funcional de contato: 11231102907@alunos.umc.br.\n",
+      "documento_hash": "3b7035378f535ff972d219e3daec6fc4e39a1c1087e98fb1ca492112f339db1b",
+      "data_publicacao": "2026-11-01T00:00:00+00:00",
+      "ativo": true,
+      "data_criacao": "2026-11-01T00:00:00+00:00",
+      "data_atualizacao": "2026-11-01T00:00:00+00:00"
+    }
+  }
+]
