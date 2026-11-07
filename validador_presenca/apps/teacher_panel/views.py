@@ -1,12 +1,11 @@
-from functools import wraps
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from apps.accounts.decorators import only_teacher
 from apps.checkin.domain.services.chamada_service import (
     ChamadaJaAbertaError,
     ChamadaJaEncerradaError,
@@ -27,19 +26,8 @@ from apps.teacher_panel.models import Aula, Disciplina, Turma
 from apps.validator.models import PresencaRecord
 
 
-def professor_obrigatorio(view_func):
-    # Levanta erro 403 padrao do Django caso o usuario logado nao seja professor
-    @wraps(view_func)
-    def wrapper(request, *args, **kwargs):
-        if not hasattr(request.user, "professor"):
-            raise PermissionDenied
-        return view_func(request, *args, **kwargs)
-
-    return wrapper
-
-
 @login_required
-@professor_obrigatorio
+@only_teacher
 def turmas_view(request):
     professor = request.user.professor
     aba_ativa = request.GET.get("aba", "aulas")
@@ -76,7 +64,7 @@ def turmas_view(request):
 
 
 @login_required
-@professor_obrigatorio
+@only_teacher
 @require_POST
 def salvar_turma_view(request, turma_id: int | None = None):
     instancia = get_object_or_404(Turma, pk=turma_id) if turma_id else None
@@ -94,7 +82,7 @@ def salvar_turma_view(request, turma_id: int | None = None):
 
 
 @login_required
-@professor_obrigatorio
+@only_teacher
 @require_POST
 def excluir_turma_view(request, turma_id: int):
     turma = get_object_or_404(Turma, pk=turma_id)
@@ -111,7 +99,7 @@ def excluir_turma_view(request, turma_id: int):
 
 
 @login_required
-@professor_obrigatorio
+@only_teacher
 @require_POST
 def salvar_disciplina_view(request, disciplina_id: int | None = None):
     professor = request.user.professor
@@ -136,7 +124,7 @@ def salvar_disciplina_view(request, disciplina_id: int | None = None):
 
 
 @login_required
-@professor_obrigatorio
+@only_teacher
 @require_POST
 def excluir_disciplina_view(request, disciplina_id: int):
     professor = request.user.professor
@@ -154,7 +142,7 @@ def excluir_disciplina_view(request, disciplina_id: int):
 
 
 @login_required
-@professor_obrigatorio
+@only_teacher
 @require_POST
 def salvar_aula_view(request, aula_id: int | None = None):
     professor = request.user.professor
@@ -177,7 +165,7 @@ def salvar_aula_view(request, aula_id: int | None = None):
 
 
 @login_required
-@professor_obrigatorio
+@only_teacher
 @require_POST
 def excluir_aula_view(request, aula_id: int):
     professor = request.user.professor
@@ -194,7 +182,7 @@ def excluir_aula_view(request, aula_id: int):
 
 
 @login_required
-@professor_obrigatorio
+@only_teacher
 def chamadas_view(request):
     professor = request.user.professor
     agora = timezone.now()
@@ -216,7 +204,7 @@ def chamadas_view(request):
 
 
 @login_required
-@professor_obrigatorio
+@only_teacher
 @require_POST
 def abrir_chamada_view(request):
     professor = request.user.professor
@@ -256,7 +244,7 @@ def abrir_chamada_view(request):
 
 
 @login_required
-@professor_obrigatorio
+@only_teacher
 @require_POST
 def encerrar_chamada_view(request, sessao_id: int):
     professor = request.user.professor
@@ -272,7 +260,7 @@ def encerrar_chamada_view(request, sessao_id: int):
 
 
 @login_required
-@professor_obrigatorio
+@only_teacher
 def pendencias_view(request):
     pendentes = PresencaRecord.objects.filter(status="PENDING").order_by(
         "-data_criacao"
@@ -292,7 +280,7 @@ def pendencias_view(request):
 
 
 @login_required
-@professor_obrigatorio
+@only_teacher
 @require_POST
 def revisar_pendencia_view(request, registro_id: int):
     get_object_or_404(PresencaRecord, pk=registro_id)

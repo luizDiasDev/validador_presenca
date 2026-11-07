@@ -65,9 +65,7 @@ def cenario_professor(db):
 
 
 @pytest.mark.django_db
-def test_usuario_sem_perfil_professor_recebe_403_acesso_negado(
-    client, cenario_professor
-):
+def test_usuario_sem_perfil_professor_eh_redirecionado(client, cenario_professor):
     user_admin = Usuario.objects.create_user(
         email="adm@umc.br",
         password="testpassword123",
@@ -77,7 +75,7 @@ def test_usuario_sem_perfil_professor_recebe_403_acesso_negado(
     client.force_login(user_admin)
 
     resp = client.get(reverse("teacher_panel:turmas"))
-    assert resp.status_code == 403
+    assert resp.status_code == 302
 
 
 @pytest.mark.django_db
