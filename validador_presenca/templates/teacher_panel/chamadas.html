@@ -1,0 +1,201 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurar Chamada | ADSUM</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style type="text/tailwindcss">
+        @theme {
+            --color-dark-blue: #0F1B2E;
+            --color-light-blue: #17263D;
+            --color-gold: #C9962C;
+            --color-creme: #F7F3EA;
+            --color-tan: #E9DEC4;
+            --color-ink: #1F2A3C;
+            --font-display: 'Cinzel', serif;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-creme h-screen overflow-hidden flex">
+
+    <!-- Menu lateral -->
+    <aside class="w-60 bg-dark-blue flex-shrink-0">
+        <div class="flex flex-col h-full py-6 px-4">
+            <div class="flex items-center gap-2 px-2 mb-8">
+                <div class="w-15 h-15 flex items-center justify-center text-dark-blue flex-shrink-0">
+                    <img src="{% static 'images/logo_bege.svg' %}" alt="Logo Adsum">
+                </div>
+                <h1 class="font-display font-bold text-2xl text-creme mb-1">ADSUM</h1>
+            </div>
+
+            <nav class="space-y-1.5 text-sm flex-1">
+                <a href="{% url 'teacher_panel:turmas' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="book-open" class="w-4 h-4"></i> Minhas Turmas
+                </a>
+                <a href="{% url 'validator:painel' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="clipboard-list" class="w-4 h-4"></i> Histórico de Presença
+                </a>
+                <a href="{% url 'checkin:qr_demo' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="video" class="w-4 h-4"></i> Chamada ao vivo
+                </a>
+                <a href="{% url 'teacher_panel:turmas' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="users" class="w-4 h-4"></i> Gestão de Alunos
+                </a>
+                <a href="{% url 'teacher_panel:chamadas' %}" class="flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-lg bg-gold text-dark-blue font-semibold">
+                    <span class="flex items-center gap-2.5"><i data-lucide="settings" class="w-4 h-4"></i> Configurar Chamada</span>
+                </a>
+                <a href="{% url 'teacher_panel:pendencias' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="alert-triangle" class="w-4 h-4"></i> Pendências
+                </a>
+                <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Dashboard BI
+                </a>
+                <a href="{% url 'privacy:central' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="shield-check" class="w-4 h-4"></i> Central de Privacidade
+                </a>
+            </nav>
+
+            <div class="border-t border-white/10 pt-4 flex items-center justify-between px-2">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center text-gold text-xs font-semibold">{{ request.user.first_name|slice:":1"|default:"U" }}</div>
+                    <div class="leading-tight">
+                        <div class="text-white text-xs font-medium">{{ request.user.get_full_name|default:request.user.email }}</div>
+                    </div>
+                </div>
+                <form method="post" action="{% url 'accounts:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="flex items-center gap-2.5 text-white/40 hover:text-white/70">
+                        <i data-lucide="log-out" class="w-4 h-4 cursor-pointer"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </aside>
+
+    <div class="w-6 bg-dark-blue">
+        <img src="{% static 'images/divisao.svg' %}" alt="Divisao">
+    </div>
+
+    <!-- Conteudo principal -->
+    <div class="flex-1 p-8 overflow-y-auto space-y-6">
+
+        {% if messages %}
+            <div id="mensagens-alerta" class="space-y-2 transition-opacity duration-500">
+                {% for message in messages %}
+                    <div class="px-4 py-3 rounded-xl text-sm font-medium {% if message.tags == 'error' %}bg-red-100 text-red-800{% else %}bg-green-100 text-green-800{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="bg-white rounded-2xl p-6">
+            <h1 class="font-[family-name:var(--font-display)] text-3xl font-bold text-light-blue mb-6">
+                CONFIGURAR E INICIAR CHAMADA
+            </h1>
+
+            <form method="post" action="{% url 'teacher_panel:abrir_chamada' %}" class="bg-creme rounded-xl p-5 mb-8">
+                {% csrf_token %}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div>
+                        <label class="block text-xs font-semibold text-ink/70 mb-1">Aula (define Sala e Turma)</label>
+                        <select name="aula" required class="w-full px-3.5 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
+                            {% for a in form.fields.aula.queryset %}
+                                <option value="{{ a.id }}">{{ a }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-ink/70 mb-1">Janela na tela (minutos)</label>
+                        <input type="number" name="duracao_min" min="1" max="180" value="10" required class="w-full px-3.5 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-ink/70 mb-1">Tempos de aula cobertos</label>
+                        <input type="number" name="tempos_cobertos" min="1" max="8" value="4" required class="w-full px-3.5 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
+                    </div>
+                </div>
+                <div class="mt-4 flex justify-end">
+                    <button type="submit" class="flex items-center gap-2 bg-gold text-dark-blue text-xs font-semibold px-5 py-2.5 rounded-lg hover:bg-gold/80">
+                        <i data-lucide="play" class="w-4 h-4"></i> ABRIR SESSÃO DE CHAMADA
+                    </button>
+                </div>
+            </form>
+
+            <h2 class="text-sm font-semibold text-ink/70 uppercase tracking-wide mb-3">Sessões Recentes</h2>
+            <div class="border border-ink/10 rounded-xl overflow-hidden">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-tan text-ink/60 text-xs">
+                            <th class="text-left font-semibold py-3 px-4">#</th>
+                            <th class="text-left font-semibold py-3">Disciplina / Aula</th>
+                            <th class="text-left font-semibold py-3">Sala</th>
+                            <th class="text-center font-semibold py-3">Tempos</th>
+                            <th class="text-center font-semibold py-3">Abertura</th>
+                            <th class="text-center font-semibold py-3">Fechamento</th>
+                            <th class="text-center font-semibold py-3">Status</th>
+                            <th class="text-right font-semibold py-3 px-4">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-ink/5">
+                        {% for sessao in sessoes %}
+                            <tr class="hover:bg-creme/40">
+                                <td class="py-3 px-4 font-medium text-ink">#{{ sessao.id }}</td>
+                                <td class="py-3 text-ink/80">
+                                    {% if sessao.aula %}{{ sessao.aula.disciplina.nome }}{% else %}Chamada Avulsa{% endif %}
+                                </td>
+                                <td class="py-3 text-ink/70">{{ sessao.sala.codigo }}</td>
+                                <td class="py-3 text-center font-semibold text-light-blue">{{ sessao.tempos_cobertos }}</td>
+                                <td class="py-3 text-center text-ink/70">{{ sessao.abre_em|date:"d/m H:i" }}</td>
+                                <td class="py-3 text-center text-ink/70">{{ sessao.fecha_em|date:"d/m H:i" }}</td>
+                                <td class="py-3 text-center">
+                                    {% if sessao.id in sessoes_abertas_ids %}
+                                        <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-green-100 text-green-800">ABERTA</span>
+                                    {% else %}
+                                        <span class="text-[11px] font-medium px-2.5 py-1 rounded-full bg-ink/10 text-ink/60">ENCERRADA</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 px-4 text-right">
+                                    {% if sessao.id in sessoes_abertas_ids %}
+                                        <form method="post" action="{% url 'teacher_panel:encerrar_chamada' sessao.id %}" class="inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="bg-red-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-red-700">
+                                                Encerrar Agora
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <span class="text-xs text-ink/30">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="8" class="py-6 text-center text-ink/40">Nenhuma sessão de chamada registrada ainda.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const alerta = document.getElementById('mensagens-alerta');
+        if (alerta) {
+            setTimeout(() => {
+                alerta.classList.add('opacity-0');
+                setTimeout(() => alerta.remove(), 500);
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
