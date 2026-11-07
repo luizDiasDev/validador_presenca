@@ -4,7 +4,6 @@ from apps.biometrics.domain.services.biometric_service import COMPARISON_DONE, B
 from ..values.factor_result import FactorResult
 from .validator_model import ValidatorModel
 
-
 class FacialValidator(ValidatorModel):
     name = "facial"
     weight = 0.70
