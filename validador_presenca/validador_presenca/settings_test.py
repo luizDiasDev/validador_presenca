@@ -16,6 +16,7 @@ import os
 os.environ.setdefault("DATABASE_URL", "sqlite://:memory:")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
 os.environ.setdefault("TOTP_ENCRYPTION_KEY", "gF3Yc1tq8v0n6Z7Qm0j6Q2k1oW8m7xT9yH3bV5sR4aE=")
+os.environ.setdefault("BIOMETRIC_ENCRYPTION_KEY", "s64fCicGMooNDwgQ17HSKUS0jbOL_Gw4KhnOvquFeFs=")
 
 from .settings import *  # noqa: E402,F401,F403
 
