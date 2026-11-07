@@ -19,10 +19,11 @@ from django.urls import path, include
 from django.views.generic import RedirectView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', RedirectView.as_view(pattern_name='accounts:login')),
-    path('checkin/', include('apps.checkin.urls')),
-    path('validator/', include('apps.validator.urls')),
+    path("admin/", admin.site.urls),
+    path("", RedirectView.as_view(pattern_name="accounts:login")),
+    path("checkin/", include("apps.checkin.urls")),
+    path("validator/", include("apps.validator.urls")),
     path("accounts/", include("apps.accounts.urls")),
     path("privacidade/", include("apps.privacy.urls")),
+    path("", include("apps.teacher_panel.urls")),
 ]

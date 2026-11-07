@@ -23,12 +23,12 @@
         }
         body {
             font-family: 'Inter',
-            sans-serif; 
+            sans-serif;
         }
     </style>
 </head>
 <body class="bg-creme h-screen overflow-hidden flex">
-    
+
     <!-- Menu lateral -->
     <aside class="w-60 bg-dark-blue flex-shrink-0">
 
@@ -44,24 +44,28 @@
 
         <!-- Menu -->
         <nav class="space-y-1.5 text-sm flex-1">
-            <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+            {% if request.user.professor %}
+            <a href="{% url 'teacher_panel:turmas' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                 <i data-lucide="book-open" class="w-4 h-4"></i> Minhas Turmas
             </a>
+            {% endif %}
             <a href="{% url 'validator:painel' %}" class="flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-lg bg-gold text-dark-blue font-semibold">
                 <span class="flex items-center gap-2.5"><i data-lucide="clipboard-list" class="w-4 h-4"></i> Histórico de Presença</span>
             </a>
             <a href="{% url 'checkin:qr_demo' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                 <i data-lucide="video" class="w-4 h-4"></i> Chamada ao vivo
             </a>
-            <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+            {% if request.user.professor %}
+            <a href="{% url 'teacher_panel:turmas' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                 <i data-lucide="users" class="w-4 h-4"></i> Gestão de Alunos
             </a>
-            <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+            <a href="{% url 'teacher_panel:chamadas' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                 <i data-lucide="settings" class="w-4 h-4"></i> Configurar Chamada
             </a>
-            <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+            <a href="{% url 'teacher_panel:pendencias' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                 <i data-lucide="alert-triangle" class="w-4 h-4"></i> Pendências
             </a>
+            {% endif %}
             <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                 <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Dashboard BI
             </a>
@@ -105,9 +109,11 @@
                     HISTÓRICO DE PRESENÇA
                 </h1>
                 <div class="flex items-center gap-2">
-                    <a href="{% url 'checkin:qr_demo' %}" class="flex items-center gap-2 bg-gold text-dark-blue text-xs font-semibold px-4 py-2.5 rounded-lg hover:bg-gold/80">
+                    {% if request.user.professor %}
+                    <a href="{% url 'teacher_panel:chamadas' %}" class="flex items-center gap-2 bg-gold text-dark-blue text-xs font-semibold px-4 py-2.5 rounded-lg hover:bg-gold/80">
                         <i data-lucide="scan-line" class="w-4 h-4"></i> INICIAR CHAMADA
                     </a>
+                    {% endif %}
                     <a href="{% url 'validator:painel' %}" class="flex items-center gap-2 bg-light-blue text-white text-xs font-semibold px-4 py-2.5 rounded-lg hover:bg-dark-blue transition-colors">
                         <i data-lucide="filter" class="w-4 h-4"></i>
                     </a>
@@ -189,7 +195,7 @@
                     </tbody>
                 </table>
             </div>
-            
+
             <!-- Rodapé -->
             <div class="flex items-center justify-between mt-4 text-xs text-ink/50">
                 <span>Exibindo {{ total }}</span>
