@@ -69,7 +69,7 @@
                     <i data-lucide="alert-triangle" class="w-4 h-4"></i> Pendências
                 </a>
                 {% endif %}
-                <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                <a href="{% url 'teacher_panel:dashboard' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                     <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Dashboard BI
                 </a>
                 <a href="{% url 'privacy:central' %}" class="flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-lg bg-gold text-dark-blue font-semibold">
