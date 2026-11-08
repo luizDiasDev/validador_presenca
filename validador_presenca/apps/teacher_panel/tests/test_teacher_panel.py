@@ -2,12 +2,13 @@ from datetime import date, time
 from decimal import Decimal
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 
 from apps.accounts.models import Administrador, Professor, Usuario
 from apps.audit.models import AuditLog
 from apps.checkin.models import ChamadaSession
 from apps.institution.models import Campus, Institution, Room
-from apps.teacher_panel.forms import AulaForm
+from apps.teacher_panel.forms import AbrirChamadaForm, AulaForm
 from apps.teacher_panel.models import Aula, Disciplina, Turma
 from apps.validator.models import PresencaRecord
 
@@ -36,7 +37,7 @@ def cenario_professor(db):
     )
     turma = Turma.objects.create(
         sala=sala,
-        codigo="8B",
+        codigo="2324",
         nome="8 Semestre B",
         curso="Engenharia de Software",
         semestre_inicio=date(2026, 8, 1),
@@ -44,11 +45,12 @@ def cenario_professor(db):
     disciplina = Disciplina.objects.create(
         professor=professor,
         turma=turma,
-        nome="Projeto Final de Curso",
+        nome="IOT2",
     )
+    dia_hoje = timezone.localdate().weekday()
     aula = Aula.objects.create(
         disciplina=disciplina,
-        dia_semana=0,
+        dia_semana=dia_hoje,
         hora_inicio=time(19, 10),
         hora_fim=time(22, 0),
         tempos_aula=4,
@@ -76,6 +78,46 @@ def test_usuario_sem_perfil_professor_eh_redirecionado(client, cenario_professor
 
     resp = client.get(reverse("teacher_panel:turmas"))
     assert resp.status_code == 302
+
+
+@pytest.mark.django_db
+def test_formato_concatenado_da_aula_com_turma_e_curso(cenario_professor):
+    texto = str(cenario_professor["aula"])
+    assert texto.startswith("2324 (Engenharia de Software) - IOT2 (")
+
+
+@pytest.mark.django_db
+def test_abrir_chamada_form_filtra_dia_vigente_e_limita_tempos_da_grade(
+    cenario_professor,
+):
+    aula_hoje = cenario_professor["aula"]
+    outro_dia = (aula_hoje.dia_semana + 1) % 7
+    aula_outro_dia = Aula.objects.create(
+        disciplina=cenario_professor["disciplina"],
+        dia_semana=outro_dia,
+        hora_inicio=time(19, 10),
+        hora_fim=time(22, 0),
+        tempos_aula=2,
+    )
+
+    form_hoje = AbrirChamadaForm(professor=cenario_professor["professor"])
+    ids_disponiveis = list(
+        form_hoje.fields["aula"].queryset.values_list("id", flat=True)
+    )
+    assert aula_hoje.id in ids_disponiveis
+    assert aula_outro_dia.id not in ids_disponiveis
+
+    # Tenta enviar tempos_cobertos = 6 para uma aula que tem tempos_aula = 4 na grade
+    form_invalido = AbrirChamadaForm(
+        data={
+            "aula": aula_hoje.id,
+            "duracao_min": 10,
+            "tempos_cobertos": 6,
+        },
+        professor=cenario_professor["professor"],
+    )
+    assert form_invalido.is_valid() is False
+    assert "tempos_cobertos" in form_invalido.errors
 
 
 @pytest.mark.django_db

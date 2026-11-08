@@ -111,4 +111,5 @@ class Aula(models.Model):
 
     def __str__(self):
         dia_nome = dict(self.DIAS_SEMANA).get(self.dia_semana, "")
-        return f"{self.disciplina.nome} ({dia_nome} {self.hora_inicio:%H:%M}-{self.hora_fim:%H:%M})"
+        turma = self.disciplina.turma
+        return f"{turma.codigo} ({turma.curso}) - {self.disciplina.nome} ({dia_nome} {self.hora_inicio:%H:%M}-{self.hora_fim:%H:%M})"

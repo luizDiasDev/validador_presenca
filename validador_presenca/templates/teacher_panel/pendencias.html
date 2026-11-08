@@ -48,16 +48,25 @@
                 <a href="{% url 'checkin:qr_demo' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                     <i data-lucide="video" class="w-4 h-4"></i> Chamada ao vivo
                 </a>
-                <a href="{% url 'teacher_panel:turmas' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                {% if request.user.administrador %}
+                <a href="{% url 'institution:infraestrutura' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="monitor" class="w-4 h-4"></i> Campus e Máquinas
+                </a>
+                {% endif %}
+                {% if request.user.administrador or request.user.professor %}
+                <a href="{% url 'teacher_panel:alunos' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                     <i data-lucide="users" class="w-4 h-4"></i> Gestão de Alunos
                 </a>
+                {% endif %}
+                {% if request.user.professor %}
                 <a href="{% url 'teacher_panel:chamadas' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                     <i data-lucide="settings" class="w-4 h-4"></i> Configurar Chamada
                 </a>
-                <a href="{% url 'teacher_panel:pendencias' %}" class="flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-lg bg-gold text-dark-blue font-semibold">
-                    <span class="flex items-center gap-2.5"><i data-lucide="alert-triangle" class="w-4 h-4"></i> Pendências</span>
+                <a href="{% url 'teacher_panel:pendencias' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="alert-triangle" class="w-4 h-4"></i> Pendências
                 </a>
-                <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                {% endif %}
+                <a href="{% url 'teacher_panel:dashboard' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                     <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Dashboard BI
                 </a>
                 <a href="{% url 'privacy:central' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
@@ -113,10 +122,11 @@
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="bg-tan text-ink/60 text-xs">
-                            <th class="text-left font-semibold py-3 px-4">Registro</th>
+                            <th class="text-left font-semibold py-3 px-4">Aluno</th>
+                            <th class="text-left font-semibold py-3">Turma / Disciplina</th>
+                            <th class="text-left font-semibold py-3">Sala / Máquina</th>
                             <th class="text-center font-semibold py-3">Hora</th>
-                            <th class="text-center font-semibold py-3">Facial</th>
-                            <th class="text-center font-semibold py-3">Vivacidade</th>
+                            <th class="text-center font-semibold py-3">Facial / Vida</th>
                             <th class="text-center font-semibold py-3">Score Final</th>
                             <th class="text-left font-semibold py-3 px-4">Decisão Manual e Justificativa</th>
                         </tr>
@@ -124,10 +134,31 @@
                     <tbody class="divide-y divide-ink/5">
                         {% for item in pendentes %}
                             <tr class="hover:bg-creme/40">
-                                <td class="py-3 px-4 font-semibold text-ink">#{{ item.id }}</td>
+                                <td class="py-3 px-4 font-semibold text-ink">
+                                    {% if item.usuario %}
+                                        {{ item.usuario.get_full_name|default:item.usuario.email }}
+                                    {% else %}
+                                        #{{ item.id }}
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 text-ink/70">
+                                    {% if item.sessao and item.sessao.aula %}
+                                        {{ item.sessao.aula.disciplina.turma.codigo }} - {{ item.sessao.aula.disciplina.nome }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 text-ink/70">
+                                    {% if item.maquina %}
+                                        {{ item.maquina.apelido }} ({{ item.maquina.sala.codigo }})
+                                    {% elif item.sessao and item.sessao.sala %}
+                                        {{ item.sessao.sala.codigo }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
                                 <td class="py-3 text-center text-ink/70">{{ item.data_criacao|date:"d/m H:i" }}</td>
-                                <td class="py-3 text-center text-ink/70">{{ item.score_facial }}</td>
-                                <td class="py-3 text-center text-ink/70">{{ item.score_vida }}</td>
+                                <td class="py-3 text-center text-ink/70">{{ item.score_facial }} / {{ item.score_vida }}</td>
                                 <td class="py-3 text-center font-semibold text-amber-700">{{ item.score_final }}</td>
                                 <td class="py-3 px-4">
                                     <form method="post" action="{% url 'teacher_panel:revisar_pendencia' item.id %}" class="flex flex-wrap items-center gap-2">
@@ -144,7 +175,7 @@
                                 </td>
                             </tr>
                         {% empty %}
-                            <tr><td colspan="6" class="py-6 text-center text-ink/40">Nenhum registro pendente no momento.</td></tr>
+                            <tr><td colspan="7" class="py-6 text-center text-ink/40">Nenhum registro pendente no momento.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -155,7 +186,8 @@
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="bg-tan text-ink/60 text-xs">
-                            <th class="text-left font-semibold py-3 px-4">Registro</th>
+                            <th class="text-left font-semibold py-3 px-4">Aluno</th>
+                            <th class="text-left font-semibold py-3">Turma / Disciplina</th>
                             <th class="text-center font-semibold py-3">Data Revisão</th>
                             <th class="text-center font-semibold py-3">Score Final</th>
                             <th class="text-center font-semibold py-3">Decisão</th>
@@ -165,7 +197,20 @@
                     <tbody class="divide-y divide-ink/5">
                         {% for rev in revisados %}
                             <tr>
-                                <td class="py-3 px-4 font-medium text-ink">#{{ rev.id }}</td>
+                                <td class="py-3 px-4 font-medium text-ink">
+                                    {% if rev.usuario %}
+                                        {{ rev.usuario.get_full_name|default:rev.usuario.email }}
+                                    {% else %}
+                                        #{{ rev.id }}
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 text-ink/70">
+                                    {% if rev.sessao and rev.sessao.aula %}
+                                        {{ rev.sessao.aula.disciplina.turma.codigo }} - {{ rev.sessao.aula.disciplina.nome }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
                                 <td class="py-3 text-center text-ink/70">{{ rev.data_revisao|date:"d/m H:i" }}</td>
                                 <td class="py-3 text-center text-ink/70">{{ rev.score_final }}</td>
                                 <td class="py-3 text-center">
@@ -176,7 +221,7 @@
                                 <td class="py-3 px-4 text-ink/70">{{ rev.motivo }}</td>
                             </tr>
                         {% empty %}
-                            <tr><td colspan="5" class="py-6 text-center text-ink/40">Nenhuma revisão manual realizada ainda.</td></tr>
+                            <tr><td colspan="6" class="py-6 text-center text-ink/40">Nenhuma revisão manual realizada ainda.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>

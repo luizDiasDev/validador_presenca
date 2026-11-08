@@ -49,25 +49,36 @@
 
         <!-- Menu -->
         <nav class="space-y-1.5 text-sm flex-1">
-            <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+            {% if request.user.professor %}
+            <a href="{% url 'teacher_panel:turmas' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                 <i data-lucide="book-open" class="w-4 h-4"></i> Minhas Turmas
             </a>
+            {% endif %}
             <a href="{% url 'validator:painel' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                 <i data-lucide="clipboard-list" class="w-4 h-4"></i> Histórico de Presença
             </a>
             <a href="{% url 'checkin:qr_demo' %}" class="flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-lg bg-gold text-dark-blue font-semibold">
                 <span class="flex items-center gap-2.5"><i data-lucide="video" class="w-4 h-4"></i> Chamada ao vivo</span>
             </a>
-            <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+            {% if request.user.administrador %}
+            <a href="{% url 'institution:infraestrutura' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                <i data-lucide="monitor" class="w-4 h-4"></i> Campus e Máquinas
+            </a>
+            {% endif %}
+            {% if request.user.administrador or request.user.professor %}
+            <a href="{% url 'teacher_panel:alunos' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                 <i data-lucide="users" class="w-4 h-4"></i> Gestão de Alunos
             </a>
-            <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+            {% endif %}
+            {% if request.user.professor %}
+            <a href="{% url 'teacher_panel:chamadas' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                 <i data-lucide="settings" class="w-4 h-4"></i> Configurar Chamada
             </a>
-            <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+            <a href="{% url 'teacher_panel:pendencias' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                 <i data-lucide="alert-triangle" class="w-4 h-4"></i> Pendências
             </a>
-            <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+            {% endif %}
+            <a href="{% url 'teacher_panel:dashboard' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                 <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Dashboard BI
             </a>
             <a href="{% url 'privacy:central' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
