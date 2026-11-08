@@ -5,12 +5,14 @@ import qrcode
 from django.core.cache import cache
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.utils import timezone
 from apps.checkin.domain.services.chamada_service import ChamadaService
 from apps.checkin.domain.services.qr_service import QrTokenService
+from apps.checkin.models import ChamadaSession
 from apps.validator.domain.case import try_checkin
 from apps.institution.domain.services.geolocation_service import GeolocationService
 from apps.institution.domain.services.geocoding_service import GeocodingService
-from apps.institution.models import Campus
+from apps.institution.models import Campus, Machine
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseBadRequest, JsonResponse
 
@@ -30,19 +32,27 @@ def qr_demo(request):
         # hash para auditoria
         qr_token_hash = hashlib.sha256(token.encode()).hexdigest() if token else ""
 
-        # dado chumbado, virá depois quando o PWA for desenvolvido
         aluno_id = request.user.id
 
         sessao_id = resultado.sessao_id if resultado else None
         maquina_id = resultado.maquina_id if resultado else None
 
+        sessao_obj = (
+            ChamadaSession.objects.select_related("sala").filter(pk=sessao_id).first()
+            if sessao_id
+            else None
+        )
+        sessao_valida = ChamadaService().esta_aberta(sessao_obj) if sessao_obj else True
+
         lat_raw = request.POST.get("lat", "")
         lon_raw = request.POST.get("lon", "")
-        campus_id = 1 # vai ser dinâmico depois quando vier da sessão
+        campus_id = (
+            sessao_obj.sala.campus_id if (sessao_obj and sessao_obj.sala_id) else 1
+        )
 
         geo_valida = False
         geo_motivo = "Localização não fornecida pelo aluno"
-    
+
         if lat_raw and lon_raw:
             try:
                 lat = float(lat_raw)
@@ -50,7 +60,7 @@ def qr_demo(request):
                 geo_svc = GeolocationService()
                 geo_resultado = geo_svc.validate(lat, lon, campus_id)
                 endereco_decoding = GeocodingService()
-                endereco_aluno = endereco_decoding.translate_location(lat_raw,lon_raw)
+                endereco_aluno = endereco_decoding.translate_location(lat_raw, lon_raw)
                 geo_valida = geo_resultado.valida
                 geo_motivo = geo_resultado.motivo
             except (ValueError, Campus.DoesNotExist):
@@ -58,7 +68,7 @@ def qr_demo(request):
 
         # informações que serão úteis no PresencaRecord
         results_pack = {
-            "qr_code": resultado is not None,
+            "qr_code": (resultado is not None) and sessao_valida,
             "qr_token_hash": qr_token_hash,
             "sessao_id": sessao_id,
             "maquina_id": maquina_id,
@@ -68,15 +78,28 @@ def qr_demo(request):
         }
 
         try_checkin(results_pack=results_pack)
-        
 
     # Gera novo QR
+    agora = timezone.now()
+    sessao_ativa = (
+        ChamadaSession.objects.filter(abre_em__lte=agora, fecha_em__gt=agora)
+        .order_by("-abre_em")
+        .first()
+    )
+    sessao_padrao = sessao_ativa.id if sessao_ativa else 1
+    maq_sala = (
+        Machine.objects.filter(sala_id=sessao_ativa.sala_id).order_by("id").first()
+        if (sessao_ativa and sessao_ativa.sala_id)
+        else None
+    )
+    maquina_padrao = maq_sala.id if maq_sala else 1
+
     try:
-        sessao_id = int(request.GET.get("sessao", 1))
-        maquina_id = int(request.GET.get("maquina", 1))
+        sessao_id = int(request.GET.get("sessao", sessao_padrao))
+        maquina_id = int(request.GET.get("maquina", maquina_padrao))
     except ValueError:
         return HttpResponseBadRequest("Parâmetros sessao e maquina devem ser números inteiros.")
-    
+
     qr = svc.gerar(sessao_id=sessao_id, maquina_id=maquina_id)
 
     # Renderiza QR
@@ -96,6 +119,7 @@ def qr_demo(request):
         "endereco_aluno": endereco_aluno,
     }
     return render(request, "checkin/qr_demo.html", contexto)
+
 
 # Endpoint de pooling para o Pyside6
 def status_sessao_sala(request, sala_id: int):
