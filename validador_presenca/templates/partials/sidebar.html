@@ -21,9 +21,11 @@
 
         <!-- Menu -->
         <nav class="space-y-1.5 text-sm flex-1">
+            {% if request.user.administrador or request.user.professor %}
             <a href="{% url 'teacher_panel:dashboard' %}" class="{% if tela.namespace == 'teacher_panel' and tela.url_name == 'dashboard' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
                 <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Dashboard BI
             </a>
+            {% endif %}
             {% if request.user.professor %}
             <a href="{% url 'teacher_panel:turmas' %}" class="{% if tela.namespace == 'teacher_panel' and tela.url_name == 'turmas' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
                 <i data-lucide="book-open" class="w-4 h-4"></i> Minhas Turmas
