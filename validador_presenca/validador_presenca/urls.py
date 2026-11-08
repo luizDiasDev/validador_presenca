@@ -26,4 +26,5 @@ urlpatterns = [
     path("accounts/", include("apps.accounts.urls")),
     path("privacidade/", include("apps.privacy.urls")),
     path("", include("apps.teacher_panel.urls")),
+    path("", include("apps.institution.urls")),
 ]
