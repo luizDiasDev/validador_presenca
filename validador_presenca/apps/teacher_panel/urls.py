@@ -25,6 +25,13 @@ urlpatterns = [
     path("aulas/criar/", views.salvar_aula_view, name="criar_aula"),
     path("aulas/<int:aula_id>/editar/", views.salvar_aula_view, name="editar_aula"),
     path("aulas/<int:aula_id>/excluir/", views.excluir_aula_view, name="excluir_aula"),
+    # Alunos
+    path("alunos/", views.alunos_view, name="alunos"),
+    path("alunos/criar/", views.salvar_aluno_view, name="criar_aluno"),
+    path("alunos/<int:aluno_id>/editar/", views.salvar_aluno_view, name="editar_aluno"),
+    path(
+        "alunos/<int:aluno_id>/excluir/", views.excluir_aluno_view, name="excluir_aluno"
+    ),
     # Sessoes de chamada
     path("chamadas/", views.chamadas_view, name="chamadas"),
     path("chamadas/abrir/", views.abrir_chamada_view, name="abrir_chamada"),

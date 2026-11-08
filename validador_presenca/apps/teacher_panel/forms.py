@@ -1,7 +1,9 @@
 from django import forms
+from django.db import transaction
 from django.utils import timezone
-from apps.teacher_panel.models import Turma, Disciplina, Aula
-
+from apps.accounts.models import Usuario
+from apps.institution.models import Institution
+from apps.teacher_panel.models import Turma, Disciplina, Aula, Aluno
 
 class TurmaForm(forms.ModelForm):
     class Meta:
@@ -122,3 +124,83 @@ class RevisaoPresencaForm(forms.Form):
                 "Informe uma justificativa com pelo menos 5 caracteres."
             )
         return motivo
+
+
+class AlunoCadastroForm(forms.Form):
+    turma = forms.ModelChoiceField(queryset=Turma.objects.all(), label="Turma")
+    matricula = forms.CharField(max_length=30, label="Matrícula")
+    nome = forms.CharField(max_length=150, label="Nome Completo")
+    email = forms.EmailField(label="E-mail Institucional")
+    senha = forms.CharField(
+        max_length=128,
+        required=False,
+        label="Senha",
+    )
+
+    def __init__(self, *args, aluno_instance=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.aluno_instance = aluno_instance
+        if not aluno_instance:
+            self.fields["senha"].required = True
+
+    def clean_matricula(self):
+        matricula = self.cleaned_data["matricula"].strip()
+        qs = Aluno.objects.filter(matricula=matricula)
+        if self.aluno_instance:
+            qs = qs.exclude(pk=self.aluno_instance.pk)
+        if qs.exists():
+            raise forms.ValidationError(
+                "Já existe um aluno cadastrado com esta matrícula."
+            )
+        return matricula
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip().lower()
+        qs = Usuario.objects.filter(email=email)
+        if self.aluno_instance:
+            qs = qs.exclude(pk=self.aluno_instance.usuario_id)
+        if qs.exists():
+            raise forms.ValidationError(
+                "Já existe um usuário cadastrado com este e-mail."
+            )
+        return email
+
+    @transaction.atomic
+    def save(self, instituicao=None) -> Aluno:
+        nome_completo = self.cleaned_data["nome"].strip()
+        partes_nome = nome_completo.split(" ", 1)
+        first_name = partes_nome[0]
+        last_name = partes_nome[1] if len(partes_nome) > 1 else ""
+        email = self.cleaned_data["email"]
+        senha = self.cleaned_data.get("senha")
+        turma = self.cleaned_data["turma"]
+        matricula = self.cleaned_data["matricula"]
+        instituicao_final = instituicao or Institution.objects.first()
+
+        if self.aluno_instance:
+            usuario = self.aluno_instance.usuario
+            usuario.email = email
+            usuario.username = email
+            usuario.first_name = first_name
+            usuario.last_name = last_name
+            if senha:
+                usuario.set_password(senha)
+            usuario.save()
+
+            self.aluno_instance.turma = turma
+            self.aluno_instance.matricula = matricula
+            self.aluno_instance.save()
+            return self.aluno_instance
+
+        usuario = Usuario.objects.create_user(
+            email=email,
+            password=senha,
+            first_name=first_name,
+            last_name=last_name,
+            instituicao=instituicao_final,
+        )
+        return Aluno.objects.create(
+            usuario=usuario,
+            turma=turma,
+            matricula=matricula,
+        )

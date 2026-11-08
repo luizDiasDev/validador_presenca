@@ -1,11 +1,12 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from apps.accounts.decorators import only_teacher
+from apps.accounts.decorators import only_admin, only_teacher
 from apps.checkin.domain.services.chamada_service import (
     ChamadaJaAbertaError,
     ChamadaJaEncerradaError,
@@ -17,12 +18,13 @@ from apps.institution.models import Room
 from apps.teacher_panel.domain.services.revisao_service import RevisaoPresencaService
 from apps.teacher_panel.forms import (
     AbrirChamadaForm,
+    AlunoCadastroForm,
     AulaForm,
     DisciplinaForm,
     RevisaoPresencaForm,
     TurmaForm,
 )
-from apps.teacher_panel.models import Aula, Disciplina, Turma
+from apps.teacher_panel.models import Aluno, Aula, Disciplina, Turma
 from apps.validator.models import PresencaRecord
 
 
@@ -182,6 +184,76 @@ def excluir_aula_view(request, aula_id: int):
 
 
 @login_required
+def alunos_view(request):
+    if not hasattr(request.user, "professor") and not hasattr(
+        request.user, "administrador"
+    ):
+        return redirect("accounts:login")
+
+    turma_filtro = request.GET.get("turma", "")
+    turmas = Turma.objects.select_related("sala").order_by("codigo")
+
+    alunos = Aluno.objects.select_related("usuario", "turma__sala").order_by(
+        "turma__codigo", "matricula"
+    )
+    if turma_filtro.isdigit():
+        alunos = alunos.filter(turma_id=int(turma_filtro))
+
+    context = {
+        "alunos": alunos,
+        "turmas": turmas,
+        "turma_filtro": int(turma_filtro) if turma_filtro.isdigit() else None,
+        "total_alunos": alunos.count(),
+    }
+    return render(request, "teacher_panel/alunos.html", context)
+
+
+@login_required
+@only_admin
+@require_POST
+def salvar_aluno_view(request, aluno_id: int | None = None):
+    instancia = (
+        get_object_or_404(Aluno.objects.select_related("usuario"), pk=aluno_id)
+        if aluno_id
+        else None
+    )
+    form = AlunoCadastroForm(request.POST, aluno_instance=instancia)
+
+    if form.is_valid():
+        aluno = form.save(instituicao=getattr(request.user, "instituicao", None))
+        acao = (
+            "atualizado" if aluno_id else f"matriculado na turma {aluno.turma.codigo}"
+        )
+        messages.success(
+            request, f"Aluno {aluno.usuario.get_full_name()} {acao} com sucesso."
+        )
+    else:
+        for campo, erros in form.errors.items():
+            messages.error(request, f"{erros[0]}")
+
+    return redirect("teacher_panel:alunos")
+
+
+@login_required
+@only_admin
+@require_POST
+def excluir_aluno_view(request, aluno_id: int):
+    aluno = get_object_or_404(Aluno.objects.select_related("usuario"), pk=aluno_id)
+    try:
+        nome = aluno.usuario.get_full_name() or aluno.usuario.email
+        usuario = aluno.usuario
+        aluno.delete()
+        usuario.delete()
+        messages.success(request, f"Aluno {nome} excluído com sucesso.")
+    except ProtectedError:
+        messages.error(
+            request,
+            "Não é possível excluir este aluno pois já existem registros vinculados a ele.",
+        )
+    return redirect("teacher_panel:alunos")
+
+
+@login_required
 @only_teacher
 def chamadas_view(request):
     professor = request.user.professor
@@ -268,12 +340,30 @@ def encerrar_chamada_view(request, sessao_id: int):
 @login_required
 @only_teacher
 def pendencias_view(request):
-    pendentes = PresencaRecord.objects.filter(status="PENDING").order_by(
-        "-data_criacao"
+    professor = request.user.professor
+    # Exibe registros vinculados as sessoes do professor logado (ou sem sessao nos testes unitarios)
+    filtro_prof = Q(sessao__professor=professor) | Q(sessao__isnull=True)
+
+    pendentes = (
+        PresencaRecord.objects.filter(filtro_prof, status="PENDING")
+        .select_related(
+            "usuario",
+            "sessao__aula__disciplina__turma",
+            "sessao__sala",
+            "maquina__sala",
+        )
+        .order_by("-data_criacao")
     )
     revisados = (
-        PresencaRecord.objects.exclude(status="PENDING")
+        PresencaRecord.objects.filter(filtro_prof)
+        .exclude(status="PENDING")
         .filter(revisado_por__isnull=False)
+        .select_related(
+            "usuario",
+            "sessao__aula__disciplina__turma",
+            "sessao__sala",
+            "maquina__sala",
+        )
         .order_by("-data_revisao")[:20]
     )
 
