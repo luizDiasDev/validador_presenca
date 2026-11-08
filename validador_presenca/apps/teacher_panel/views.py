@@ -464,7 +464,7 @@ def dashboard_view(request):
     if not hasattr(request.user, "professor") and not hasattr(
         request.user, "administrador"
     ):
-        return redirect("accounts:login")
+        return redirect("checkin:qr_demo")
 
     professor = getattr(request.user, "professor", None)
     turma_param = request.GET.get("turma", "")

@@ -1,10 +1,12 @@
 from django.shortcuts import render
 from .models import PresencaRecord
 from django.contrib.auth.decorators import login_required
+from apps.accounts.decorators import only_teacher
 
 # Create your views here.
 
 @login_required
+@only_teacher
 def painel(request):
     status_filter = request.GET.get("status")
 

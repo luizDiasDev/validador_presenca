@@ -26,9 +26,11 @@
                 <i data-lucide="book-open" class="w-4 h-4"></i> Minhas Turmas
             </a>
             {% endif %}
+            {% if request.user.professor %}
             <a href="{% url 'validator:painel' %}" class="{% if tela.namespace == 'validator' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
                 <i data-lucide="clipboard-list" class="w-4 h-4"></i> Histórico de Presença
             </a>
+            {% endif %}
             <a href="{% url 'checkin:qr_demo' %}" class="{% if tela.namespace == 'checkin' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
                 <i data-lucide="video" class="w-4 h-4"></i> Chamada ao vivo
             </a>
