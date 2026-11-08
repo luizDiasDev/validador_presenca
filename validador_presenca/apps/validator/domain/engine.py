@@ -13,7 +13,7 @@ class Engine():
 
         validator_result_list = [ validator.validate(parameter_list) for validator in self.validators_list]
 
-        blocked_valitadors = [validator for validator in validator_result_list if validator.block and not validator.passed]
+        blocked_valitadors = [validator for validator in validator_result_list if validator.block and not validator.passed and not validator.needs_review]
 
         if blocked_valitadors:
             blocked_reasons = "; ".join([blocked.reason for blocked in blocked_valitadors])
@@ -21,6 +21,12 @@ class Engine():
         else:
             weight_sum = sum(validator.weight for validator in validator_result_list)
             final_score = sum(validator.score * validator.weight for validator in validator_result_list) / weight_sum
+
+            review_requests = [validator for validator in validator_result_list if validator.needs_review]
+            
+            if review_requests:
+                review_reasons = "; ".join(validator.reason for validator in review_requests)
+                return Verdict.PENDING, validator_result_list, final_score, review_reasons
 
             if final_score >= self.APPROVE_LIMIT:
                 return Verdict.APPROVED, validator_result_list, final_score, ""
