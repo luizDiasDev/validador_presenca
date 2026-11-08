@@ -10,7 +10,7 @@ def painel(request):
 
     registers = PresencaRecord.objects.all().order_by("-data_criacao")
     if status_filter:
-        registers = PresencaRecord.objects.select_related("usuario").all().order_by("-data_criacao")
+        registers = registers.filter(status=status_filter)
 
     content = {
         "registers": registers,
