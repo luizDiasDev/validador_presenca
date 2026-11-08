@@ -3,7 +3,7 @@ from ..values.factor_result import FactorResult
 
 class QrCodeValidator(ValidatorModel):
     name = "qr_code"
-    weight = 0.3
+    weight = 0.0
     block = True
 
 

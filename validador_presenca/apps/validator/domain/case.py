@@ -1,13 +1,14 @@
-from .factory import buid_engine
+from .factory import build_engine
 from apps.validator.models import PresencaRecord
 from apps.audit.domain.log_register import LogRegister
 
 
 def try_checkin(results_pack: dict):
-    engine = buid_engine()
+    engine = build_engine()
     veredict, results, final_score, reason = engine.calculate(results_pack)
 
     new_register = PresencaRecord.objects.create(
+        qr_token_hash=results_pack.get("qr_token_hash") or "",
         score_facial=next(result.score for result in results if result.name == "facial"),
         score_vida=next(result.score for result in results if result.name == "liveness"),
         geo_valida=results_pack.get("geo_valida", False),

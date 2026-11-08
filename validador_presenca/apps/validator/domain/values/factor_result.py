@@ -13,5 +13,6 @@ class FactorResult:
     score: float
     weight: float
     reason: str = ""
+    needs_review: bool = False
 
 #---NOTA: Se for testar, testa via Django Shell que é melhor, tem que importar desse jeito: from apps.validator.domain.factor_result import FactorResult
