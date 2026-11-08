@@ -27,74 +27,7 @@
 <body class="bg-creme h-screen overflow-hidden flex">
 
     <!-- Menu lateral -->
-    <aside class="w-60 bg-dark-blue flex-shrink-0">
-        <div class="flex flex-col h-full py-6 px-4">
-
-            <!-- Logo -->
-            <div class="flex items-center gap-2 px-2 mb-8">
-                <div class="w-15 h-15 flex items-center justify-center text-dark-blue flex-shrink-0">
-                    <img src="{% static 'images/logo_bege.svg' %}" alt="Logo Adsum">
-                </div>
-                <h1 class="font-display font-bold text-2xl text-creme mb-1">ADSUM</h1>
-            </div>
-
-            <!-- Menu -->
-            <nav class="space-y-1.5 text-sm flex-1">
-                {% if request.user.professor %}
-                <a href="{% url 'teacher_panel:turmas' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
-                    <i data-lucide="book-open" class="w-4 h-4"></i> Minhas Turmas
-                </a>
-                {% endif %}
-                <a href="{% url 'validator:painel' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
-                    <i data-lucide="clipboard-list" class="w-4 h-4"></i> Histórico de Presença
-                </a>
-                <a href="{% url 'checkin:qr_demo' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
-                    <i data-lucide="video" class="w-4 h-4"></i> Chamada ao vivo
-                </a>
-                {% if request.user.administrador %}
-                <a href="{% url 'institution:infraestrutura' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
-                    <i data-lucide="monitor" class="w-4 h-4"></i> Campus e Máquinas
-                </a>
-                {% endif %}
-                {% if request.user.administrador or request.user.professor %}
-                <a href="{% url 'teacher_panel:alunos' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
-                    <i data-lucide="users" class="w-4 h-4"></i> Gestão de Alunos
-                </a>
-                {% endif %}
-                {% if request.user.professor %}
-                <a href="{% url 'teacher_panel:chamadas' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
-                    <i data-lucide="settings" class="w-4 h-4"></i> Configurar Chamada
-                </a>
-                <a href="{% url 'teacher_panel:pendencias' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
-                    <i data-lucide="alert-triangle" class="w-4 h-4"></i> Pendências
-                </a>
-                {% endif %}
-                <a href="{% url 'teacher_panel:dashboard' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
-                    <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Dashboard BI
-                </a>
-                <a href="{% url 'privacy:central' %}" class="flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-lg bg-gold text-dark-blue font-semibold">
-                    <span class="flex items-center gap-2.5"><i data-lucide="shield-check" class="w-4 h-4"></i> Central de Privacidade</span>
-                </a>
-            </nav>
-
-            <!-- Perfil -->
-            <div class="border-t border-white/10 pt-4 flex items-center justify-between px-2">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center text-gold text-xs font-semibold">{{ request.user.first_name|slice:":1"|default:"U" }}</div>
-                    <div class="leading-tight">
-                        <div class="text-white text-xs font-medium">{{ request.user.get_full_name|default:request.user.email }}</div>
-                    </div>
-                </div>
-                <form method="post" action="{% url 'accounts:logout' %}">
-                    {% csrf_token %}
-                    <button type="submit" class="flex items-center gap-2.5 text-white/40 hover:text-white/70">
-                        <i data-lucide="log-out" class="w-4 h-4 cursor-pointer"></i>
-                    </button>
-                </form>
-            </div>
-
-        </div>
-    </aside>
+    {% include "partials/sidebar.html" %}
 
     <!-- Divisoria do Menu lateral -->
     <div class="w-6 bg-dark-blue">

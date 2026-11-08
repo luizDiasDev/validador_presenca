@@ -1,7 +1,7 @@
 from django import forms
 from django.db import transaction
 from django.utils import timezone
-from apps.accounts.models import Usuario
+from apps.accounts.models import Professor, Usuario
 from apps.institution.models import Institution
 from apps.teacher_panel.models import Turma, Disciplina, Aula, Aluno
 
@@ -204,3 +204,64 @@ class AlunoCadastroForm(forms.Form):
             turma=turma,
             matricula=matricula,
         )
+
+class ProfessorCadastroForm(forms.Form):
+    nome = forms.CharField(max_length=150, label="Nome Completo")
+    email = forms.EmailField(label="E-mail Institucional")
+    area_atuacao = forms.CharField(max_length=100, label="Área de Atuação")
+    senha = forms.CharField(max_length=128, required=False, label="Senha")
+
+    def __init__(self, *args, professor_instance=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.professor_instance = professor_instance
+        
+        if not professor_instance:
+            self.fields["senha"].required = True
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip().lower()
+        usuarios_com_email = Usuario.objects.filter(email=email)
+        if self.professor_instance:
+            usuarios_com_email = usuarios_com_email.exclude(pk=self.professor_instance.usuario_id)
+        if usuarios_com_email.exists():
+            raise forms.ValidationError("Já existe um usuário cadastrado com este e-mail.")
+        return email
+
+    def clean_area_atuacao(self):
+        area_atuacao = self.cleaned_data["area_atuacao"].strip()
+        if not area_atuacao:
+            raise forms.ValidationError("Informe a área de atuação do professor.")
+        return area_atuacao
+
+    @transaction.atomic
+    def save(self, instituicao=None) -> Professor:
+        nome_completo = self.cleaned_data["nome"].strip()
+        partes_nome = nome_completo.split(" ", 1)
+        first_name = partes_nome[0]
+        last_name = partes_nome[1] if len(partes_nome) > 1 else ""
+        email = self.cleaned_data["email"]
+        senha = self.cleaned_data.get("senha")
+        area_atuacao = self.cleaned_data["area_atuacao"]
+
+        if self.professor_instance:
+            usuario = self.professor_instance.usuario
+            usuario.email = email
+            usuario.username = email
+            usuario.first_name = first_name
+            usuario.last_name = last_name
+            if senha:
+                usuario.set_password(senha)
+            usuario.save()
+
+            self.professor_instance.area_atuacao = area_atuacao
+            self.professor_instance.save()
+            return self.professor_instance
+
+        usuario = Usuario.objects.create_user(
+            email=email,
+            password=senha,
+            first_name=first_name,
+            last_name=last_name,
+            instituicao=instituicao or Institution.objects.first(),
+        )
+        return Professor.objects.create(usuario=usuario, area_atuacao=area_atuacao)

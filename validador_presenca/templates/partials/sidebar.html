@@ -1,0 +1,74 @@
+{% load static %}
+{% comment %}
+    Menu lateral único do sistema. Toda tela faz: {% include "partials/sidebar.html" %}
+    Para mudar nome, ordem, ícone ou cor de um item, mude SÓ aqui.
+
+    O item da tela atual fica dourado. A tela atual vem de request.resolver_match:
+      - namespace: o app_name do urls.py (ex.: "teacher_panel", "privacy")
+      - url_name:  o name= do path (ex.: "alunos", "dashboard")
+{% endcomment %}
+{% with tela=request.resolver_match item_ativo="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-gold text-dark-blue font-semibold" item_normal="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5" %}
+<aside class="w-60 bg-dark-blue flex-shrink-0">
+    <div class="flex flex-col h-full py-6 px-4">
+
+        <!-- Logo -->
+        <div class="flex items-center gap-2 px-2 mb-8">
+            <div class="w-15 h-15 flex items-center justify-center text-dark-blue flex-shrink-0">
+                <img src="{% static 'images/logo_bege.svg' %}" alt="Logo Adsum">
+            </div>
+            <h1 class="font-display font-bold text-2xl text-creme mb-1">ADSUM</h1>
+        </div>
+
+        <!-- Menu -->
+        <nav class="space-y-1.5 text-sm flex-1">
+            {% if request.user.professor %}
+            <a href="{% url 'teacher_panel:turmas' %}" class="{% if tela.namespace == 'teacher_panel' and tela.url_name == 'turmas' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+                <i data-lucide="book-open" class="w-4 h-4"></i> Minhas Turmas
+            </a>
+            {% endif %}
+            <a href="{% url 'validator:painel' %}" class="{% if tela.namespace == 'validator' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+                <i data-lucide="clipboard-list" class="w-4 h-4"></i> Histórico de Presença
+            </a>
+            <a href="{% url 'checkin:qr_demo' %}" class="{% if tela.namespace == 'checkin' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+                <i data-lucide="video" class="w-4 h-4"></i> Chamada ao vivo
+            </a>
+            {% if request.user.administrador %}
+            <a href="{% url 'institution:infraestrutura' %}" class="{% if tela.namespace == 'institution' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+                <i data-lucide="monitor" class="w-4 h-4"></i> Campus e Máquinas
+            </a>
+            {% endif %}
+            {% if request.user.administrador or request.user.professor %}
+            <a href="{% url 'teacher_panel:alunos' %}" class="{% if tela.namespace == 'teacher_panel' and tela.url_name == 'alunos' or tela.namespace == 'teacher_panel' and tela.url_name == 'professores' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+                <i data-lucide="users" class="w-4 h-4"></i> {% if request.user.administrador %}Gestão de Usuários{% else %}Gestão de Alunos{% endif %}
+            </a>
+            {% endif %}
+            {% if request.user.professor %}
+            <a href="{% url 'teacher_panel:chamadas' %}" class="{% if tela.namespace == 'teacher_panel' and tela.url_name == 'chamadas' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+                <i data-lucide="settings" class="w-4 h-4"></i> Configurar Chamada
+            </a>
+            <a href="{% url 'teacher_panel:pendencias' %}" class="{% if tela.namespace == 'teacher_panel' and tela.url_name == 'pendencias' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+                <i data-lucide="alert-triangle" class="w-4 h-4"></i> Pendências
+            </a>
+            {% endif %}
+            <a href="{% url 'teacher_panel:dashboard' %}" class="{% if tela.namespace == 'teacher_panel' and tela.url_name == 'dashboard' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+                <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Dashboard BI
+            </a>
+            <a href="{% url 'privacy:central' %}" class="{% if tela.namespace == 'privacy' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+                <i data-lucide="shield-check" class="w-4 h-4"></i> Central de Privacidade
+            </a>
+        </nav>
+
+        <!-- Perfil -->
+        <div class="border-t border-white/10 pt-4 flex items-center justify-between px-2">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center text-gold text-xs font-semibold">{{ request.user.first_name|slice:":1"|default:"U" }}</div>
+                <div class="text-white text-xs font-medium">{{ request.user.get_full_name|default:request.user.email }}</div>
+            </div>
+            <form method="post" action="{% url 'accounts:logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="text-white/40 hover:text-white/70"><i data-lucide="log-out" class="w-4 h-4 cursor-pointer"></i></button>
+            </form>
+        </div>
+    </div>
+</aside>
+{% endwith %}
