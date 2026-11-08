@@ -51,6 +51,11 @@
                 <a href="{% url 'checkin:qr_demo' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                     <i data-lucide="video" class="w-4 h-4"></i> Chamada ao vivo
                 </a>
+                {% if request.user.administrador %}
+                <a href="{% url 'institution:infraestrutura' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="monitor" class="w-4 h-4"></i> Campus e Máquinas
+                </a>
+                {% endif %}
                 {% if request.user.professor %}
                 <a href="{% url 'teacher_panel:turmas' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                     <i data-lucide="users" class="w-4 h-4"></i> Gestão de Alunos
