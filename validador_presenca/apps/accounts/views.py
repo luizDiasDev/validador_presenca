@@ -86,7 +86,7 @@ def config_totp(request):
             })
 
             login(request, user)
-            return redirect("validator:painel")
+            return redirect(settings.LOGIN_REDIRECT_URL)
 
         LogRegister().register({
             "autor_id": user.id,
@@ -134,7 +134,7 @@ def read_totp(request):
             })
 
             login(request, user)
-            return redirect("validator:painel")
+            return redirect(settings.LOGIN_REDIRECT_URL)
 
         LogRegister().register({
             "autor_id": user.id,

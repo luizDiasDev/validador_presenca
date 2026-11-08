@@ -27,11 +27,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-07(z@3(3#zv4rtr^3=u$v1-m54fzrl^b(9z60p!rs+=#nrzwuf'
+SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # Ativa debug local e desativa em produção
-DEBUG = os.environ.get("DEBUG", "True").lower() in ("true", "1", "yes")
+DEBUG = os.environ.get("DEBUG", "False").lower() in ("true", "1", "yes")
 
 # Domínios autorizados a acessar a aplicação
 ALLOWED_HOSTS = os.environ.get(
@@ -123,7 +123,7 @@ CACHES = {
 
 LOGIN_URL = "accounts:login"
 
-LOGIN_REDIRECT_URL = "validator:painel"
+LOGIN_REDIRECT_URL = "teacher_panel:dashboard"
 
 AUTH_USER_MODEL = "accounts.Usuario"
 
