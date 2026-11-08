@@ -15,6 +15,7 @@ from apps.checkin.domain.services.chamada_service import (
 )
 from apps.checkin.models import ChamadaSession
 from apps.institution.models import Room
+from apps.teacher_panel.domain.services.dashboard_service import DashboardService
 from apps.teacher_panel.domain.services.revisao_service import RevisaoPresencaService
 from apps.teacher_panel.forms import (
     AbrirChamadaForm,
@@ -399,3 +400,19 @@ def revisar_pendencia_view(request, registro_id: int):
         request, f"Registro #{registro.id} atualizado para {registro.status}."
     )
     return redirect("teacher_panel:pendencias")
+
+
+@login_required
+def dashboard_view(request):
+    if not hasattr(request.user, "professor") and not hasattr(
+        request.user, "administrador"
+    ):
+        return redirect("accounts:login")
+
+    professor = getattr(request.user, "professor", None)
+    turma_param = request.GET.get("turma", "")
+    turma_id = int(turma_param) if turma_param.isdigit() else None
+
+    service = DashboardService()
+    context = service.gerar_dados(professor=professor, turma_id=turma_id)
+    return render(request, "teacher_panel/dashboard.html", context)

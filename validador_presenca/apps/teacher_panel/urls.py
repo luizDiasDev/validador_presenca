@@ -4,6 +4,7 @@ from . import views
 app_name = "teacher_panel"
 
 urlpatterns = [
+    path("dashboard/", views.dashboard_view, name="dashboard"),
     # Listagem principal e CRUD de Turmas, Disciplinas e Aulas
     path("turmas/", views.turmas_view, name="turmas"),
     path("turmas/criar/", views.salvar_turma_view, name="criar_turma"),
