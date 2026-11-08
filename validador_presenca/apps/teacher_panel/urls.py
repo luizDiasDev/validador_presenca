@@ -33,6 +33,19 @@ urlpatterns = [
     path(
         "alunos/<int:aluno_id>/excluir/", views.excluir_aluno_view, name="excluir_aluno"
     ),
+    # Professores
+    path("professores/", views.professores_view, name="professores"),
+    path("professores/criar/", views.salvar_professor_view, name="criar_professor"),
+    path(
+        "professores/<int:professor_id>/editar/",
+        views.salvar_professor_view,
+        name="editar_professor",
+    ),
+    path(
+        "professores/<int:professor_id>/excluir/",
+        views.excluir_professor_view,
+        name="excluir_professor",
+    ),
     # Sessoes de chamada
     path("chamadas/", views.chamadas_view, name="chamadas"),
     path("chamadas/abrir/", views.abrir_chamada_view, name="abrir_chamada"),

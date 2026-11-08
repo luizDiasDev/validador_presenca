@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from apps.accounts.decorators import only_admin, only_teacher
+from apps.accounts.models import Professor
 from apps.checkin.domain.services.chamada_service import (
     ChamadaJaAbertaError,
     ChamadaJaEncerradaError,
@@ -20,6 +21,7 @@ from apps.teacher_panel.domain.services.revisao_service import RevisaoPresencaSe
 from apps.teacher_panel.forms import (
     AbrirChamadaForm,
     AlunoCadastroForm,
+    ProfessorCadastroForm,
     AulaForm,
     DisciplinaForm,
     RevisaoPresencaForm,
@@ -252,6 +254,61 @@ def excluir_aluno_view(request, aluno_id: int):
             "Não é possível excluir este aluno pois já existem registros vinculados a ele.",
         )
     return redirect("teacher_panel:alunos")
+
+@login_required
+@only_admin
+def professores_view(request):
+    professores = Professor.objects.select_related("usuario").order_by(
+        "usuario__first_name", "usuario__last_name"
+    )
+    context = {
+        "professores": professores,
+        "total_professores": professores.count(),
+    }
+    return render(request, "teacher_panel/professores.html", context)
+
+
+@login_required
+@only_admin
+@require_POST
+def salvar_professor_view(request, professor_id: int | None = None):
+    instancia = (
+        get_object_or_404(Professor.objects.select_related("usuario"), pk=professor_id)
+        if professor_id
+        else None
+    )
+    form = ProfessorCadastroForm(request.POST, professor_instance=instancia)
+
+    if form.is_valid():
+        professor = form.save(instituicao=getattr(request.user, "instituicao", None))
+        acao = "atualizado" if professor_id else "cadastrado"
+        messages.success(
+            request, f"Professor {professor.usuario.get_full_name()} {acao} com sucesso."
+        )
+    else:
+        for campo, erros in form.errors.items():
+            messages.error(request, f"{erros[0]}")
+
+    return redirect("teacher_panel:professores")
+
+
+@login_required
+@only_admin
+@require_POST
+def excluir_professor_view(request, professor_id: int):
+    professor = get_object_or_404(Professor.objects.select_related("usuario"), pk=professor_id)
+    try:
+        nome = professor.usuario.get_full_name() or professor.usuario.email
+        usuario = professor.usuario
+        professor.delete()
+        usuario.delete()
+        messages.success(request, f"Professor {nome} excluído com sucesso.")
+    except ProtectedError:
+        messages.error(
+            request,
+            "Não é possível excluir este professor pois ele já possui disciplinas ou chamadas vinculadas.",
+        )
+    return redirect("teacher_panel:professores")
 
 
 @login_required
