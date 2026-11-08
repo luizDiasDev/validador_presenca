@@ -17,4 +17,10 @@ def test_invalid_qrcode():
 
     assert result.passed is False
 
+def test_qrcode_only_blocks_and_does_not_weigh_in_the_score():
+    validator = QrCodeValidator()
+
+    assert validator.weight == 0.0
+    assert validator.block is True
+
 

@@ -1,4 +1,4 @@
-from .factory import buid_engine
+from .factory import build_engine
 from apps.validator.models import PresencaRecord
 from apps.audit.domain.log_register import LogRegister
 from apps.checkin.models import ChamadaSession
@@ -7,7 +7,7 @@ from apps.accounts.models import Usuario
 
 
 def try_checkin(results_pack: dict):
-    engine = buid_engine()
+    engine = build_engine()
     veredict, results, final_score, reason = engine.calculate(results_pack)
 
     sessao = ChamadaSession.objects.filter(pk=results_pack.get("sessao_id")).first()
