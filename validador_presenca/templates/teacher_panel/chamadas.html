@@ -39,15 +39,23 @@
             </div>
 
             <nav class="space-y-1.5 text-sm flex-1">
+                {% if request.user.professor %}
                 <a href="{% url 'teacher_panel:turmas' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                     <i data-lucide="book-open" class="w-4 h-4"></i> Minhas Turmas
                 </a>
+                {% endif %}
                 <a href="{% url 'validator:painel' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                     <i data-lucide="clipboard-list" class="w-4 h-4"></i> Histórico de Presença
                 </a>
                 <a href="{% url 'checkin:qr_demo' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                     <i data-lucide="video" class="w-4 h-4"></i> Chamada ao vivo
                 </a>
+                {% if request.user.administrador %}
+                <a href="{% url 'institution:infraestrutura' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
+                    <i data-lucide="monitor" class="w-4 h-4"></i> Campus e Máquinas
+                </a>
+                {% endif %}
+                {% if request.user.professor %}
                 <a href="{% url 'teacher_panel:turmas' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                     <i data-lucide="users" class="w-4 h-4"></i> Gestão de Alunos
                 </a>
@@ -57,6 +65,7 @@
                 <a href="{% url 'teacher_panel:pendencias' %}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                     <i data-lucide="alert-triangle" class="w-4 h-4"></i> Pendências
                 </a>
+                {% endif %}
                 <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5">
                     <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Dashboard BI
                 </a>
@@ -100,18 +109,25 @@
         {% endif %}
 
         <div class="bg-white rounded-2xl p-6">
-            <h1 class="font-[family-name:var(--font-display)] text-3xl font-bold text-light-blue mb-6">
-                CONFIGURAR E INICIAR CHAMADA
-            </h1>
+            <div class="mb-6">
+                <h1 class="font-[family-name:var(--font-display)] text-3xl font-bold text-light-blue">
+                    CONFIGURAR E INICIAR CHAMADA
+                </h1>
+                <p class="text-xs text-ink/50 mt-1">
+                    Exibindo apenas as suas aulas de hoje ({{ dia_hoje_nome }}, {{ data_hoje|date:"d/m/Y" }}).
+                </p>
+            </div>
 
             <form method="post" action="{% url 'teacher_panel:abrir_chamada' %}" class="bg-creme rounded-xl p-5 mb-8">
                 {% csrf_token %}
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                     <div>
-                        <label class="block text-xs font-semibold text-ink/70 mb-1">Aula (define Sala e Turma)</label>
-                        <select name="aula" required class="w-full px-3.5 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
+                        <label class="block text-xs font-semibold text-ink/70 mb-1">Aula do Dia (Turma e Disciplina)</label>
+                        <select id="select-aula" name="aula" required onchange="atualizarLimiteTempos()" class="w-full px-3.5 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
                             {% for a in form.fields.aula.queryset %}
-                                <option value="{{ a.id }}">{{ a }}</option>
+                                <option value="{{ a.id }}" data-tempos="{{ a.tempos_aula }}">{{ a }}</option>
+                            {% empty %}
+                                <option value="" disabled selected>Nenhuma aula cadastrada para {{ dia_hoje_nome }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -120,12 +136,12 @@
                         <input type="number" name="duracao_min" min="1" max="180" value="10" required class="w-full px-3.5 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-ink/70 mb-1">Tempos de aula cobertos</label>
-                        <input type="number" name="tempos_cobertos" min="1" max="8" value="4" required class="w-full px-3.5 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
+                        <label id="label-tempos" class="block text-xs font-semibold text-ink/70 mb-1">Tempos de aula cobertos</label>
+                        <input id="input-tempos" type="number" name="tempos_cobertos" min="1" max="8" value="4" required class="w-full px-3.5 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
                     </div>
                 </div>
                 <div class="mt-4 flex justify-end">
-                    <button type="submit" class="flex items-center gap-2 bg-gold text-dark-blue text-xs font-semibold px-5 py-2.5 rounded-lg hover:bg-gold/80">
+                    <button type="submit" {% if not form.fields.aula.queryset %}disabled{% endif %} class="flex items-center gap-2 bg-gold text-dark-blue text-xs font-semibold px-5 py-2.5 rounded-lg hover:bg-gold/80 disabled:opacity-40 disabled:cursor-not-allowed">
                         <i data-lucide="play" class="w-4 h-4"></i> ABRIR SESSÃO DE CHAMADA
                     </button>
                 </div>
@@ -137,7 +153,7 @@
                     <thead>
                         <tr class="bg-tan text-ink/60 text-xs">
                             <th class="text-left font-semibold py-3 px-4">#</th>
-                            <th class="text-left font-semibold py-3">Disciplina / Aula</th>
+                            <th class="text-left font-semibold py-3">Turma / Disciplina</th>
                             <th class="text-left font-semibold py-3">Sala</th>
                             <th class="text-center font-semibold py-3">Tempos</th>
                             <th class="text-center font-semibold py-3">Abertura</th>
@@ -151,7 +167,11 @@
                             <tr class="hover:bg-creme/40">
                                 <td class="py-3 px-4 font-medium text-ink">#{{ sessao.id }}</td>
                                 <td class="py-3 text-ink/80">
-                                    {% if sessao.aula %}{{ sessao.aula.disciplina.nome }}{% else %}Chamada Avulsa{% endif %}
+                                    {% if sessao.aula %}
+                                        {{ sessao.aula.disciplina.turma.codigo }} ({{ sessao.aula.disciplina.turma.curso }}) - {{ sessao.aula.disciplina.nome }}
+                                    {% else %}
+                                        Chamada Avulsa
+                                    {% endif %}
                                 </td>
                                 <td class="py-3 text-ink/70">{{ sessao.sala.codigo }}</td>
                                 <td class="py-3 text-center font-semibold text-light-blue">{{ sessao.tempos_cobertos }}</td>
@@ -188,6 +208,23 @@
 
     <script>
         lucide.createIcons();
+
+        function atualizarLimiteTempos() {
+            const select = document.getElementById('select-aula');
+            const inputTempos = document.getElementById('input-tempos');
+            const labelTempos = document.getElementById('label-tempos');
+            if (!select || !inputTempos) return;
+            const opt = select.options[select.selectedIndex];
+            if (opt && opt.dataset.tempos) {
+                const maxTempos = parseInt(opt.dataset.tempos, 10);
+                inputTempos.max = maxTempos;
+                inputTempos.value = maxTempos;
+                if (labelTempos) {
+                    labelTempos.textContent = `Tempos de aula cobertos (máx: ${maxTempos})`;
+                }
+            }
+        }
+        atualizarLimiteTempos();
 
         const alerta = document.getElementById('mensagens-alerta');
         if (alerta) {
