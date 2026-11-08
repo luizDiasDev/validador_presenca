@@ -186,7 +186,11 @@ def excluir_aula_view(request, aula_id: int):
 def chamadas_view(request):
     professor = request.user.professor
     agora = timezone.now()
-    form = AbrirChamadaForm(professor=professor)
+    data_hoje = timezone.localdate()
+    dia_semana_hoje = data_hoje.weekday()
+    dia_hoje_nome = dict(Aula.DIAS_SEMANA).get(dia_semana_hoje, "")
+
+    form = AbrirChamadaForm(professor=professor, dia_semana=dia_semana_hoje)
 
     sessoes = (
         ChamadaSession.objects.filter(professor=professor)
@@ -199,6 +203,8 @@ def chamadas_view(request):
         "form": form,
         "sessoes": sessoes,
         "sessoes_abertas_ids": sessoes_abertas_ids,
+        "data_hoje": data_hoje,
+        "dia_hoje_nome": dia_hoje_nome,
     }
     return render(request, "teacher_panel/chamadas.html", context)
 

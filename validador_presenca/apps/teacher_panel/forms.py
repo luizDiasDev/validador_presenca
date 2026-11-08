@@ -1,4 +1,5 @@
 from django import forms
+from django.utils import timezone
 from apps.teacher_panel.models import Turma, Disciplina, Aula
 
 
@@ -55,7 +56,6 @@ class AulaForm(forms.ModelForm):
 
 
 class AbrirChamadaForm(forms.Form):
-    # Sem duracao_qr_s: a rotacao do QR e fixa no sistema
     aula = forms.ModelChoiceField(
         queryset=Aula.objects.none(),
         label="Aula",
@@ -73,14 +73,33 @@ class AbrirChamadaForm(forms.Form):
         label="Tempos de aula cobertos",
     )
 
-    def __init__(self, *args, professor=None, **kwargs):
+    def __init__(self, *args, professor=None, dia_semana=None, **kwargs):
         super().__init__(*args, **kwargs)
+        if dia_semana is None:
+            dia_semana = timezone.localdate().weekday()
         if professor is not None:
             self.fields["aula"].queryset = (
-                Aula.objects.filter(disciplina__professor=professor)
+                Aula.objects.filter(
+                    disciplina__professor=professor,
+                    dia_semana=dia_semana,
+                )
                 .select_related("disciplina__turma__sala")
-                .order_by("dia_semana", "hora_inicio")
+                .order_by("hora_inicio")
             )
+
+    def clean(self):
+        cleaned = super().clean()
+        aula = cleaned.get("aula")
+        tempos = cleaned.get("tempos_cobertos")
+
+        if aula is not None and tempos is not None:
+            if tempos < 1 or tempos > aula.tempos_aula:
+                self.add_error(
+                    "tempos_cobertos",
+                    f"Esta aula permite cobrir entre 1 e {aula.tempos_aula} tempo(s) configurado(s) na grade.",
+                )
+
+        return cleaned
 
 
 class RevisaoPresencaForm(forms.Form):
