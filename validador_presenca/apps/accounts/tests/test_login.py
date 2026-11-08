@@ -75,7 +75,7 @@ def test_configuring_totp_with_correct_code_activates_user_and_logs_in(usuario_s
     usuario_sem_totp.refresh_from_db()
     assert usuario_sem_totp.totp_ativo is True
     assert response.status_code == 302
-    assert response.url == reverse("validator:painel")
+    assert response.url == reverse("teacher_panel:dashboard")
 
     log = AuditLog.objects.filter(acao="TOTP_CONFIGURADO").first()
     assert log is not None

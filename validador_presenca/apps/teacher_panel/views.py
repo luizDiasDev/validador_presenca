@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from apps.accounts.decorators import only_admin, only_teacher
+from apps.accounts.decorators import only_admin, only_teacher, only_teacher_or_admin
 from apps.accounts.models import Professor
 from apps.checkin.domain.services.chamada_service import (
     ChamadaJaAbertaError,
@@ -187,11 +187,8 @@ def excluir_aula_view(request, aula_id: int):
 
 
 @login_required
+@only_teacher_or_admin
 def alunos_view(request):
-    if not hasattr(request.user, "professor") and not hasattr(
-        request.user, "administrador"
-    ):
-        return redirect("accounts:login")
 
     turma_filtro = request.GET.get("turma", "")
     turmas = Turma.objects.select_related("sala").order_by("codigo")
@@ -460,11 +457,8 @@ def revisar_pendencia_view(request, registro_id: int):
 
 
 @login_required
+@only_teacher_or_admin
 def dashboard_view(request):
-    if not hasattr(request.user, "professor") and not hasattr(
-        request.user, "administrador"
-    ):
-        return redirect("accounts:login")
 
     professor = getattr(request.user, "professor", None)
     turma_param = request.GET.get("turma", "")

@@ -21,14 +21,21 @@
 
         <!-- Menu -->
         <nav class="space-y-1.5 text-sm flex-1">
+            {% if request.user.administrador or request.user.professor %}
+            <a href="{% url 'teacher_panel:dashboard' %}" class="{% if tela.namespace == 'teacher_panel' and tela.url_name == 'dashboard' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+                <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Dashboard BI
+            </a>
+            {% endif %}
             {% if request.user.professor %}
             <a href="{% url 'teacher_panel:turmas' %}" class="{% if tela.namespace == 'teacher_panel' and tela.url_name == 'turmas' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
                 <i data-lucide="book-open" class="w-4 h-4"></i> Minhas Turmas
             </a>
             {% endif %}
+            {% if request.user.professor %}
             <a href="{% url 'validator:painel' %}" class="{% if tela.namespace == 'validator' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
                 <i data-lucide="clipboard-list" class="w-4 h-4"></i> Histórico de Presença
             </a>
+            {% endif %}
             <a href="{% url 'checkin:qr_demo' %}" class="{% if tela.namespace == 'checkin' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
                 <i data-lucide="video" class="w-4 h-4"></i> Chamada ao vivo
             </a>
@@ -50,9 +57,6 @@
                 <i data-lucide="alert-triangle" class="w-4 h-4"></i> Pendências
             </a>
             {% endif %}
-            <a href="{% url 'teacher_panel:dashboard' %}" class="{% if tela.namespace == 'teacher_panel' and tela.url_name == 'dashboard' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
-                <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Dashboard BI
-            </a>
             <a href="{% url 'privacy:central' %}" class="{% if tela.namespace == 'privacy' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
                 <i data-lucide="shield-check" class="w-4 h-4"></i> Central de Privacidade
             </a>
