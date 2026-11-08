@@ -21,6 +21,14 @@ def only_admin(view_func):
         return view_func(request, *args, **kwargs)
     return wrapper
 
+def only_student(view_func):
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not hasattr(request.user, "aluno"):
+            return redirect("accounts:login")
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
 def only_teacher_or_admin(view_func):
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
