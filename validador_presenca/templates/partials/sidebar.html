@@ -36,9 +36,11 @@
                 <i data-lucide="clipboard-list" class="w-4 h-4"></i> Histórico de Presença
             </a>
             {% endif %}
+            {% if request.user.aluno %}
             <a href="{% url 'checkin:qr_demo' %}" class="{% if tela.namespace == 'checkin' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
                 <i data-lucide="video" class="w-4 h-4"></i> Chamada ao vivo
             </a>
+            {% endif %}
             {% if request.user.administrador %}
             <a href="{% url 'institution:infraestrutura' %}" class="{% if tela.namespace == 'institution' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
                 <i data-lucide="monitor" class="w-4 h-4"></i> Campus e Máquinas
