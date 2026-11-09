@@ -15,9 +15,11 @@ from apps.institution.domain.services.geocoding_service import GeocodingService
 from apps.institution.models import Campus, Machine
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseBadRequest, JsonResponse
+from apps.accounts.decorators import only_student
 
 
 @login_required
+@only_student
 def qr_demo(request):
     svc = QrTokenService(cache=cache)
 
