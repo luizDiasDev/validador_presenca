@@ -9,7 +9,7 @@ from django.test import Client
 from apps.accounts.models import Professor, Usuario
 from apps.checkin.domain.services.chamada_service import ChamadaService
 from apps.institution.models import Campus, Institution, Room
-from apps.teacher_panel.models import Aula, Disciplina, Turma
+from apps.teacher_panel.models import Aluno, Aula, Disciplina, Turma
 from apps.validator.models import PresencaRecord
 
 QR_PATH = "/checkin/"
@@ -49,6 +49,11 @@ def create_lesson(room, teacher, subject_name):
 def logged_http_session():
     """Creates a user, logs in through the framework and returns a requests.Session with the session cookie."""
     user = Usuario.objects.create_user(email=f"aluno.{uuid.uuid4().hex}@umc.br", password="senha-forte-123")
+    suffix = uuid.uuid4().hex[:6]
+    class_group = Turma.objects.create(
+        sala=create_room(), codigo=f"AL-{suffix}", nome="Turma do aluno", curso="Eng. Software", semestre_inicio="2026-08-01"
+    )
+    Aluno.objects.create(usuario=user, turma=class_group, matricula=suffix)
     django_client = Client()
     django_client.force_login(user)
     http = requests.Session()

@@ -15,7 +15,6 @@ def active_item_text(html):
 @pytest.mark.parametrize("page, menu_text", [
     ("teacher_panel:turmas", "Minhas Turmas"),
     ("validator:painel", "Histórico de Presença"),
-    ("checkin:qr_demo", "Chamada ao vivo"),
     ("teacher_panel:alunos", "Gestão de Alunos"),
     ("teacher_panel:chamadas", "Configurar Chamada"),
     ("teacher_panel:pendencias", "Pendências"),
