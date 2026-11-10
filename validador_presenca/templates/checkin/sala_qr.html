@@ -1,0 +1,51 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    {% include "partials/favicon.html" %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- a página se recarrega sozinha e cada recarga gera um QR novo -->
+    <meta http-equiv="refresh" content="{{ atualiza_s }}">
+    <title>QR da Sala | ADSUM</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <style type="text/tailwindcss">
+        @theme {
+            --color-dark-blue: #0F1B2E;
+            --color-gold: #C9962C;
+            --color-creme: #F7F3EA;
+            --font-display: 'Cinzel', serif;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="min-h-screen bg-dark-blue text-creme flex flex-col items-center justify-center gap-6 p-6">
+    <div class="flex items-center gap-3">
+        <img src="{% static 'images/logo_bege.svg' %}" alt="Logo Adsum" class="w-14 h-14">
+        <h1 class="font-display text-4xl font-bold">ADSUM</h1>
+    </div>
+
+    {% if sessao %}
+        <div class="text-center">
+            <p class="text-2xl font-semibold">{{ sessao.aula.disciplina.nome|default:"Chamada" }}</p>
+            <p class="text-creme/60">Sala {{ sessao.sala.codigo }}{% if maquina %} · {{ maquina.apelido }}{% endif %} · chamada aberta até {{ sessao.fecha_em|time:"H:i" }}</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl">
+            <img src="data:image/png;base64,{{ qr_image }}" alt="QR Code da chamada" class="w-80 h-80">
+        </div>
+
+        <p class="text-xl text-center">Aponte a câmera do celular para o QR Code</p>
+        <p class="text-sm text-creme/50">O código muda a cada {{ atualiza_s }} segundos e vale para uma única leitura.</p>
+    {% else %}
+        <p class="text-2xl font-semibold text-center">Nenhuma chamada aberta no momento</p>
+        <p class="text-creme/60 text-center">Abra a chamada em "Configurar Chamada". Esta tela atualiza sozinha.</p>
+    {% endif %}
+
+    <a href="{% url 'teacher_panel:chamadas' %}" class="text-sm text-gold hover:underline">Voltar ao painel</a>
+</body>
+</html>
