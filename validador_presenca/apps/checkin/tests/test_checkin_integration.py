@@ -1,4 +1,3 @@
-import re
 import uuid
 from datetime import time
 
@@ -7,7 +6,10 @@ import requests
 from django.test import Client
 
 from apps.accounts.models import Professor, Usuario
+from django.core.cache import cache
+
 from apps.checkin.domain.services.chamada_service import ChamadaService
+from apps.checkin.domain.services.qr_service import QrTokenService
 from apps.institution.models import Campus, Institution, Room
 from apps.teacher_panel.models import Aluno, Aula, Disciplina, Turma
 from apps.validator.models import PresencaRecord
@@ -61,10 +63,6 @@ def logged_http_session():
     return http, user
 
 
-def extract_token(html):
-    return re.search(r'id="input-token" value="([^"]+)"', html).group(1)
-
-
 # ---------- GET /checkin/api/v1/sessoes/sala/{id}/status/ ----------
 
 
@@ -93,36 +91,13 @@ def test_status_comSalaIdNaoNumerico_deveRetornar404(live_server):
     assert "Not Found" in response.text
 
 
-# ---------- GET /checkin/ (qr_demo) ----------
-
-
-def test_qrDemo_logado_deveRetornar200ComNovoTokenParaSessaoEMaquina(live_server):
-    http, _ = logged_http_session()
-
-    response = http.get(live_server.url + QR_PATH, params={"sessao": 7, "maquina": 3})
-
-    assert response.status_code == 200
-    assert extract_token(response.text)
-    assert 'Sessão <span class="text-dark-blue font-semibold">7</span>' in response.text
-    assert 'Máquina <span class="text-dark-blue font-semibold">3</span>' in response.text
-    assert "data:image/png;base64," in response.text
-
-
-def test_qrDemo_comSessaoNaoNumerica_deveRetornar400ComMensagem(live_server):
-    http, _ = logged_http_session()
-
-    response = http.get(live_server.url + QR_PATH, params={"sessao": "abc"})
-
-    assert response.status_code == 400
-    assert "sessao e maquina devem ser números inteiros" in response.text
-
-
 # ---------- POST /checkin/ (qr_demo: consome o token e registra presença) ----------
 
 def test_qrDemo_postComTokenValido_deveRegistrarPresencaNoBanco(live_server):
     http, aluno = logged_http_session()
-    pagina = http.get(live_server.url + QR_PATH)
-    token = extract_token(pagina.text)
+    http.get(live_server.url + QR_PATH)  # abre a tela do aluno (recebe o cookie de CSRF)
+    # o QR agora é exibido na tela da sala; aqui o token é gerado direto pelo serviço
+    token = QrTokenService(cache=cache).gerar(sessao_id=1, maquina_id=1).token
 
     response = http.post(
         live_server.url + QR_PATH,
@@ -131,7 +106,7 @@ def test_qrDemo_postComTokenValido_deveRegistrarPresencaNoBanco(live_server):
     )
 
     assert response.status_code == 200
-    assert "Sessão 1  Máquina 1" in response.text  # bloco de resultado do QR consumido
+    assert "Check-in não aceito" in response.text  # sessão 1 não existe, então a chamada não está aberta
     # Efeito persistido: um registro de presença foi gravado pelo try_checkin
     registro = PresencaRecord.objects.get()
     assert registro.origem == "qr"

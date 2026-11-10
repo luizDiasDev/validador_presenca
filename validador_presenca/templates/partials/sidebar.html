@@ -1,11 +1,6 @@
 {% load static %}
 {% comment %}
     Menu lateral único do sistema. Toda tela faz: {% include "partials/sidebar.html" %}
-    Para mudar nome, ordem, ícone ou cor de um item, mude SÓ aqui.
-
-    O item da tela atual fica dourado. A tela atual vem de request.resolver_match:
-      - namespace: o app_name do urls.py (ex.: "teacher_panel", "privacy")
-      - url_name:  o name= do path (ex.: "alunos", "dashboard")
 {% endcomment %}
 {% with tela=request.resolver_match item_ativo="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-gold text-dark-blue font-semibold" item_normal="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5" %}
 <aside class="w-60 bg-dark-blue flex-shrink-0">
@@ -37,8 +32,8 @@
             </a>
             {% endif %}
             {% if request.user.aluno %}
-            <a href="{% url 'checkin:qr_demo' %}" class="{% if tela.namespace == 'checkin' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
-                <i data-lucide="video" class="w-4 h-4"></i> Chamada ao vivo
+            <a href="{% url 'checkin:qr_demo' %}" class="{% if tela.namespace == 'checkin' and tela.url_name == 'qr_demo' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+                <i data-lucide="scan-line" class="w-4 h-4"></i> Fazer check-in
             </a>
             {% endif %}
             {% if request.user.administrador %}
@@ -54,6 +49,9 @@
             {% if request.user.professor %}
             <a href="{% url 'teacher_panel:chamadas' %}" class="{% if tela.namespace == 'teacher_panel' and tela.url_name == 'chamadas' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
                 <i data-lucide="settings" class="w-4 h-4"></i> Configurar Chamada
+            </a>
+            <a href="{% url 'checkin:sala' %}" class="{% if tela.namespace == 'checkin' and tela.url_name == 'sala' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+                <i data-lucide="qr-code" class="w-4 h-4"></i> QR da Sala
             </a>
             <a href="{% url 'teacher_panel:pendencias' %}" class="{% if tela.namespace == 'teacher_panel' and tela.url_name == 'pendencias' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
                 <i data-lucide="alert-triangle" class="w-4 h-4"></i> Pendências

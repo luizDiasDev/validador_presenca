@@ -1,0 +1,108 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    {% include "partials/favicon.html" %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check-in | ADSUM</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <style type="text/tailwindcss">
+        @theme {
+            --color-dark-blue: #0F1B2E;
+            --color-gold: #C9962C;
+            --color-creme: #F7F3EA;
+            --color-ink: #1F2A3C;
+            --font-display: 'Cinzel', serif;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="min-h-screen bg-creme text-ink flex flex-col items-center p-6 gap-6">
+    <div class="flex items-center gap-2 mt-4">
+        <img src="{% static 'images/logo_bg.svg' %}" alt="Logo Adsum" class="w-10 h-10">
+        <h1 class="font-display text-2xl font-bold text-dark-blue">ADSUM</h1>
+    </div>
+
+    {% if enviado %}
+        {% if status == "PENDING" %}
+            <div class="w-full max-w-sm bg-white rounded-2xl p-6 text-center border-2 border-gold">
+                <p class="text-xl font-bold text-dark-blue">Presença registrada</p>
+                <p class="mt-2 text-sm text-ink/70">QR Code e localização conferidos. Falta a verificação facial, então o professor vai confirmar a sua presença.</p>
+            </div>
+        {% elif status == "APPROVED" %}
+            <div class="w-full max-w-sm bg-white rounded-2xl p-6 text-center border-2 border-green-600">
+                <p class="text-xl font-bold text-green-700">Presença confirmada</p>
+            </div>
+        {% else %}
+            <div class="w-full max-w-sm bg-white rounded-2xl p-6 text-center border-2 border-red-600">
+                <p class="text-xl font-bold text-red-700">Check-in não aceito</p>
+                {% if not token_valido %}
+                    <p class="mt-2 text-sm text-ink/70">Este QR Code já foi usado, expirou ou a chamada não está aberta. Leia o QR da sala de novo.</p>
+                {% elif geo_resultado %}
+                    <p class="mt-2 text-sm text-ink/70">{{ geo_resultado.motivo }}</p>
+                {% else %}
+                    <p class="mt-2 text-sm text-ink/70">Não foi possível obter a sua localização. Libere a localização do navegador e leia o QR de novo.</p>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        {% if geo_resultado and geo_resultado.valida %}
+            <p class="text-sm text-ink/60 text-center">Você está a {{ geo_resultado.distancia_m|floatformat:0 }} m do campus{% if endereco_aluno %}<br>{{ endereco_aluno }}{% endif %}</p>
+        {% endif %}
+        <a href="{% url 'checkin:qr_demo' %}" class="text-sm text-dark-blue underline">Voltar</a>
+    {% elif not token %}
+        <div class="w-full max-w-sm bg-white rounded-2xl p-6 text-center">
+            <p class="text-lg font-semibold text-dark-blue">Fazer check-in</p>
+            <p class="mt-3 text-sm text-ink/70">Aponte a câmera do celular para o QR Code exibido no computador da sala. O link abre esta página e o check-in é enviado sozinho.</p>
+            <p class="mt-3 text-xs text-ink/50">Cada QR Code vale para uma única leitura e muda a cada poucos segundos. Permita o acesso à localização quando o navegador pedir.</p>
+        </div>
+    {% else %}
+        <div class="w-full max-w-sm bg-white rounded-2xl p-6 text-center">
+            <p class="text-lg font-semibold text-dark-blue" id="mensagem">Obtendo a sua localização...</p>
+            <p class="mt-2 text-sm text-ink/60">Se o navegador perguntar, permita o acesso à localização.</p>
+        </div>
+
+        <form method="post" id="form-checkin">
+            {% csrf_token %}
+            <input type="hidden" name="token" value="{{ token }}">
+            <input type="hidden" name="lat" id="input-lat">
+            <input type="hidden" name="lon" id="input-lon">
+        </form>
+
+        <script>
+            const form = document.getElementById("form-checkin");
+            const enviar = () => {
+                document.getElementById("mensagem").textContent = "Enviando o check-in...";
+                form.submit();
+            };
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (posicao) => {
+                        document.getElementById("input-lat").value = posicao.coords.latitude;
+                        document.getElementById("input-lon").value = posicao.coords.longitude;
+                        enviar();
+                    },
+                    // sem localização o check-in segue e o motor recusa pelo fator de localização
+                    () => enviar(),
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            } else {
+                enviar();
+            }
+        </script>
+    {% endif %}
+
+    <nav class="mt-auto flex gap-4 text-xs text-ink/60">
+        <a href="{% url 'privacy:central' %}" class="hover:underline">Central de Privacidade</a>
+        <form method="post" action="{% url 'accounts:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="hover:underline">Sair</button>
+        </form>
+    </nav>
+</body>
+</html>
