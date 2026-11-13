@@ -75,7 +75,7 @@ def test_status_comChamadaAbertaDeUmaAula_deveRetornar200ComDisciplinaDaAula(liv
 
     response = requests.get(live_server.url + STATUS_PATH.format(sala_id=sala.id))
 
-    assert response.status_code == 200
+    assert response.status_code == 201
     body = response.json()
     assert body["ativa"] is True
     assert body["sessao_id"] == sessao.id

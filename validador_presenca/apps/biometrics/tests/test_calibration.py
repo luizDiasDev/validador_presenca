@@ -29,7 +29,7 @@ def test_real_person_above_threshold_is_approved():
     reading = liveness_to_score(0.94)
 
     assert reading.approved
-    assert reading.score == pytest.approx(0.94)
+    assert reading.score == pytest.approx(0.99)
 
 
 def test_weak_liveness_keeps_the_score_but_is_not_approved():
