@@ -1,4 +1,4 @@
-from django.db.models import Count, Q
+from django.db.models import Q
 from apps.checkin.models import ChamadaSession
 from apps.teacher_panel.models import Aluno, Disciplina, Turma
 from apps.validator.models import PresencaRecord

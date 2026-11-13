@@ -1,0 +1,15 @@
+# Configuração do linter Ruff
+target-version = "py313"
+extend-exclude = ["**/migrations/**"]
+
+[lint]
+# E: estilo PEP 8 | F: imports/variáveis não usados, nomes indefinidos
+select = ["E", "F"]
+ignore = ["E501"]  # tamanho de linha
+
+[lint.per-file-ignores]
+# fixtures do pytest são importadas e recebidas como parâmetro
+"**/tests/**" = ["F401", "F811"]
+"**/settings_test.py" = ["F403", "F405"]
+# o import de signals existe só para registrá-los
+"**/privacy/apps.py" = ["F401"]

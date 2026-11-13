@@ -14,7 +14,6 @@ from apps.institution.domain.services.geolocation_service import GeolocationServ
 from apps.institution.domain.services.geocoding_service import GeocodingService
 from apps.institution.models import Campus, Machine
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
 from apps.accounts.decorators import only_student, only_teacher
 from django.urls import reverse
 
@@ -101,7 +100,7 @@ def _registrar_checkin(request, svc):
             geo_valida = geo_resultado.valida
             geo_motivo = geo_resultado.motivo
         except (ValueError, Campus.DoesNotExist):
-            geo_motivo = f"Coordenada inválida ou campus não encontrado"
+            geo_motivo = "Coordenada inválida ou campus não encontrado"
 
     # informações que serão úteis no PresencaRecord
     results_pack = {

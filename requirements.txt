@@ -23,6 +23,7 @@ pytest-cov==7.1.0
 pytest-django==4.14.0
 factory-boy==3.3.3
 fakeredis==2.37.1
+ruff==0.17.4
 
 # Geolocalização
 geopy==2.5.0
