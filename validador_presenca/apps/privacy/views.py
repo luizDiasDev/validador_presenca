@@ -23,6 +23,11 @@ def termo_uso(request):
     return render(request, "privacy/termo.html", {"termo": termo})
 
 
+def termo_biometrico(request):
+    termo = get_object_or_404(Termo, tipo=Termo.TIPO_BIOMETRICO, ativo=True)
+    return render(request, "privacy/termo.html", {"termo": termo})
+
+
 @login_required
 def solicitar_direito(request):
     if request.method == "POST":

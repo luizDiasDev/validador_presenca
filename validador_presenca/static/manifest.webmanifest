@@ -1,0 +1,16 @@
+{
+  "name": "ADSUM - Verificação de Presença",
+  "short_name": "ADSUM",
+  "description": "Check-in de presença acadêmica com QR Code, localização e reconhecimento facial.",
+  "start_url": "/checkin/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F7F3EA",
+  "theme_color": "#0F1B2E",
+  "lang": "pt-BR",
+  "icons": [
+    {"src": "/static/images/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "/static/images/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "/static/images/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

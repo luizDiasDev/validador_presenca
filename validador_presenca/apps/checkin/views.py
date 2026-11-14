@@ -4,37 +4,149 @@ import io
 import qrcode
 from django.core.cache import cache
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 from django.utils import timezone
 from apps.checkin.domain.services.chamada_service import ChamadaService
 from apps.checkin.domain.services.qr_service import QrTokenService
 from apps.checkin.models import ChamadaSession
-from apps.validator.domain.case import try_checkin
+from apps.validator.domain.case import register_checkin
 from apps.institution.domain.services.geolocation_service import GeolocationService
 from apps.institution.domain.services.geocoding_service import GeocodingService
 from apps.institution.models import Campus, Machine
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from apps.accounts.decorators import only_student, only_teacher
+from apps.biometrics.domain.services.biometric_service import BiometricService, BiometricTermUnavailableError
+from apps.biometrics.models import Biometria
+from apps.class_client.domain.services.face_authorization_service import (
+    MODE_CHECKIN,
+    MODE_ENROLLMENT,
+    FaceAuthorization,
+    FaceAuthorizationService,
+)
+from apps.validator.models import PresencaRecord
 from django.urls import reverse
 
 
 @login_required
 @only_student
 def qr_demo(request):
-    if request.method == "POST":
-        svc = QrTokenService(cache=cache)
-        resultado, geo_resultado, endereco_aluno, veredito = _registrar_checkin(request, svc)
-        contexto = {
-            "enviado": True,
-            "status": veredito.value,
-            "token_valido": resultado is not None,
-            "geo_resultado": geo_resultado,
-            "endereco_aluno": endereco_aluno,
-        }
+    if request.method != "POST":
+        return render(request, "checkin/checkin_aluno.html", {"token": request.GET.get("t", "")})
+
+    svc = QrTokenService(cache=cache)
+    resultado, geo_resultado, endereco_aluno, registro, results_pack = _registrar_checkin(request, svc)
+    contexto = {
+        "enviado": True,
+        "status": registro.status,
+        "token_valido": resultado is not None,
+        "geo_resultado": geo_resultado,
+        "endereco_aluno": endereco_aluno,
+        "registro": registro,
+        "etapa_rosto": _liberar_etapa_do_rosto(request, registro, results_pack),
+    }
+    return render(request, "checkin/checkin_aluno.html", contexto)
+
+
+def _liberar_etapa_do_rosto(request, registro, results_pack) -> str:
+    maquina_id = results_pack.get("maquina_id")
+    passou_qr_e_local = results_pack.get("qr_code") and results_pack.get("geo_valida")
+    if registro.status != "PENDING" or not passou_qr_e_local or not maquina_id:
+        return ""
+    if not Machine.objects.filter(pk=maquina_id).exists():
+        return ""
+
+    if Biometria.objects.filter(usuario=request.user).exists():
+        _liberar_camera(maquina_id, registro, results_pack, MODE_CHECKIN)
+        return "comparar"
+
+    if BiometricService().get_active_consent(request.user):
+        _liberar_camera(maquina_id, registro, results_pack, MODE_ENROLLMENT)
+        return "cadastrar"
+
+    # guarda o check-in na sessão do navegador até o aluno responder ao termo
+    request.session["checkin_aguardando_termo"] = {
+        "presenca_id": registro.id,
+        "maquina_id": maquina_id,
+        "results_pack": results_pack,
+    }
+    return "consentimento"
+
+
+def _liberar_camera(maquina_id, registro, results_pack, modo):
+    FaceAuthorizationService(cache).authorize(
+        maquina_id,
+        FaceAuthorization(
+            presenca_id=registro.id,
+            aluno_id=registro.usuario_id,
+            mode=modo,
+            base_pack=results_pack,
+        ),
+    )
+
+
+@login_required
+@only_student
+@require_POST
+def consentimento_biometrico(request):
+    pendente = request.session.pop("checkin_aguardando_termo", None)
+    if not pendente:
+        return redirect("checkin:qr_demo")
+
+    registro = PresencaRecord.objects.filter(pk=pendente["presenca_id"], usuario=request.user).first()
+    if registro is None:
+        return redirect("checkin:qr_demo")
+
+    contexto = {"enviado": True, "status": registro.status, "token_valido": True, "registro": registro}
+    if request.POST.get("resposta") != "aceito":
+        contexto["etapa_rosto"] = ""
+        contexto["recusou_termo"] = True
         return render(request, "checkin/checkin_aluno.html", contexto)
 
-    return render(request, "checkin/checkin_aluno.html", {"token": request.GET.get("t", "")})
+    try:
+        BiometricService().grant_consent(
+            request.user,
+            evidence={
+                "ip": request.META.get("REMOTE_ADDR"),
+                "user_agent": request.META.get("HTTP_USER_AGENT", "")[:255],
+                "origem": "primeiro check-in",
+            },
+        )
+    except BiometricTermUnavailableError:
+        contexto["etapa_rosto"] = ""
+        return render(request, "checkin/checkin_aluno.html", contexto)
+
+    _liberar_camera(pendente["maquina_id"], registro, pendente["results_pack"], MODE_ENROLLMENT)
+    contexto["etapa_rosto"] = "cadastrar"
+    return render(request, "checkin/checkin_aluno.html", contexto)
+
+
+@login_required
+@only_student
+def status_presenca(request, presenca_id: int):
+    registro = get_object_or_404(PresencaRecord, pk=presenca_id, usuario=request.user)
+    return JsonResponse({
+        "status": registro.status,
+        "motivo": registro.motivo,
+        "aguardando_rosto": FaceAuthorizationService(cache).is_waiting(registro.id),
+    })
+
+
+@login_required
+@only_student
+def minhas_presencas(request):
+    registros = (
+        PresencaRecord.objects.filter(usuario=request.user)
+        .select_related("sessao__aula__disciplina", "sessao__sala")
+        .order_by("-data_criacao")
+    )
+    totais = {
+        "aprovados": registros.filter(status="APPROVED").count(),
+        "pendentes": registros.filter(status="PENDING").count(),
+        "rejeitados": registros.filter(status="REJECTED").count(),
+    }
+    return render(request, "checkin/minhas_presencas.html", {"registros": registros, "totais": totais})
 
 
 # Endpoint de pooling para o Pyside6
@@ -114,12 +226,10 @@ def _registrar_checkin(request, svc):
         "geo_motivo": geo_motivo,
     }
 
-    veredito = try_checkin(results_pack=results_pack)
-    return resultado, geo_resultado, endereco_aluno, veredito
+    registro = register_checkin(results_pack=results_pack)
+    return resultado, geo_resultado, endereco_aluno, registro, results_pack
 
 
-# Tempo mínimo de vida do QR exibido na sala: o aluno precisa apontar a câmera,
-# abrir o link e o celular ainda precisa achar a localização antes de enviar.
 QR_SALA_TTL_MINIMO_S = 30
 QR_SALA_ATUALIZA_S = 10
 
