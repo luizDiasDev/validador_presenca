@@ -1,11 +1,15 @@
 import hashlib
 import secrets
+from datetime import timedelta
 import string
 from django.db import transaction
 from django.utils import timezone
 
 from apps.audit.domain.log_register import LogRegister
 from apps.institution.models import Machine, Room
+
+
+VISTO_EM_INTERVALO_SEGUNDOS = 30
 
 
 class CodigoPareamentoInvalidoError(Exception):
@@ -57,7 +61,8 @@ class MachinePairingService:
         maquina = Machine.objects.select_for_update().get(pk=maquina_id)
         novo_codigo = self.gerar_codigo_unico()
         maquina.codigo_pareamento = novo_codigo
-        maquina.save(update_fields=["codigo_pareamento", "data_atualizacao"])
+        maquina.token_hash = None
+        maquina.save(update_fields=["codigo_pareamento", "token_hash", "data_atualizacao"])
 
         self.log_register.register(
             {
@@ -123,8 +128,27 @@ class MachinePairingService:
             .filter(token_hash=self._hash(token))
             .first()
         )
-        if maquina:
-            Machine.objects.filter(pk=maquina.pk).update(visto_em=self.clock())
+        agora = self.clock()
+        if maquina and (maquina.visto_em is None or agora - maquina.visto_em >= timedelta(seconds=VISTO_EM_INTERVALO_SEGUNDOS)):
+            Machine.objects.filter(pk=maquina.pk).update(visto_em=agora)
+            maquina.visto_em = agora
+        return maquina
+
+    @transaction.atomic
+    def desparear(self, maquina_id: int, autor_id: int) -> Machine:
+        maquina = Machine.objects.select_for_update().get(pk=maquina_id)
+        maquina.token_hash = None
+        maquina.save(update_fields=["token_hash", "data_atualizacao"])
+        self.log_register.register(
+            {
+                "autor_id": autor_id,
+                "origem": "institution",
+                "acao": "MAQUINA_DESPAREADA",
+                "tabela": "maquina",
+                "linha_tabela_id": maquina.id,
+                "payload": {"sala_id": maquina.sala_id, "apelido": maquina.apelido},
+            }
+        )
         return maquina
 
     @staticmethod
