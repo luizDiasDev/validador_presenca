@@ -85,6 +85,29 @@
                 {% endif %}
             </div>
 
+            {% if aba_ativa == 'maquinas' %}
+                <div class="mb-6 rounded-xl border border-gold/40 bg-creme/60 p-5">
+                    <div class="flex flex-wrap items-start justify-between gap-4">
+                        <div>
+                            <h2 class="font-semibold text-light-blue flex items-center gap-2"><i data-lucide="monitor-down" class="w-4 h-4"></i> Executável de sala</h2>
+                            <p class="text-xs text-ink/60 mt-1">Programa instalado no computador de cada sala. Ele exibe o QR Code da chamada e faz o reconhecimento facial do aluno.</p>
+                        </div>
+                        <a href="{{ executavel_download_url }}" target="_blank" rel="noopener" class="flex items-center gap-1.5 bg-gold text-dark-blue text-xs font-semibold px-4 py-2.5 rounded-lg hover:bg-gold/80">
+                            <i data-lucide="download" class="w-4 h-4"></i> Baixar executável
+                        </a>
+                    </div>
+                    <ol class="mt-4 grid gap-3 text-xs text-ink/70 md:grid-cols-3">
+                        <li class="rounded-lg bg-white p-3"><span class="font-semibold text-light-blue">1. Instale</span><br>Baixe e copie a pasta do executável para o computador da sala, depois abra o ADSUM-Sala.</li>
+                        <li class="rounded-lg bg-white p-3">
+                            <span class="font-semibold text-light-blue">2. Informe o servidor</span><br>
+                            <span class="font-mono text-dark-blue break-all" id="endereco-servidor">{{ endereco_servidor }}</span>
+                            <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('endereco-servidor').textContent)" class="ml-1 text-gold hover:underline">copiar</button>
+                        </li>
+                        <li class="rounded-lg bg-white p-3"><span class="font-semibold text-light-blue">3. Digite o código</span><br>Use o código de pareamento da máquina na tabela abaixo. Quando aparecer como online, a sala está pronta.</li>
+                    </ol>
+                </div>
+            {% endif %}
+
             <div class="border border-ink/10 rounded-xl overflow-hidden">
                 <table class="w-full text-sm">
                     {% if aba_ativa == 'maquinas' %}
@@ -94,7 +117,7 @@
                                 <th class="text-left font-semibold py-3">Sala / Campus</th>
                                 <th class="text-center font-semibold py-3">Código de Pareamento</th>
                                 <th class="text-center font-semibold py-3">Último IP</th>
-                                <th class="text-center font-semibold py-3">Visto em</th>
+                                <th class="text-center font-semibold py-3">Situação</th>
                                 <th class="text-right font-semibold py-3 px-4">Ações</th>
                             </tr>
                         </thead>
@@ -107,12 +130,26 @@
                                         <span class="font-mono text-sm font-bold tracking-widest px-3 py-1 rounded-lg bg-gold/20 text-dark-blue border border-gold/40">{{ maq.codigo_pareamento }}</span>
                                     </td>
                                     <td class="py-3 text-center text-ink/70">{{ maq.ip|default:"-" }}</td>
-                                    <td class="py-3 text-center text-ink/70">{{ maq.visto_em|date:"d/m/Y H:i"|default:"Nunca pareada" }}</td>
+                                    <td class="py-3 text-center text-xs">
+                                        {% if maq.esta_online %}
+                                            <span class="font-semibold text-green-700">Online</span>
+                                        {% elif maq.esta_pareada %}
+                                            <span class="font-semibold text-ink/70">Pareada</span><br><span class="text-ink/50">visto em {{ maq.visto_em|date:"d/m/Y H:i"|default:"-" }}</span>
+                                        {% else %}
+                                            <span class="font-semibold text-gold">Aguardando pareamento</span>
+                                        {% endif %}
+                                    </td>
                                     <td class="py-3 px-4 text-right space-x-2">
                                         <form method="post" action="{% url 'institution:regenerar_codigo' maq.id %}" class="inline">
                                             {% csrf_token %}
                                             <button type="submit" class="inline-flex items-center gap-1 text-xs font-medium text-gold hover:underline"><i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Novo Código</button>
                                         </form>
+                                        {% if maq.esta_pareada %}
+                                            <form method="post" action="{% url 'institution:desparear_maquina' maq.id %}" class="inline" onsubmit="return confirm('Desconectar o executável desta máquina?');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="inline-flex items-center gap-1 text-xs font-medium text-ink/60 hover:underline"><i data-lucide="unlink" class="w-3.5 h-3.5"></i> Desconectar</button>
+                                            </form>
+                                        {% endif %}
                                         <button type="button" onclick="abrirModal('{% url 'institution:editar_maquina' maq.id %}', 'Editar Máquina', {sala: '{{ maq.sala_id }}', apelido: '{{ maq.apelido|escapejs }}'})" class="inline-flex items-center gap-1 text-xs font-medium text-light-blue hover:underline"><i data-lucide="pencil" class="w-3.5 h-3.5"></i> Editar</button>
                                         <form method="post" action="{% url 'institution:excluir_maquina' maq.id %}" class="inline" onsubmit="return confirm('Deseja realmente excluir esta máquina?');">{% csrf_token %}<button type="submit" class="inline-flex items-center gap-1 text-xs font-medium text-red-700 hover:underline"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Excluir</button></form>
                                     </td>
