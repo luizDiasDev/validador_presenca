@@ -11,3 +11,11 @@ numpy==2.5.4
 # Testes
 pytest==9.1.1
 scikit-image==0.26.0
+# Janela do executável e comunicação com o servidor
+PySide6==6.12.0
+qrcode==8.2
+pillow==13.0.0
+requests==2.34.2
+
+# Empacotamento em .exe (só para gerar a versão de instalação)
+pyinstaller==6.22.3
