@@ -1,3 +1,4 @@
+import hashlib
 import secrets
 import string
 from django.db import transaction
@@ -107,3 +108,25 @@ class MachinePairingService:
             }
         )
         return maquina
+
+    def emitir_token(self, maquina: Machine) -> str:
+        token = secrets.token_urlsafe(32)
+        maquina.token_hash = self._hash(token)
+        maquina.save(update_fields=["token_hash", "data_atualizacao"])
+        return token
+
+    def autenticar(self, token: str) -> Machine | None:
+        if not token:
+            return None
+        maquina = (
+            Machine.objects.select_related("sala__campus")
+            .filter(token_hash=self._hash(token))
+            .first()
+        )
+        if maquina:
+            Machine.objects.filter(pk=maquina.pk).update(visto_em=self.clock())
+        return maquina
+
+    @staticmethod
+    def _hash(token: str) -> str:
+        return hashlib.sha256(token.encode()).hexdigest()

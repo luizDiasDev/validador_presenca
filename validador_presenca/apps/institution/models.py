@@ -73,6 +73,8 @@ class Machine(models.Model):
     apelido = models.CharField(max_length=20)
     codigo_pareamento = models.CharField(max_length=4, unique=True)
     ip = models.GenericIPAddressField(null=True, blank=True)
+    # hash (SHA-256) do token entregue ao executável no pareamento; o token em si nunca é guardado
+    token_hash = models.CharField(max_length=64, null=True, blank=True)
     visto_em = models.DateTimeField(null=True, blank=True)
     data_criacao = models.DateTimeField(auto_now_add=True)
     data_atualizacao = models.DateTimeField(auto_now=True)
