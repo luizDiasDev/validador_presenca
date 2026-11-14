@@ -96,9 +96,77 @@
     {% elif not token %}
         <div class="w-full max-w-sm bg-white rounded-2xl p-6 text-center">
             <p class="text-lg font-semibold text-dark-blue">Fazer check-in</p>
-            <p class="mt-3 text-sm text-ink/70">Aponte a câmera do celular para o QR Code exibido no computador da sala. O link abre esta página e o check-in é enviado sozinho.</p>
-            <p class="mt-3 text-xs text-ink/50">Cada QR Code vale para uma única leitura e muda a cada poucos segundos. Permita o acesso à localização quando o navegador pedir.</p>
+            <p class="mt-3 text-sm text-ink/70">Leia o QR Code exibido no computador da sala.</p>
+
+            <div id="leitor-qr" class="mt-4 hidden overflow-hidden rounded-xl"></div>
+            <p id="aviso-leitura" class="mt-3 hidden text-sm text-red-700"></p>
+
+            <button type="button" id="botao-ler-qr" class="mt-4 w-full rounded-lg bg-dark-blue text-creme py-3 font-semibold">Ler QR Code</button>
+            <button type="button" id="botao-cancelar-qr" class="mt-2 hidden w-full rounded-lg border border-ink/20 py-3 text-sm text-ink/70">Cancelar</button>
+
+            <p class="mt-4 text-xs text-ink/50">Cada QR Code vale para uma única leitura e muda a cada poucos segundos. Permita o acesso à câmera e à localização quando o navegador pedir. Se preferir, também dá para ler com a câmera do próprio celular.</p>
         </div>
+
+        <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+        <script>
+            const leitor = document.getElementById("leitor-qr");
+            const aviso = document.getElementById("aviso-leitura");
+            const botaoLer = document.getElementById("botao-ler-qr");
+            const botaoCancelar = document.getElementById("botao-cancelar-qr");
+            const caminhoCheckin = "{% url 'checkin:qr_demo' %}";
+            let scanner = null;
+
+            const mostrarAviso = (texto) => {
+                aviso.textContent = texto;
+                aviso.classList.toggle("hidden", !texto);
+            };
+
+            const alternarLeitor = (lendo) => {
+                leitor.classList.toggle("hidden", !lendo);
+                botaoCancelar.classList.toggle("hidden", !lendo);
+                botaoLer.classList.toggle("hidden", lendo);
+            };
+
+            const pararLeitura = async () => {
+                if (scanner && scanner.isScanning) {
+                    await scanner.stop();
+                }
+                alternarLeitor(false);
+            };
+
+            const tokenDoQr = (texto) => {
+                try {
+                    const link = new URL(texto);
+                    return link.pathname === caminhoCheckin ? link.searchParams.get("t") : null;
+                } catch (erro) {
+                    return null;
+                }
+            };
+
+            const aoLer = async (texto) => {
+                const token = tokenDoQr(texto);
+                if (!token) {
+                    mostrarAviso("Este QR Code não é de uma chamada do ADSUM.");
+                    return;
+                }
+                await pararLeitura();
+                window.location.href = caminhoCheckin + "?t=" + encodeURIComponent(token);
+            };
+
+            botaoLer.addEventListener("click", async () => {
+                mostrarAviso("");
+                alternarLeitor(true);
+                scanner = scanner || new Html5Qrcode("leitor-qr");
+                try {
+                    await scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 240 }, aoLer);
+                } catch (erro) {
+                    alternarLeitor(false);
+                    mostrarAviso("Não foi possível abrir a câmera. Libere o acesso à câmera nas configurações do navegador.");
+                }
+            });
+
+            botaoCancelar.addEventListener("click", pararLeitura);
+        </script>
     {% else %}
         <div class="w-full max-w-sm bg-white rounded-2xl p-6 text-center">
             <p class="text-lg font-semibold text-dark-blue" id="mensagem">Obtendo a sua localização...</p>
