@@ -50,9 +50,6 @@
             <a href="{% url 'teacher_panel:chamadas' %}" class="{% if tela.namespace == 'teacher_panel' and tela.url_name == 'chamadas' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
                 <i data-lucide="settings" class="w-4 h-4"></i> Configurar Chamada
             </a>
-            <a href="{% url 'checkin:sala' %}" class="{% if tela.namespace == 'checkin' and tela.url_name == 'sala' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
-                <i data-lucide="qr-code" class="w-4 h-4"></i> QR da Sala
-            </a>
             <a href="{% url 'teacher_panel:pendencias' %}" class="{% if tela.namespace == 'teacher_panel' and tela.url_name == 'pendencias' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
                 <i data-lucide="alert-triangle" class="w-4 h-4"></i> Pendências
             </a>
