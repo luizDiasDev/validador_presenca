@@ -211,9 +211,12 @@ def parear_maquina_api(request):
     except CodigoPareamentoInvalidoError as exc:
         return JsonResponse({"pareado": False, "erro": str(exc)}, status=404)
 
+    token = svc.emitir_token(maquina)
+
     return JsonResponse(
         {
             "pareado": True,
+            "token": token,
             "maquina_id": maquina.id,
             "apelido": maquina.apelido,
             "sala_id": maquina.sala_id,

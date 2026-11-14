@@ -1,0 +1,83 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    {% include "partials/favicon.html" %}
+    {% include "pwa/head.html" %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minhas presenças | ADSUM</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <style type="text/tailwindcss">
+        @theme {
+            --color-dark-blue: #0F1B2E;
+            --color-gold: #C9962C;
+            --color-creme: #F7F3EA;
+            --color-ink: #1F2A3C;
+            --font-display: 'Cinzel', serif;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="min-h-screen bg-creme text-ink flex flex-col items-center p-6 gap-6">
+    <div class="flex items-center gap-2 mt-4">
+        <img src="{% static 'images/logo_bg.svg' %}" alt="Logo Adsum" class="w-10 h-10">
+        <h1 class="font-display text-2xl font-bold text-dark-blue">ADSUM</h1>
+    </div>
+
+    <div class="w-full max-w-md">
+        <p class="text-lg font-semibold text-dark-blue">Minhas presenças</p>
+
+        <div class="mt-3 grid grid-cols-3 gap-2 text-center">
+            <div class="bg-white rounded-xl p-3 border border-green-600/40">
+                <p class="text-2xl font-bold text-green-700">{{ totais.aprovados }}</p>
+                <p class="text-xs text-ink/60">Confirmadas</p>
+            </div>
+            <div class="bg-white rounded-xl p-3 border border-gold/60">
+                <p class="text-2xl font-bold text-dark-blue">{{ totais.pendentes }}</p>
+                <p class="text-xs text-ink/60">Em revisão</p>
+            </div>
+            <div class="bg-white rounded-xl p-3 border border-red-600/40">
+                <p class="text-2xl font-bold text-red-700">{{ totais.rejeitados }}</p>
+                <p class="text-xs text-ink/60">Não aceitas</p>
+            </div>
+        </div>
+
+        <ul class="mt-4 flex flex-col gap-2">
+            {% for registro in registros %}
+                <li class="bg-white rounded-xl p-4">
+                    <div class="flex items-center justify-between gap-2">
+                        <p class="font-semibold text-dark-blue text-sm">{{ registro.sessao.aula.disciplina.nome|default:"Chamada" }}</p>
+                        {% if registro.status == "APPROVED" %}
+                            <span class="text-xs font-semibold text-green-700">Confirmada</span>
+                        {% elif registro.status == "PENDING" %}
+                            <span class="text-xs font-semibold text-gold">Em revisão</span>
+                        {% else %}
+                            <span class="text-xs font-semibold text-red-700">Não aceita</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-xs text-ink/50 mt-1">{{ registro.data_criacao|date:"d/m/Y H:i" }}{% if registro.sessao.sala %} · Sala {{ registro.sessao.sala.codigo }}{% endif %}</p>
+                    {% if registro.status != "APPROVED" and registro.motivo %}
+                        <p class="text-xs text-ink/70 mt-2">{{ registro.motivo }}</p>
+                    {% endif %}
+                </li>
+            {% empty %}
+                <li class="bg-white rounded-xl p-6 text-center text-sm text-ink/60">Nenhum check-in registrado ainda.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <nav class="mt-auto flex gap-4 text-xs text-ink/60">
+        <a href="{% url 'checkin:qr_demo' %}" class="hover:underline">Fazer check-in</a>
+        <a href="{% url 'privacy:central' %}" class="hover:underline">Central de Privacidade</a>
+        <form method="post" action="{% url 'accounts:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="hover:underline">Sair</button>
+        </form>
+    </nav>
+</body>
+</html>

@@ -3,6 +3,7 @@
 <html lang="pt-br">
 <head>
     {% include "partials/favicon.html" %}
+    {% include "pwa/head.html" %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Check-in | ADSUM</title>
@@ -29,10 +30,47 @@
     </div>
 
     {% if enviado %}
-        {% if status == "PENDING" %}
+        {% if etapa_rosto == "comparar" or etapa_rosto == "cadastrar" %}
+            <div class="w-full max-w-sm bg-white rounded-2xl p-6 text-center border-2 border-gold" id="cartao-rosto">
+                <p class="text-xl font-bold text-dark-blue" id="titulo-rosto">Olhe para a câmera da sala</p>
+                <p class="mt-2 text-sm text-ink/70" id="texto-rosto">
+                    {% if etapa_rosto == "cadastrar" %}Primeiro acesso: o computador da sala vai cadastrar o seu rosto. Siga as instruções na tela dele.{% else %}QR Code e localização conferidos. Agora o computador da sala confere o seu rosto.{% endif %}
+                </p>
+            </div>
+            <script>
+                // pergunta ao servidor até a câmera da sala terminar (ou a liberação expirar)
+                const urlStatus = "{% url 'checkin:status_presenca' registro.id %}";
+                const textos = {
+                    APPROVED: ["Presença confirmada", "Rosto conferido. Pode guardar o celular."],
+                    PENDING: ["Presença registrada", "O professor vai confirmar a sua presença."],
+                    REJECTED: ["Check-in não aceito", ""],
+                };
+                const consultar = async () => {
+                    const resposta = await fetch(urlStatus);
+                    const dados = await resposta.json();
+                    if (dados.aguardando_rosto) { setTimeout(consultar, 2000); return; }
+                    const [titulo, texto] = textos[dados.status] || ["", ""];
+                    document.getElementById("titulo-rosto").textContent = titulo;
+                    document.getElementById("texto-rosto").textContent = texto || dados.motivo;
+                };
+                setTimeout(consultar, 2000);
+            </script>
+        {% elif etapa_rosto == "consentimento" %}
+            <div class="w-full max-w-sm bg-white rounded-2xl p-6 border-2 border-gold">
+                <p class="text-lg font-bold text-dark-blue text-center">Cadastro do rosto</p>
+                <p class="mt-3 text-sm text-ink/70">QR Code e localização conferidos. Este é o seu primeiro check-in com reconhecimento facial.</p>
+                <p class="mt-2 text-sm text-ink/70">O ADSUM guarda apenas um vetor numérico cifrado do seu rosto, nunca a imagem, e só para confirmar a sua presença. Você pode revogar este consentimento a qualquer momento na Central de Privacidade, e o cadastro é apagado.</p>
+                <a href="{% url 'privacy:termo_biometrico' %}" class="mt-2 inline-block text-sm text-dark-blue underline">Ler o termo de consentimento biométrico</a>
+                <form method="post" action="{% url 'checkin:consentimento' %}" class="mt-4 flex flex-col gap-2">
+                    {% csrf_token %}
+                    <button type="submit" name="resposta" value="aceito" class="w-full rounded-lg bg-dark-blue text-creme py-3 font-semibold">Li e aceito</button>
+                    <button type="submit" name="resposta" value="recusado" class="w-full rounded-lg border border-ink/20 py-3 text-sm text-ink/70">Agora não</button>
+                </form>
+            </div>
+        {% elif status == "PENDING" %}
             <div class="w-full max-w-sm bg-white rounded-2xl p-6 text-center border-2 border-gold">
                 <p class="text-xl font-bold text-dark-blue">Presença registrada</p>
-                <p class="mt-2 text-sm text-ink/70">QR Code e localização conferidos. Falta a verificação facial, então o professor vai confirmar a sua presença.</p>
+                <p class="mt-2 text-sm text-ink/70">{% if recusou_termo %}Sem o cadastro facial, o professor vai confirmar a sua presença.{% else %}QR Code e localização conferidos. Falta a verificação facial, então o professor vai confirmar a sua presença.{% endif %}</p>
             </div>
         {% elif status == "APPROVED" %}
             <div class="w-full max-w-sm bg-white rounded-2xl p-6 text-center border-2 border-green-600">
@@ -98,6 +136,7 @@
     {% endif %}
 
     <nav class="mt-auto flex gap-4 text-xs text-ink/60">
+        <a href="{% url 'checkin:minhas_presencas' %}" class="hover:underline">Minhas presenças</a>
         <a href="{% url 'privacy:central' %}" class="hover:underline">Central de Privacidade</a>
         <form method="post" action="{% url 'accounts:logout' %}">
             {% csrf_token %}
