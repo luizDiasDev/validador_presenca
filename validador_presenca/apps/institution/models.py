@@ -1,4 +1,9 @@
+from datetime import timedelta
+
 from django.db import models
+from django.utils import timezone
+
+MAQUINA_ONLINE_SEGUNDOS = 60
 
 # Create your models here.
 
@@ -88,3 +93,15 @@ class Machine(models.Model):
     # Como vai retornar
     def __str__(self):
         return f"Máquina {self.codigo_pareamento} ({self.sala.codigo})"
+
+    @property
+    def esta_pareada(self) -> bool:
+        return bool(self.token_hash)
+
+    @property
+    def esta_online(self) -> bool:
+        return (
+            self.esta_pareada
+            and self.visto_em is not None
+            and timezone.now() - self.visto_em <= timedelta(seconds=MAQUINA_ONLINE_SEGUNDOS)
+        )

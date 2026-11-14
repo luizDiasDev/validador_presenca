@@ -160,6 +160,11 @@ TOTP_ENCRYPTION_KEY = os.environ.get("TOTP_ENCRYPTION_KEY")
 
 BIOMETRIC_ENCRYPTION_KEY = os.environ.get("BIOMETRIC_ENCRYPTION_KEY")
 
+EXECUTAVEL_DOWNLOAD_URL = os.environ.get(
+    "EXECUTAVEL_DOWNLOAD_URL",
+    "https://github.com/luizDiasDev/validador_presenca/releases/latest",
+)
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.1/topics/i18n/

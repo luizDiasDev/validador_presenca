@@ -1,4 +1,5 @@
 import json
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models.deletion import ProtectedError
@@ -46,6 +47,8 @@ def infraestrutura_view(request):
         "campus_form": CampusForm(),
         "room_form": RoomForm(),
         "machine_form": MachineForm(),
+        "executavel_download_url": settings.EXECUTAVEL_DOWNLOAD_URL,
+        "endereco_servidor": request.build_absolute_uri("/").rstrip("/"),
     }
     return render(request, "institution/infraestrutura.html", context)
 
@@ -188,7 +191,20 @@ def regenerar_codigo_view(request, maquina_id: int):
     maquina = svc.regenerar_codigo(maquina_id=maquina_id, autor_id=request.user.id)
     messages.success(
         request,
-        f"Novo código gerado para {maquina.apelido}: {maquina.codigo_pareamento}.",
+        f"Novo código gerado para {maquina.apelido}: {maquina.codigo_pareamento}. O executável que estava pareado foi desconectado.",
+    )
+    return redirect("/infraestrutura/?aba=maquinas")
+
+
+@login_required
+@only_admin
+@require_POST
+def desparear_maquina_view(request, maquina_id: int):
+    get_object_or_404(Machine, pk=maquina_id)
+    maquina = MachinePairingService().desparear(maquina_id=maquina_id, autor_id=request.user.id)
+    messages.success(
+        request,
+        f"{maquina.apelido} foi desconectada. Para usar de novo, pareie com o código {maquina.codigo_pareamento}.",
     )
     return redirect("/infraestrutura/?aba=maquinas")
 

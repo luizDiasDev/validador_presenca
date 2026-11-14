@@ -1,12 +1,8 @@
-import base64
 import hashlib
-import io
-import qrcode
 from django.core.cache import cache
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
-from django.utils import timezone
 from apps.checkin.domain.services.chamada_service import ChamadaService
 from apps.checkin.domain.services.qr_service import QrTokenService
 from apps.checkin.models import ChamadaSession
@@ -15,8 +11,7 @@ from apps.institution.domain.services.geolocation_service import GeolocationServ
 from apps.institution.domain.services.geocoding_service import GeocodingService
 from apps.institution.models import Campus, Machine
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from apps.accounts.decorators import only_student, only_teacher
+from apps.accounts.decorators import only_student
 from apps.biometrics.domain.services.biometric_service import BiometricService, BiometricTermUnavailableError
 from apps.biometrics.models import Biometria
 from apps.class_client.domain.services.face_authorization_service import (
@@ -26,7 +21,6 @@ from apps.class_client.domain.services.face_authorization_service import (
     FaceAuthorizationService,
 )
 from apps.validator.models import PresencaRecord
-from django.urls import reverse
 
 
 @login_required
@@ -213,7 +207,7 @@ def _registrar_checkin(request, svc):
             geo_valida = geo_resultado.valida
             geo_motivo = geo_resultado.motivo
         except (ValueError, Campus.DoesNotExist):
-            geo_motivo = f"Coordenada inválida ou campus não encontrado"
+            geo_motivo = "Coordenada inválida ou campus não encontrado"
 
     # informações que serão úteis no PresencaRecord
     results_pack = {
@@ -229,43 +223,3 @@ def _registrar_checkin(request, svc):
     registro = register_checkin(results_pack=results_pack)
     return resultado, geo_resultado, endereco_aluno, registro, results_pack
 
-
-QR_SALA_TTL_MINIMO_S = 30
-QR_SALA_ATUALIZA_S = 10
-
-
-@login_required
-@only_teacher
-def sala_qr(request):
-    agora = timezone.now()
-    sessao = (
-        ChamadaSession.objects.select_related("sala", "aula__disciplina")
-        .filter(professor=request.user.professor, abre_em__lte=agora, fecha_em__gt=agora)
-        .order_by("-abre_em")
-        .first()
-    )
-    contexto = {"sessao": sessao, "atualiza_s": QR_SALA_ATUALIZA_S, "maquina": None}
-
-    if sessao:
-        maquinas_da_sala = Machine.objects.filter(sala_id=sessao.sala_id).order_by("id")
-        # com várias máquinas na sala, cada tela informa a sua: /checkin/sala/?maquina=3
-        maquina_escolhida = request.GET.get("maquina", "")
-        maquina = (
-            maquinas_da_sala.filter(pk=maquina_escolhida).first()
-            if maquina_escolhida.isdigit()
-            else maquinas_da_sala.first()
-        )
-        contexto["maquina"] = maquina
-        qr = QrTokenService(cache=cache).gerar(
-            sessao_id=sessao.id,
-            maquina_id=maquina.id if maquina else 0,
-            ttl_s=max(sessao.duracao_qr_s, QR_SALA_TTL_MINIMO_S),
-        )
-        # o QR guarda um link: a câmera comum do celular já abre a página de leitura
-        link_leitura = request.build_absolute_uri(f"{reverse('checkin:qr_demo')}?t={qr.token}")
-        imagem = qrcode.make(link_leitura)
-        buffer = io.BytesIO()
-        imagem.save(buffer, format="PNG")
-        contexto["qr_image"] = base64.b64encode(buffer.getvalue()).decode()
-
-    return render(request, "checkin/sala_qr.html", contexto)
