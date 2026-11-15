@@ -4,7 +4,7 @@ import time
 
 import cv2
 import qrcode
-from PySide6.QtCore import QObject, Qt, QThread, QTimer, Signal
+from PySide6.QtCore import Qt, QThread, QTimer, Signal
 from PySide6.QtGui import QFont, QImage, QPixmap
 from PySide6.QtWidgets import QApplication, QInputDialog, QLabel, QMessageBox, QVBoxLayout, QWidget
 

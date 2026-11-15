@@ -49,7 +49,7 @@ class FaceEngine:
 
     def analyze(self, frame_bgr) -> list[FaceModel]:
         
-        if not self.is_loaded:
+        if not self.is_loaded():
             self.load()
 
         detected_faces = self._face_analysis.get(frame_bgr)
