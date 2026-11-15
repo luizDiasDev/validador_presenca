@@ -173,7 +173,7 @@ GEOCODING_ENABLED = os.environ.get("GEOCODING_ENABLED", "true").lower() != "fals
 
 EXECUTAVEL_DOWNLOAD_URL = os.environ.get(
     "EXECUTAVEL_DOWNLOAD_URL",
-    "https://github.com/luizDiasDev/validador_presenca/releases/latest",
+    "https://github.com/luizDiasDev/validador_presenca/releases/download/executavel/ADSUM-Sala.zip",
 )
 
 
