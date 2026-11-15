@@ -193,7 +193,16 @@ def test_professor_abre_e_encerra_chamada_pela_view(client, cenario_professor):
 @pytest.mark.django_db
 def test_revisao_manual_atualiza_registro_e_gera_auditoria(client, cenario_professor):
     client.force_login(cenario_professor["user"])
+    agora = timezone.now()
+    sessao = ChamadaSession.objects.create(
+        aula=cenario_professor["aula"],
+        sala=cenario_professor["sala"],
+        professor=cenario_professor["professor"],
+        abre_em=agora,
+        fecha_em=agora,
+    )
     registro = PresencaRecord.objects.create(
+        sessao=sessao,
         qr_token_hash="abc123hash",
         score_facial=Decimal("0.620"),
         score_vida=Decimal("0.880"),

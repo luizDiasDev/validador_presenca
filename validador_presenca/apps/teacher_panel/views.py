@@ -1,6 +1,5 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -396,11 +395,10 @@ def encerrar_chamada_view(request, sessao_id: int):
 @only_teacher
 def pendencias_view(request):
     professor = request.user.professor
-    # Exibe registros vinculados as sessoes do professor logado (ou sem sessao nos testes unitarios)
-    filtro_prof = Q(sessao__professor=professor) | Q(sessao__isnull=True)
+    registros_do_professor = PresencaRecord.objects.filter(sessao__professor=professor)
 
     pendentes = (
-        PresencaRecord.objects.filter(filtro_prof, status="PENDING")
+        registros_do_professor.filter(status="PENDING")
         .select_related(
             "usuario",
             "sessao__aula__disciplina__turma",
@@ -410,8 +408,7 @@ def pendencias_view(request):
         .order_by("-data_criacao")
     )
     revisados = (
-        PresencaRecord.objects.filter(filtro_prof)
-        .exclude(status="PENDING")
+        registros_do_professor.exclude(status="PENDING")
         .filter(revisado_por__isnull=False)
         .select_related(
             "usuario",
@@ -434,7 +431,12 @@ def pendencias_view(request):
 @only_teacher
 @require_POST
 def revisar_pendencia_view(request, registro_id: int):
-    get_object_or_404(PresencaRecord, pk=registro_id)
+    get_object_or_404(
+        PresencaRecord,
+        pk=registro_id,
+        status="PENDING",
+        sessao__professor=request.user.professor,
+    )
     form = RevisaoPresencaForm(request.POST)
 
     if not form.is_valid():
@@ -442,13 +444,16 @@ def revisar_pendencia_view(request, registro_id: int):
             messages.error(request, erros[0])
         return redirect("teacher_panel:pendencias")
 
-    service = RevisaoPresencaService()
-    registro = service.revisar(
-        registro_id=registro_id,
-        autor_id=request.user.id,
-        novo_status=form.cleaned_data["status"],
-        motivo=form.cleaned_data["motivo"],
-    )
+    try:
+        registro = RevisaoPresencaService().revisar(
+            registro_id=registro_id,
+            autor_id=request.user.id,
+            novo_status=form.cleaned_data["status"],
+            motivo=form.cleaned_data["motivo"],
+        )
+    except ValueError as exc:
+        messages.error(request, str(exc))
+        return redirect("teacher_panel:pendencias")
 
     messages.success(
         request, f"Registro #{registro.id} atualizado para {registro.status}."
