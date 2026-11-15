@@ -43,8 +43,10 @@ def run_face_capture(
             quality=capture_config.quality,
         )
 
+    action = "Cadastrando o seu rosto" if mode == MODE_ENROLLMENT else "Conferindo o seu rosto"
+
     def report_progress(collected, needed, hint):
-        on_instruction(hint or f"Olhe para a câmera ({collected}/{needed})")
+        on_instruction(hint or f"{action}: leitura {collected} de {needed}. Olhe para a câmera.")
 
     capture = collect_samples(read_frame, analyze_frame, capture_config, require_liveness=True,
                               clock=clock, on_progress=report_progress)
@@ -54,16 +56,22 @@ def run_face_capture(
 
     # 2) desafio de virar a cabeça, com o mesmo rosto
     challenge = HeadTurnChallenge(challenge_steps or draw_challenge(), challenge_config, clock=clock)
-    on_instruction(challenge.instruction)
+    on_instruction(_challenge_text(challenge))
     while challenge.state is ChallengeState.IN_PROGRESS:
         frame = read_frame()
         yaw = _yaw_of_the_same_person(analyze_frame(frame), capture.mean_embedding) if frame is not None else None
         challenge.update(yaw)
-        on_instruction(challenge.instruction)
+        on_instruction(_challenge_text(challenge))
 
     challenge_passed = challenge.state is ChallengeState.PASSED
     build = build_enrollment_payload if mode == MODE_ENROLLMENT else build_checkin_payload
     return FaceCaptureOutcome(capture, challenge_passed, build(capture, challenge_passed))
+
+
+def _challenge_text(challenge: HeadTurnChallenge) -> str:
+    if challenge.state is ChallengeState.IN_PROGRESS:
+        return f"Prova de vida: {challenge.instruction}"
+    return challenge.instruction
 
 
 def _yaw_of_the_same_person(faces, reference_embedding) -> float | None:
