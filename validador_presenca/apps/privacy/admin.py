@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.utils import timezone
+from apps.biometrics.domain.services.biometric_service import BiometricService
 from apps.privacy.models import AceiteTermo, SolicitacaoLGPD, Termo
 
 # Register your models here.
@@ -49,10 +50,14 @@ class SolicitacaoLGPDAdmin(admin.ModelAdmin):
     marcar_como_em_analise.short_description = "Marcar como 'Em análise'"
 
     def marcar_como_atendida(self, request, queryset):
-        agora = timezone.now()
-        atualizadas = queryset.update(
+        revogacoes = list(queryset.filter(tipo=SolicitacaoLGPD.TIPO_REVOGAR_BIOMETRIA))
+        for solicitacao in revogacoes:
+            BiometricService().fulfill_revocation_request(solicitacao)
+        atualizadas = len(revogacoes) + queryset.exclude(
+            tipo=SolicitacaoLGPD.TIPO_REVOGAR_BIOMETRIA
+        ).update(
             status=SolicitacaoLGPD.STATUS_ATENDIDA,
-            data_resposta=agora,
+            data_resposta=timezone.now(),
         )
         self.message_user(request, f"{atualizadas} solicitação(ões) marcada(s) como 'atendida'.")
     marcar_como_atendida.short_description = "Marcar como 'Atendida'"
@@ -62,3 +67,9 @@ class SolicitacaoLGPDAdmin(admin.ModelAdmin):
             if not obj.data_resposta:
                 obj.data_resposta = timezone.now()
         super().save_model(request, obj, form, change)
+        if (
+            obj.tipo == SolicitacaoLGPD.TIPO_REVOGAR_BIOMETRIA
+            and obj.status == SolicitacaoLGPD.STATUS_ATENDIDA
+            and "status" in form.changed_data
+        ):
+            BiometricService().fulfill_revocation_request(obj)
