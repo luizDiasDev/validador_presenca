@@ -25,15 +25,15 @@
         body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
-<body class="bg-creme h-screen overflow-hidden flex">
+<body class="bg-creme h-dvh overflow-hidden flex">
 
     <!-- Menu lateral -->
     {% include "partials/sidebar.html" %}
 
-    <div class="w-6 bg-dark-blue"><img src="{% static 'images/divisao.svg' %}" alt="Divisao"></div>
+    <div class="hidden md:block w-6 bg-dark-blue"><img src="{% static 'images/divisao.svg' %}" alt="Divisao"></div>
 
     <!-- Conteudo principal -->
-    <div class="flex-1 p-8 overflow-y-auto space-y-6">
+    <div class="flex-1 min-w-0 p-4 pb-24 md:p-8 overflow-y-auto space-y-6">
 
         {% if messages %}
             <div id="mensagens-alerta" class="space-y-2 transition-opacity duration-500">
@@ -108,8 +108,8 @@
                 </div>
             {% endif %}
 
-            <div class="border border-ink/10 rounded-xl overflow-hidden">
-                <table class="w-full text-sm">
+            <div class="border border-ink/10 rounded-xl overflow-x-auto">
+                <table class="w-full min-w-[720px] text-sm">
                     {% if aba_ativa == 'maquinas' %}
                         <thead>
                             <tr class="bg-tan text-ink/60 text-xs">

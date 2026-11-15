@@ -28,18 +28,18 @@
         }
     </style>
 </head>
-<body class="bg-creme h-screen overflow-hidden flex">
+<body class="bg-creme h-dvh overflow-hidden flex">
 
     <!-- Menu lateral -->
     {% include "partials/sidebar.html" %}
     
     <!-- Divisoria do Menu lateral -->
-    <div class="w-6 bg-dark-blue">
+    <div class="hidden md:block w-6 bg-dark-blue">
         <img src="{% static 'images/divisao.svg' %}" alt="Divisao">
     </div>
 
     <!-- Body das paginas -->
-    <div class="flex-1 p-8 overflow-y-auto">
+    <div class="flex-1 min-w-0 p-4 pb-24 md:p-8 overflow-y-auto">
 
         <!-- Card principal -->
         <div class="bg-white rounded-2xl p-6">
@@ -95,8 +95,8 @@
 
 
             <!-- Tabela -->
-            <div class="border border-ink/10 rounded-xl overflow-hidden">
-                <table class="w-full text-sm">
+            <div class="border border-ink/10 rounded-xl overflow-x-auto">
+                <table class="w-full min-w-[720px] text-sm">
                     <thead>
                         <tr class="bg-tan text-ink/50 text-[10px] tracking-wide">
                             <th class="text-left font-semibold py-3 px-4">Aluno</th>
