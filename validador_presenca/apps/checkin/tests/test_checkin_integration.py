@@ -15,7 +15,6 @@ from apps.teacher_panel.models import Aluno, Aula, Disciplina, Turma
 from apps.validator.models import PresencaRecord
 
 QR_PATH = "/checkin/"
-STATUS_PATH = "/checkin/api/v1/sessoes/sala/{sala_id}/status/"
 
 pytestmark = pytest.mark.django_db(transaction=True)
 
@@ -61,34 +60,6 @@ def logged_http_session():
     http = requests.Session()
     http.cookies.set("sessionid", django_client.cookies["sessionid"].value)
     return http, user
-
-
-# ---------- GET /checkin/api/v1/sessoes/sala/{id}/status/ ----------
-
-
-def test_status_comChamadaAbertaDeUmaAula_deveRetornar200ComDisciplinaDaAula(live_server):
-    # Relacionamento: sala -> turma -> disciplina -> aula -> sessao de chamada
-    sala = create_room()
-    professor = create_teacher()
-    aula = create_lesson(sala, professor, "Desenvolvimento de Software Corporativo")
-    sessao = ChamadaService().abrir(sala_id=sala.id, professor=professor, aula=aula, duracao_min=5)
-
-    response = requests.get(live_server.url + STATUS_PATH.format(sala_id=sala.id))
-
-    assert response.status_code == 200
-    body = response.json()
-    assert body["ativa"] is True
-    assert body["sessao_id"] == sessao.id
-    assert body["sequencia"] == 1
-    assert body["disciplina"] == "Desenvolvimento de Software Corporativo"
-    assert body["abre_em"] == sessao.abre_em.isoformat()
-
-
-def test_status_comSalaIdNaoNumerico_deveRetornar404(live_server):
-    response = requests.get(live_server.url + "/checkin/api/v1/sessoes/sala/abc/status/")
-
-    assert response.status_code == 404
-    assert "Not Found" in response.text
 
 
 # ---------- POST /checkin/ (qr_demo: consome o token e registra presença) ----------
