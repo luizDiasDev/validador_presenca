@@ -1,4 +1,5 @@
 import hashlib
+from django.conf import settings
 from django.core.cache import cache
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -35,6 +36,7 @@ def qr_demo(request):
         "enviado": True,
         "status": registro.status,
         "token_valido": resultado is not None,
+        "qr_motivo": results_pack["qr_motivo"],
         "geo_resultado": geo_resultado,
         "endereco_aluno": endereco_aluno,
         "registro": registro,
@@ -143,29 +145,6 @@ def minhas_presencas(request):
     return render(request, "checkin/minhas_presencas.html", {"registros": registros, "totais": totais})
 
 
-# Endpoint de pooling para o Pyside6
-def status_sessao_sala(request, sala_id: int):
-    service = ChamadaService()
-    sessao = service.sessao_aberta_da_sala(sala_id)
-
-    if not sessao:
-        return JsonResponse({
-            "ativa": False,
-            "mensagem": "Nenhuma chamada em andamento para esta sala.",
-        })
-
-    disciplina_nome = sessao.aula.disciplina.nome if sessao.aula else "Chamada Manual"
-
-    return JsonResponse({
-        "ativa": True,
-        "sessao_id": sessao.id,
-        "sequencia": sessao.sequencia,
-        "disciplina": disciplina_nome,
-        "abre_em": sessao.abre_em.isoformat(),
-        "fecha_em": sessao.fecha_em.isoformat(),
-    })
-
-
 def _registrar_checkin(request, svc):
     geo_resultado = None
     endereco_aluno = None
@@ -181,11 +160,11 @@ def _registrar_checkin(request, svc):
     maquina_id = resultado.maquina_id if resultado else None
 
     sessao_obj = (
-        ChamadaSession.objects.select_related("sala").filter(pk=sessao_id).first()
+        ChamadaSession.objects.select_related("sala", "aula__disciplina").filter(pk=sessao_id).first()
         if sessao_id
         else None
     )
-    sessao_valida = ChamadaService().esta_aberta(sessao_obj) if sessao_obj else False
+    qr_motivo = _motivo_qr_recusado(request.user, resultado, sessao_obj)
 
     lat_raw = request.POST.get("lat", "")
     lon_raw = request.POST.get("lon", "")
@@ -202,8 +181,8 @@ def _registrar_checkin(request, svc):
             lon = float(lon_raw)
             geo_svc = GeolocationService()
             geo_resultado = geo_svc.validate(lat, lon, campus_id)
-            endereco_decoding = GeocodingService()
-            endereco_aluno = endereco_decoding.translate_location(lat_raw, lon_raw)
+            if settings.GEOCODING_ENABLED:
+                endereco_aluno = GeocodingService().translate_location(lat_raw, lon_raw)
             geo_valida = geo_resultado.valida
             geo_motivo = geo_resultado.motivo
         except (ValueError, Campus.DoesNotExist):
@@ -211,7 +190,8 @@ def _registrar_checkin(request, svc):
 
     # informações que serão úteis no PresencaRecord
     results_pack = {
-        "qr_code": (resultado is not None) and sessao_valida,
+        "qr_code": resultado is not None and not qr_motivo,
+        "qr_motivo": qr_motivo,
         "qr_token_hash": qr_token_hash,
         "sessao_id": sessao_id,
         "maquina_id": maquina_id,
@@ -223,3 +203,27 @@ def _registrar_checkin(request, svc):
     registro = register_checkin(results_pack=results_pack)
     return resultado, geo_resultado, endereco_aluno, registro, results_pack
 
+
+def _motivo_qr_recusado(usuario, resultado, sessao) -> str:
+    if resultado is None:
+        return ""
+    if sessao is None or not ChamadaService().esta_aberta(sessao):
+        return "A chamada deste QR Code não está aberta"
+    aluno = getattr(usuario, "aluno", None)
+    if sessao.aula_id and (aluno is None or aluno.turma_id != sessao.aula.disciplina.turma_id):
+        return "Você não está matriculado na turma desta chamada"
+    if resultado.maquina_id and _maquina_lotada(sessao, resultado.maquina_id, usuario.id):
+        return f"Este computador já atingiu o limite de {sessao.limite_por_maquina} aluno(s) nesta chamada"
+    return ""
+
+
+def _maquina_lotada(sessao, maquina_id, usuario_id) -> bool:
+    outros_alunos = (
+        PresencaRecord.objects.filter(sessao=sessao, maquina_id=maquina_id)
+        .exclude(status="REJECTED")
+        .exclude(usuario_id=usuario_id)
+        .values("usuario_id")
+        .distinct()
+        .count()
+    )
+    return outros_alunos >= sessao.limite_por_maquina

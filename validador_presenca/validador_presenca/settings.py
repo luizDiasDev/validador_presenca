@@ -76,6 +76,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'apps.accounts.middleware.SessaoUnicaMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -105,7 +106,8 @@ WSGI_APPLICATION = 'validador_presenca.wsgi.application'
 DATABASES = {
     'default': dj_database_url.config(
         default=os.environ["DATABASE_URL"],
-        conn_max_age=600
+        conn_max_age=600,
+        conn_health_checks=True,
     )
 }
 
@@ -114,7 +116,14 @@ CACHES = {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": os.environ["REDIS_URL"],
         "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient"
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "SOCKET_CONNECT_TIMEOUT": 5,
+            "SOCKET_TIMEOUT": 5,
+            "CONNECTION_POOL_KWARGS": {
+                "health_check_interval": 30,
+                "retry_on_timeout": True,
+                "socket_keepalive": True,
+            },
         }
     }
 }
@@ -159,6 +168,8 @@ CSRF_FAILURE_VIEW = "apps.accounts.views.csrf_failure"
 TOTP_ENCRYPTION_KEY = os.environ.get("TOTP_ENCRYPTION_KEY")
 
 BIOMETRIC_ENCRYPTION_KEY = os.environ.get("BIOMETRIC_ENCRYPTION_KEY")
+
+GEOCODING_ENABLED = os.environ.get("GEOCODING_ENABLED", "true").lower() != "false"
 
 EXECUTAVEL_DOWNLOAD_URL = os.environ.get(
     "EXECUTAVEL_DOWNLOAD_URL",

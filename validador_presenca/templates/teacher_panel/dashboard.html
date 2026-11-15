@@ -65,7 +65,7 @@
                         Frequência Média <i data-lucide="percent" class="w-4 h-4 text-gold"></i>
                     </div>
                     <div class="text-3xl font-bold text-light-blue">{{ frequencia_media }}%</div>
-                    <div class="text-[11px] text-ink/40 mt-1">Em {{ total_chamadas }} chamada(s) aberta(s)</div>
+                    <div class="text-[11px] text-ink/40 mt-1">Por tempos de aula, em {{ total_chamadas }} chamada(s) encerrada(s)</div>
                 </div>
 
                 <div class="bg-green-50 rounded-xl p-4 border border-green-100">
@@ -73,7 +73,7 @@
                         Presenças Aprovadas <i data-lucide="check-circle-2" class="w-4 h-4"></i>
                     </div>
                     <div class="text-3xl font-bold text-green-700">{{ aprovados }}</div>
-                    <div class="text-[11px] text-green-700/60 mt-1">De {{ total_registros }} check-in(s)</div>
+                    <div class="text-[11px] text-green-700/60 mt-1">De {{ presencas_esperadas }} presença(s) esperada(s)</div>
                 </div>
 
                 <div class="bg-amber-50 rounded-xl p-4 border border-amber-100">
@@ -86,10 +86,10 @@
 
                 <div class="bg-red-50 rounded-xl p-4 border border-red-100">
                     <div class="flex items-center justify-between text-[11px] font-semibold text-red-700 uppercase tracking-wide mb-2">
-                        Rejeitados / Faltas <i data-lucide="user-x" class="w-4 h-4"></i>
+                        Faltas <i data-lucide="user-x" class="w-4 h-4"></i>
                     </div>
-                    <div class="text-3xl font-bold text-red-700">{{ rejeitados }}</div>
-                    <div class="text-[11px] text-red-700/60 mt-1">Registros recusados</div>
+                    <div class="text-3xl font-bold text-red-700">{{ faltas }}</div>
+                    <div class="text-[11px] text-red-700/60 mt-1">Sem check-in ou com check-in recusado</div>
                 </div>
             </div>
 
@@ -99,7 +99,7 @@
                 <div class="bg-creme/50 border border-ink/10 rounded-xl p-5 flex flex-col justify-between">
                     <div>
                         <h2 class="text-sm font-semibold text-light-blue uppercase tracking-wide mb-1">Distribuição por Situação</h2>
-                        <p class="text-xs text-ink/50 mb-4">Proporção de registros aprovados, pendentes e rejeitados.</p>
+                        <p class="text-xs text-ink/50 mb-4">Situação de cada aluno em cada chamada encerrada.</p>
                     </div>
                     <div class="h-56 flex items-center justify-center">
                         <canvas id="chartSituacao"></canvas>
@@ -110,7 +110,7 @@
                 <div class="lg:col-span-2 bg-creme/50 border border-ink/10 rounded-xl p-5 flex flex-col justify-between">
                     <div>
                         <h2 class="text-sm font-semibold text-light-blue uppercase tracking-wide mb-1">Frequência por Disciplina (%)</h2>
-                        <p class="text-xs text-ink/50 mb-4">Taxa de presença confirmada em cada disciplina ministrada.</p>
+                        <p class="text-xs text-ink/50 mb-4">Tempos de aula com presença confirmada em cada disciplina.</p>
                     </div>
                     <div class="h-56">
                         <canvas id="chartDisciplinas"></canvas>
@@ -119,7 +119,8 @@
             </div>
 
             <!-- Tabela 1: Resumo por Disciplina -->
-            <h2 class="text-sm font-semibold text-ink/70 uppercase tracking-wide mb-3">Desempenho por Disciplina</h2>
+            <h2 class="text-sm font-semibold text-ink/70 uppercase tracking-wide mb-1">Desempenho por Disciplina</h2>
+            <p class="text-xs text-ink/50 mb-3">Presenças, pendentes e faltas contadas em tempos de aula.</p>
             <div class="border border-ink/10 rounded-xl overflow-x-auto mb-8">
                 <table class="w-full min-w-[720px] text-sm">
                     <thead>
@@ -127,9 +128,9 @@
                             <th class="text-left font-semibold py-3 px-4">Disciplina</th>
                             <th class="text-left font-semibold py-3">Turma</th>
                             <th class="text-center font-semibold py-3">Chamadas</th>
-                            <th class="text-center font-semibold py-3">Aprovados</th>
+                            <th class="text-center font-semibold py-3">Presenças</th>
                             <th class="text-center font-semibold py-3">Pendentes</th>
-                            <th class="text-center font-semibold py-3">Rejeitados</th>
+                            <th class="text-center font-semibold py-3">Faltas</th>
                             <th class="text-right font-semibold py-3 px-4">Frequência Média</th>
                         </tr>
                     </thead>
@@ -139,9 +140,9 @@
                                 <td class="py-3 px-4 font-medium text-ink">{{ d.nome }}</td>
                                 <td class="py-3 text-ink/70">{{ d.turma_codigo }}</td>
                                 <td class="py-3 text-center text-ink/70">{{ d.chamadas }}</td>
-                                <td class="py-3 text-center font-medium text-green-700">{{ d.aprovados }}</td>
-                                <td class="py-3 text-center font-medium text-amber-700">{{ d.pendentes }}</td>
-                                <td class="py-3 text-center font-medium text-red-700">{{ d.rejeitados }}</td>
+                                <td class="py-3 text-center font-medium text-green-700">{{ d.tempos.presente }}</td>
+                                <td class="py-3 text-center font-medium text-amber-700">{{ d.tempos.pendente }}</td>
+                                <td class="py-3 text-center font-medium text-red-700">{{ d.tempos.falta }}</td>
                                 <td class="py-3 px-4 text-right font-semibold text-light-blue">{{ d.frequencia }}%</td>
                             </tr>
                         {% empty %}
@@ -152,7 +153,8 @@
             </div>
 
             <!-- Tabela 2: Frequencia por Aluno -->
-            <h2 class="text-sm font-semibold text-ink/70 uppercase tracking-wide mb-3">Acompanhamento Individual por Aluno</h2>
+            <h2 class="text-sm font-semibold text-ink/70 uppercase tracking-wide mb-1">Acompanhamento Individual por Aluno</h2>
+            <p class="text-xs text-ink/50 mb-3">Valores em tempos de aula. Abaixo de 75% o aluno está em risco de reprovação por falta.</p>
             <div class="border border-ink/10 rounded-xl overflow-x-auto">
                 <table class="w-full min-w-[720px] text-sm">
                     <thead>
@@ -162,7 +164,7 @@
                             <th class="text-left font-semibold py-3">Turma</th>
                             <th class="text-center font-semibold py-3">Presenças</th>
                             <th class="text-center font-semibold py-3">Pendentes</th>
-                            <th class="text-center font-semibold py-3">Faltas / Rejeições</th>
+                            <th class="text-center font-semibold py-3">Faltas</th>
                             <th class="text-right font-semibold py-3 px-4">Taxa de Presença</th>
                         </tr>
                     </thead>
@@ -172,11 +174,11 @@
                                 <td class="py-3 px-4 font-semibold text-light-blue">{{ al.matricula }}</td>
                                 <td class="py-3 font-medium text-ink">{{ al.nome }}</td>
                                 <td class="py-3 text-ink/70">{{ al.turma_codigo }}</td>
-                                <td class="py-3 text-center text-green-700 font-medium">{{ al.aprovados }}</td>
-                                <td class="py-3 text-center text-amber-700 font-medium">{{ al.pendentes }}</td>
-                                <td class="py-3 text-center text-red-700 font-medium">{{ al.rejeitados }}</td>
+                                <td class="py-3 text-center text-green-700 font-medium">{{ al.tempos.presente }}</td>
+                                <td class="py-3 text-center text-amber-700 font-medium">{{ al.tempos.pendente }}</td>
+                                <td class="py-3 text-center text-red-700 font-medium">{{ al.tempos.falta }}</td>
                                 <td class="py-3 px-4 text-right">
-                                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full {% if al.frequencia >= 75 %}bg-green-100 text-green-800{% elif al.total == 0 %}bg-ink/10 text-ink/60{% else %}bg-red-100 text-red-800{% endif %}">
+                                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full {% if al.tempos_total == 0 %}bg-ink/10 text-ink/60{% elif al.frequencia >= 75 %}bg-green-100 text-green-800{% elif al.frequencia >= 50 %}bg-amber-100 text-amber-800{% else %}bg-red-100 text-red-800{% endif %}">
                                         {{ al.frequencia }}%
                                     </span>
                                 </td>
@@ -197,13 +199,13 @@
         // Grafico 1: Rosca (Aprovados, Pendentes, Rejeitados)
         const ctxSituacao = document.getElementById('chartSituacao');
         if (ctxSituacao) {
-            const dadosSituacao = [{{ aprovados }}, {{ pendentes }}, {{ rejeitados }}];
+            const dadosSituacao = [{{ aprovados }}, {{ pendentes }}, {{ faltas }}];
             const somaSituacao = dadosSituacao.reduce((a, b) => a + b, 0);
 
             new Chart(ctxSituacao, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Aprovados', 'Pendentes', 'Rejeitados'],
+                    labels: ['Presenças', 'Pendentes', 'Faltas'],
                     datasets: [{
                         data: somaSituacao > 0 ? dadosSituacao : [1, 0, 0],
                         backgroundColor: somaSituacao > 0
@@ -235,7 +237,7 @@
                     datasets: [{
                         label: 'Frequência (%)',
                         data: valoresDisc.length > 0 ? valoresDisc : [0],
-                        backgroundColor: '#C9962C',
+                        backgroundColor: valoresDisc.map(v => v >= 75 ? '#15803d' : v >= 50 ? '#b45309' : '#b91c1c'),
                         borderRadius: 6,
                         maxBarThickness: 48
                     }]

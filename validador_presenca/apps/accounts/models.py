@@ -34,6 +34,7 @@ class Usuario(AbstractUser):
     )
     totp_cifrado = models.BinaryField(null=True, blank=True)
     totp_ativo = models.BooleanField(default=False)
+    chave_sessao_ativa = models.CharField(max_length=40, blank=True, default="")
 
     objects = UsuarioManager()
 

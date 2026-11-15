@@ -1,126 +1,124 @@
-from django.db.models import Count, Q
+from collections import defaultdict
+
+from django.utils import timezone
+
 from apps.checkin.models import ChamadaSession
 from apps.teacher_panel.models import Aluno, Disciplina, Turma
 from apps.validator.models import PresencaRecord
 
+PRESENTE = "presente"
+PENDENTE = "pendente"
+FALTA = "falta"
+
+SITUACAO_POR_STATUS = {"APPROVED": PRESENTE, "PENDING": PENDENTE}
+PRIORIDADE_STATUS = {"APPROVED": 3, "PENDING": 2, "REJECTED": 1}
+
+
+def _novo_placar():
+    return {PRESENTE: 0, PENDENTE: 0, FALTA: 0}
+
+
+def _frequencia(tempos: dict) -> float:
+    total = sum(tempos.values())
+    return round(tempos[PRESENTE] / total * 100, 1) if total else 0.0
+
 
 class DashboardService:
+    def __init__(self, clock=timezone.now):
+        self.clock = clock
+
     def gerar_dados(self, professor=None, turma_id: int | None = None) -> dict:
-        # Filtra as disciplinas do professor (ou todas caso seja administrador sem perfil professor)
-        disciplinas_qs = Disciplina.objects.select_related("turma__sala").order_by(
-            "nome"
-        )
+        disciplinas = Disciplina.objects.select_related("turma").order_by("nome")
         if professor:
-            disciplinas_qs = disciplinas_qs.filter(professor=professor)
+            disciplinas = disciplinas.filter(professor=professor)
 
-        turmas_ids = list(disciplinas_qs.values_list("turma_id", flat=True).distinct())
-        if professor and turmas_ids:
-            turmas_qs = Turma.objects.filter(id__in=turmas_ids).order_by("codigo")
-        else:
-            turmas_qs = Turma.objects.all().order_by("codigo")
-
-        if turma_id:
-            disciplinas_qs = disciplinas_qs.filter(turma_id=turma_id)
-
-        # Filtra registros de presenca do escopo do professor e da turma selecionada
-        registros_qs = PresencaRecord.objects.select_related(
-            "sessao__aula__disciplina__turma",
-            "usuario",
-        )
+        turmas = Turma.objects.order_by("codigo")
         if professor:
-            registros_qs = registros_qs.filter(
-                Q(sessao__professor=professor) | Q(sessao__isnull=True)
-            )
+            turmas = turmas.filter(disciplinas__professor=professor).distinct()
+
         if turma_id:
-            registros_qs = registros_qs.filter(
-                Q(sessao__aula__disciplina__turma_id=turma_id)
-                | Q(usuario__aluno__turma_id=turma_id)
-            ).distinct()
+            disciplinas = disciplinas.filter(turma_id=turma_id)
 
-        total_registros = registros_qs.count()
-        aprovados = registros_qs.filter(status="APPROVED").count()
-        pendentes = registros_qs.filter(status="PENDING").count()
-        rejeitados = registros_qs.filter(status="REJECTED").count()
-
-        frequencia_media = (
-            round((aprovados / total_registros) * 100, 1)
-            if total_registros > 0
-            else 0.0
+        sessoes = list(
+            ChamadaSession.objects.filter(
+                aula__disciplina__in=disciplinas,
+                fecha_em__lte=self.clock(),
+            ).select_related("aula__disciplina")
         )
 
-        # Sessoes de chamada abertas pelo professor
-        sessoes_qs = ChamadaSession.objects.all()
-        if professor:
-            sessoes_qs = sessoes_qs.filter(professor=professor)
-        if turma_id:
-            sessoes_qs = sessoes_qs.filter(aula__disciplina__turma_id=turma_id)
-        total_chamadas = sessoes_qs.count()
-
-        # Indicadores agrupados por disciplina
-        resumo_disciplinas = []
-        for disc in disciplinas_qs:
-            regs_disc = PresencaRecord.objects.filter(sessao__aula__disciplina=disc)
-            tot_d = regs_disc.count()
-            aprov_d = regs_disc.filter(status="APPROVED").count()
-            pend_d = regs_disc.filter(status="PENDING").count()
-            rej_d = regs_disc.filter(status="REJECTED").count()
-            taxa_d = round((aprov_d / tot_d) * 100, 1) if tot_d > 0 else 0.0
-            chamadas_d = ChamadaSession.objects.filter(aula__disciplina=disc).count()
-
-            resumo_disciplinas.append(
-                {
-                    "id": disc.id,
-                    "nome": disc.nome,
-                    "turma_codigo": disc.turma.codigo,
-                    "chamadas": chamadas_d,
-                    "total": tot_d,
-                    "aprovados": aprov_d,
-                    "pendentes": pend_d,
-                    "rejeitados": rej_d,
-                    "frequencia": taxa_d,
-                }
-            )
-
-        # Resumo de frequencia por aluno matriculado
-        alunos_qs = Aluno.objects.select_related("usuario", "turma").order_by(
-            "turma__codigo", "matricula"
+        alunos = list(
+            Aluno.objects.filter(turma__disciplinas__in=disciplinas)
+            .distinct()
+            .select_related("usuario", "turma")
+            .order_by("turma__codigo", "matricula")
         )
-        if turma_id:
-            alunos_qs = alunos_qs.filter(turma_id=turma_id)
-        elif professor and turmas_ids:
-            alunos_qs = alunos_qs.filter(turma_id__in=turmas_ids)
+        alunos_por_turma = defaultdict(list)
+        for aluno in alunos:
+            alunos_por_turma[aluno.turma_id].append(aluno)
 
-        resumo_alunos = []
-        for al in alunos_qs:
-            regs_al = registros_qs.filter(usuario_id=al.usuario_id)
-            tot_al = regs_al.count()
-            aprov_al = regs_al.filter(status="APPROVED").count()
-            pend_al = regs_al.filter(status="PENDING").count()
-            rej_al = regs_al.filter(status="REJECTED").count()
-            taxa_al = round((aprov_al / tot_al) * 100, 1) if tot_al > 0 else 0.0
+        melhor_status = self._melhor_status_por_aluno(sessoes)
 
-            resumo_alunos.append(
-                {
-                    "matricula": al.matricula,
-                    "nome": al.usuario.get_full_name() or al.usuario.email,
-                    "turma_codigo": al.turma.codigo,
-                    "aprovados": aprov_al,
-                    "pendentes": pend_al,
-                    "rejeitados": rej_al,
-                    "total": tot_al,
-                    "frequencia": taxa_al,
-                }
-            )
+        chamadas = _novo_placar()
+        tempos_geral = _novo_placar()
+        tempos_por_aluno = defaultdict(_novo_placar)
+        tempos_por_disciplina = defaultdict(_novo_placar)
+        chamadas_por_disciplina = defaultdict(int)
+
+        for sessao in sessoes:
+            disciplina = sessao.aula.disciplina
+            chamadas_por_disciplina[disciplina.id] += 1
+            for aluno in alunos_por_turma[disciplina.turma_id]:
+                status = melhor_status.get((sessao.id, aluno.usuario_id))
+                situacao = SITUACAO_POR_STATUS.get(status, FALTA)
+                chamadas[situacao] += 1
+                tempos_geral[situacao] += sessao.tempos_cobertos
+                tempos_por_aluno[aluno.id][situacao] += sessao.tempos_cobertos
+                tempos_por_disciplina[disciplina.id][situacao] += sessao.tempos_cobertos
+
+        resumo_disciplinas = [
+            {
+                "nome": disciplina.nome,
+                "turma_codigo": disciplina.turma.codigo,
+                "chamadas": chamadas_por_disciplina[disciplina.id],
+                "tempos": tempos_por_disciplina[disciplina.id],
+                "frequencia": _frequencia(tempos_por_disciplina[disciplina.id]),
+            }
+            for disciplina in disciplinas
+        ]
+
+        resumo_alunos = [
+            {
+                "matricula": aluno.matricula,
+                "nome": aluno.usuario.get_full_name() or aluno.usuario.email,
+                "turma_codigo": aluno.turma.codigo,
+                "tempos": tempos_por_aluno[aluno.id],
+                "tempos_total": sum(tempos_por_aluno[aluno.id].values()),
+                "frequencia": _frequencia(tempos_por_aluno[aluno.id]),
+            }
+            for aluno in alunos
+        ]
 
         return {
-            "turmas": turmas_qs,
+            "turmas": turmas,
             "turma_selecionada": turma_id,
-            "total_registros": total_registros,
-            "total_chamadas": total_chamadas,
-            "aprovados": aprovados,
-            "pendentes": pendentes,
-            "rejeitados": rejeitados,
-            "frequencia_media": frequencia_media,
+            "total_chamadas": len(sessoes),
+            "presencas_esperadas": sum(chamadas.values()),
+            "aprovados": chamadas[PRESENTE],
+            "pendentes": chamadas[PENDENTE],
+            "faltas": chamadas[FALTA],
+            "frequencia_media": _frequencia(tempos_geral),
             "resumo_disciplinas": resumo_disciplinas,
             "resumo_alunos": resumo_alunos,
         }
+
+    def _melhor_status_por_aluno(self, sessoes) -> dict:
+        melhor = {}
+        registros = PresencaRecord.objects.filter(
+            sessao__in=sessoes, usuario__isnull=False
+        ).values_list("sessao_id", "usuario_id", "status")
+        for sessao_id, usuario_id, status in registros:
+            chave = (sessao_id, usuario_id)
+            atual = melhor.get(chave)
+            if atual is None or PRIORIDADE_STATUS[status] > PRIORIDADE_STATUS[atual]:
+                melhor[chave] = status
+        return melhor

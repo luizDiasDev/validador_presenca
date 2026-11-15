@@ -1,15 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm
 from apps.privacy.models import SolicitacaoLGPD
-
-class LoginComAceiteForm(AuthenticationForm):
-    aceite_termos = forms.BooleanField(
-        required=True,
-        error_messages={
-            "required": "Você precisa aceitar a Política de Privacidade e os Termos de Uso para continuar."
-        },
-        label="",
-    )
 
 class SolicitacaoLGPDForm(forms.ModelForm):
     confirmo_impacto = forms.BooleanField(

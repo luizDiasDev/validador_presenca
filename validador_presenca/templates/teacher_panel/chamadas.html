@@ -61,7 +61,7 @@
 
             <form method="post" action="{% url 'teacher_panel:abrir_chamada' %}" class="bg-creme rounded-xl p-5 mb-8">
                 {% csrf_token %}
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div>
                         <label class="block text-xs font-semibold text-ink/70 mb-1">Aula do Dia (Turma e Disciplina)</label>
                         <select id="select-aula" name="aula" required onchange="atualizarLimiteTempos()" class="w-full px-3.5 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
@@ -80,6 +80,10 @@
                         <label id="label-tempos" class="block text-xs font-semibold text-ink/70 mb-1">Tempos de aula cobertos</label>
                         <input id="input-tempos" type="number" name="tempos_cobertos" min="1" max="8" value="4" required class="w-full px-3.5 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
                     </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-ink/70 mb-1">Alunos por computador</label>
+                        <input type="number" name="limite_por_maquina" min="1" max="10" value="1" required class="w-full px-3.5 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
+                    </div>
                 </div>
                 <div class="mt-4 flex justify-end">
                     <button type="submit" {% if not form.fields.aula.queryset %}disabled{% endif %} class="flex items-center gap-2 bg-gold text-dark-blue text-xs font-semibold px-5 py-2.5 rounded-lg hover:bg-gold/80 disabled:opacity-40 disabled:cursor-not-allowed">
@@ -97,6 +101,7 @@
                             <th class="text-left font-semibold py-3">Turma / Disciplina</th>
                             <th class="text-left font-semibold py-3">Sala</th>
                             <th class="text-center font-semibold py-3">Tempos</th>
+                            <th class="text-center font-semibold py-3">Alunos por PC</th>
                             <th class="text-center font-semibold py-3">Abertura</th>
                             <th class="text-center font-semibold py-3">Fechamento</th>
                             <th class="text-center font-semibold py-3">Status</th>
@@ -116,6 +121,7 @@
                                 </td>
                                 <td class="py-3 text-ink/70">{{ sessao.sala.codigo }}</td>
                                 <td class="py-3 text-center font-semibold text-light-blue">{{ sessao.tempos_cobertos }}</td>
+                                <td class="py-3 text-center text-ink/70">{{ sessao.limite_por_maquina }}</td>
                                 <td class="py-3 text-center text-ink/70">{{ sessao.abre_em|date:"d/m H:i" }}</td>
                                 <td class="py-3 text-center text-ink/70">{{ sessao.fecha_em|date:"d/m H:i" }}</td>
                                 <td class="py-3 text-center">
@@ -139,7 +145,7 @@
                                 </td>
                             </tr>
                         {% empty %}
-                            <tr><td colspan="8" class="py-6 text-center text-ink/40">Nenhuma sessão de chamada registrada ainda.</td></tr>
+                            <tr><td colspan="9" class="py-6 text-center text-ink/40">Nenhuma sessão de chamada registrada ainda.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>

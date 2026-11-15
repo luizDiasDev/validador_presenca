@@ -4,6 +4,3 @@ from django.apps import AppConfig
 class PrivacyConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'apps.privacy'
-
-    def ready(self):
-        from . import signals

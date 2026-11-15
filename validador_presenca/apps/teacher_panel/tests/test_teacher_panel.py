@@ -174,6 +174,7 @@ def test_professor_abre_e_encerra_chamada_pela_view(client, cenario_professor):
             "aula": aula.id,
             "duracao_min": 15,
             "tempos_cobertos": 4,
+            "limite_por_maquina": 2,
         },
     )
     assert resp.status_code == 302
@@ -181,6 +182,7 @@ def test_professor_abre_e_encerra_chamada_pela_view(client, cenario_professor):
     sessao = ChamadaSession.objects.get(aula=aula)
     assert sessao.sala_id == cenario_professor["sala"].id
     assert sessao.tempos_cobertos == 4
+    assert sessao.limite_por_maquina == 2
 
     resp_enc = client.post(
         reverse("teacher_panel:encerrar_chamada", kwargs={"sessao_id": sessao.id})
@@ -193,7 +195,16 @@ def test_professor_abre_e_encerra_chamada_pela_view(client, cenario_professor):
 @pytest.mark.django_db
 def test_revisao_manual_atualiza_registro_e_gera_auditoria(client, cenario_professor):
     client.force_login(cenario_professor["user"])
+    agora = timezone.now()
+    sessao = ChamadaSession.objects.create(
+        aula=cenario_professor["aula"],
+        sala=cenario_professor["sala"],
+        professor=cenario_professor["professor"],
+        abre_em=agora,
+        fecha_em=agora,
+    )
     registro = PresencaRecord.objects.create(
+        sessao=sessao,
         qr_token_hash="abc123hash",
         score_facial=Decimal("0.620"),
         score_vida=Decimal("0.880"),

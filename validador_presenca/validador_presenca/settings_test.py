@@ -26,3 +26,5 @@ PASSWORD_HASHERS = [
 ]
 
 MIDDLEWARE = [m for m in MIDDLEWARE if "whitenoise" not in m]
+
+GEOCODING_ENABLED = False

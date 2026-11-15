@@ -1,10 +1,9 @@
 import io
 import sys
-import time
 
 import cv2
 import qrcode
-from PySide6.QtCore import QObject, Qt, QThread, QTimer, Signal
+from PySide6.QtCore import Qt, QThread, QTimer, Signal
 from PySide6.QtGui import QFont, QImage, QPixmap
 from PySide6.QtWidgets import QApplication, QInputDialog, QLabel, QMessageBox, QVBoxLayout, QWidget
 
@@ -14,8 +13,8 @@ from biometrics.face_engine import FaceEngine
 from .api import ApiError, RoomApi
 from .capture_session import MODE_ENROLLMENT, run_face_capture
 from .config import RoomConfig, load_config, save_config
+from .polling import AUTHORIZATION_POLL_MS, PollingSchedule
 
-AUTHORIZATION_POLL_MS = 1500
 RESULT_SCREEN_MS = 4000
 RESULT_TEXT = {
     "APPROVED": "Presença confirmada",
@@ -93,7 +92,7 @@ class RoomWindow(QWidget):
         self.engine = None
         self.camera_factory = camera_factory
         self.capture_worker = None
-        self._next_qr_at = 0.0
+        self.schedule = PollingSchedule()
 
         self.setWindowTitle(f"ADSUM | {config.machine_name or 'Sala'}")
         self.setStyleSheet("background:#0F1B2E; color:#F7F3EA;")
@@ -133,15 +132,15 @@ class RoomWindow(QWidget):
         self._tick()
 
     def _tick(self):
-        """A cada 1,5 s: alguém leu o QR? Se não, mantém o QR atualizado."""
         if self.capture_worker is not None:
             return
         try:
-            authorization = self.api.pending_authorization()
-            if authorization.get("pendente"):
-                self._start_capture(authorization)
-                return
-            if time.monotonic() >= self._next_qr_at:
+            if self.schedule.should_check_authorization():
+                authorization = self.api.pending_authorization()
+                if authorization.get("pendente"):
+                    self._start_capture(authorization)
+                    return
+            if self.schedule.should_refresh_qr():
                 self._show_qr(self.api.current_qr())
         except ApiError as error:
             self.title.setText("ADSUM")
@@ -149,16 +148,15 @@ class RoomWindow(QWidget):
             self.message.setText(str(error))
 
     def _show_qr(self, data: dict):
+        self.schedule.qr_received(data)
         if not data.get("ativa"):
             self.title.setText("ADSUM")
             self.picture.clear()
             self.message.setText(data.get("mensagem", "Nenhuma chamada aberta nesta sala."))
-            self._next_qr_at = time.monotonic() + 5
             return
         self.title.setText(data["disciplina"])
         self.picture.setPixmap(_qr_pixmap(data["link"], size=460))
         self.message.setText(f"Aponte a câmera do celular para o QR Code · chamada até {data['fecha_em']}")
-        self._next_qr_at = time.monotonic() + data.get("atualizar_em_s", 10)
 
     def _start_capture(self, authorization: dict):
         self.title.setText("Cadastro do rosto" if authorization["modo"] == MODE_ENROLLMENT else "Verificação facial")
@@ -184,7 +182,7 @@ class RoomWindow(QWidget):
 
     def _back_to_qr(self):
         self.capture_worker = None
-        self._next_qr_at = 0.0
+        self.schedule.refresh_now()
         self._tick()
 
 

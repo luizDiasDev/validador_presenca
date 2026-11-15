@@ -8,3 +8,6 @@ __pycache__/
 .venv/
 .coverage
 staticfiles/
+lgpd_exports/
+loadtest/dados_carga.json
+loadtest/*.csv

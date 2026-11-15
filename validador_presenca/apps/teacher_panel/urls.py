@@ -7,6 +7,7 @@ urlpatterns = [
     path("dashboard/", views.dashboard_view, name="dashboard"),
     # Listagem principal e CRUD de Turmas, Disciplinas e Aulas
     path("turmas/", views.turmas_view, name="turmas"),
+    path("gestao-turmas/", views.gestao_turmas_view, name="gestao_turmas"),
     path("turmas/criar/", views.salvar_turma_view, name="criar_turma"),
     path("turmas/<int:turma_id>/editar/", views.salvar_turma_view, name="editar_turma"),
     path(

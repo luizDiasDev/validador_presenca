@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.db.models import Count
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -28,6 +28,7 @@ from apps.teacher_panel.forms import (
     TurmaForm,
 )
 from apps.teacher_panel.models import Aluno, Aula, Disciplina, Turma
+from apps.privacy.domain.term_acceptance import situacao_da_biometria, situacao_dos_termos
 from apps.validator.models import PresencaRecord
 
 
@@ -35,14 +36,9 @@ from apps.validator.models import PresencaRecord
 @only_teacher
 def turmas_view(request):
     professor = request.user.professor
-    aba_ativa = request.GET.get("aba", "aulas")
+    aba_ativa = "disciplinas" if request.GET.get("aba") == "disciplinas" else "aulas"
 
-    salas = Room.objects.select_related("campus").order_by("codigo")
-    turmas = (
-        Turma.objects.select_related("sala")
-        .prefetch_related("alunos")
-        .order_by("codigo")
-    )
+    turmas = Turma.objects.order_by("codigo")
     disciplinas = (
         Disciplina.objects.filter(professor=professor)
         .select_related("turma__sala")
@@ -56,20 +52,31 @@ def turmas_view(request):
 
     context = {
         "aba_ativa": aba_ativa,
-        "salas": salas,
         "turmas": turmas,
         "disciplinas": disciplinas,
         "aulas": aulas,
         "dias_semana": Aula.DIAS_SEMANA,
-        "turma_form": TurmaForm(),
-        "disciplina_form": DisciplinaForm(),
-        "aula_form": AulaForm(professor=professor),
     }
     return render(request, "teacher_panel/turmas.html", context)
 
 
 @login_required
-@only_teacher
+@only_admin
+def gestao_turmas_view(request):
+    turmas = (
+        Turma.objects.select_related("sala")
+        .annotate(
+            total_alunos=Count("alunos", distinct=True),
+            total_disciplinas=Count("disciplinas", distinct=True),
+        )
+        .order_by("codigo")
+    )
+    salas = Room.objects.order_by("codigo")
+    return render(request, "teacher_panel/gestao_turmas.html", {"turmas": turmas, "salas": salas})
+
+
+@login_required
+@only_admin
 @require_POST
 def salvar_turma_view(request, turma_id: int | None = None):
     instancia = get_object_or_404(Turma, pk=turma_id) if turma_id else None
@@ -83,11 +90,11 @@ def salvar_turma_view(request, turma_id: int | None = None):
         for campo, erros in form.errors.items():
             messages.error(request, f"{campo}: {erros[0]}")
 
-    return redirect("/turmas/?aba=turmas")
+    return redirect("teacher_panel:gestao_turmas")
 
 
 @login_required
-@only_teacher
+@only_admin
 @require_POST
 def excluir_turma_view(request, turma_id: int):
     turma = get_object_or_404(Turma, pk=turma_id)
@@ -100,7 +107,7 @@ def excluir_turma_view(request, turma_id: int):
             request,
             "Não é possível excluir esta turma pois já existem disciplinas ou alunos vinculados a ela.",
         )
-    return redirect("/turmas/?aba=turmas")
+    return redirect("teacher_panel:gestao_turmas")
 
 
 @login_required
@@ -199,11 +206,19 @@ def alunos_view(request):
     if turma_filtro.isdigit():
         alunos = alunos.filter(turma_id=int(turma_filtro))
 
+    alunos = list(alunos)
+    usuarios_ids = [aluno.usuario_id for aluno in alunos]
+    termos = situacao_dos_termos(usuarios_ids)
+    biometria = situacao_da_biometria(usuarios_ids)
+    for aluno in alunos:
+        aluno.situacao_termos = termos[aluno.usuario_id]
+        aluno.situacao_biometria = biometria[aluno.usuario_id]
+
     context = {
         "alunos": alunos,
         "turmas": turmas,
         "turma_filtro": int(turma_filtro) if turma_filtro.isdigit() else None,
-        "total_alunos": alunos.count(),
+        "total_alunos": len(alunos),
     }
     return render(request, "teacher_panel/alunos.html", context)
 
@@ -354,6 +369,7 @@ def abrir_chamada_view(request):
     aula = form.cleaned_data["aula"]
     duracao_min = form.cleaned_data["duracao_min"]
     tempos_cobertos = form.cleaned_data["tempos_cobertos"]
+    limite_por_maquina = form.cleaned_data["limite_por_maquina"]
 
     sala = aula.disciplina.turma.sala
     service = ChamadaService()
@@ -365,6 +381,7 @@ def abrir_chamada_view(request):
             aula=aula,
             duracao_min=duracao_min,
             tempos_cobertos=tempos_cobertos,
+            limite_por_maquina=limite_por_maquina,
         )
         messages.success(
             request,
@@ -396,11 +413,10 @@ def encerrar_chamada_view(request, sessao_id: int):
 @only_teacher
 def pendencias_view(request):
     professor = request.user.professor
-    # Exibe registros vinculados as sessoes do professor logado (ou sem sessao nos testes unitarios)
-    filtro_prof = Q(sessao__professor=professor) | Q(sessao__isnull=True)
+    registros_do_professor = PresencaRecord.objects.filter(sessao__professor=professor)
 
     pendentes = (
-        PresencaRecord.objects.filter(filtro_prof, status="PENDING")
+        registros_do_professor.filter(status="PENDING")
         .select_related(
             "usuario",
             "sessao__aula__disciplina__turma",
@@ -410,8 +426,7 @@ def pendencias_view(request):
         .order_by("-data_criacao")
     )
     revisados = (
-        PresencaRecord.objects.filter(filtro_prof)
-        .exclude(status="PENDING")
+        registros_do_professor.exclude(status="PENDING")
         .filter(revisado_por__isnull=False)
         .select_related(
             "usuario",
@@ -434,7 +449,12 @@ def pendencias_view(request):
 @only_teacher
 @require_POST
 def revisar_pendencia_view(request, registro_id: int):
-    get_object_or_404(PresencaRecord, pk=registro_id)
+    get_object_or_404(
+        PresencaRecord,
+        pk=registro_id,
+        status="PENDING",
+        sessao__professor=request.user.professor,
+    )
     form = RevisaoPresencaForm(request.POST)
 
     if not form.is_valid():
@@ -442,13 +462,16 @@ def revisar_pendencia_view(request, registro_id: int):
             messages.error(request, erros[0])
         return redirect("teacher_panel:pendencias")
 
-    service = RevisaoPresencaService()
-    registro = service.revisar(
-        registro_id=registro_id,
-        autor_id=request.user.id,
-        novo_status=form.cleaned_data["status"],
-        motivo=form.cleaned_data["motivo"],
-    )
+    try:
+        registro = RevisaoPresencaService().revisar(
+            registro_id=registro_id,
+            autor_id=request.user.id,
+            novo_status=form.cleaned_data["status"],
+            motivo=form.cleaned_data["motivo"],
+        )
+    except ValueError as exc:
+        messages.error(request, str(exc))
+        return redirect("teacher_panel:pendencias")
 
     messages.success(
         request, f"Registro #{registro.id} atualizado para {registro.status}."

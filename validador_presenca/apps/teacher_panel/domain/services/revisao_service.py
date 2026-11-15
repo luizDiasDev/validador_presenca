@@ -28,6 +28,10 @@ class RevisaoPresencaService:
 
         # Trava a linha do registro para evitar revisao concorrente
         registro = PresencaRecord.objects.select_for_update().get(pk=registro_id)
+        if registro.status != "PENDING":
+            raise ValueError("Este registro já foi decidido")
+
+        motivo_anterior = registro.motivo
         agora = self.clock()
 
         registro.status = novo_status
@@ -60,6 +64,7 @@ class RevisaoPresencaService:
                     "novo_status": novo_status,
                     "aprovado": registro.aprovado,
                     "motivo": motivo_limpo,
+                    "motivo_anterior": motivo_anterior,
                 },
             }
         )
