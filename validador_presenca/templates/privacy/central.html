@@ -25,18 +25,18 @@
         body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
-<body class="bg-creme h-screen overflow-hidden flex">
+<body class="bg-creme h-dvh overflow-hidden flex">
 
     <!-- Menu lateral -->
     {% include "partials/sidebar.html" %}
 
     <!-- Divisoria do Menu lateral -->
-    <div class="w-6 bg-dark-blue">
+    <div class="hidden md:block w-6 bg-dark-blue">
         <img src="{% static 'images/divisao.svg' %}" alt="Divisao">
     </div>
 
     <!-- Body -->
-    <div class="flex-1 p-8 overflow-y-auto">
+    <div class="flex-1 min-w-0 p-4 pb-24 md:p-8 overflow-y-auto">
 
         <div class="max-w-5xl mx-auto">
 

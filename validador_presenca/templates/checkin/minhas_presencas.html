@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 
     <style type="text/tailwindcss">
         @theme {
@@ -23,7 +24,7 @@
         body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
-<body class="min-h-screen bg-creme text-ink flex flex-col items-center p-6 gap-6">
+<body class="min-h-screen bg-creme text-ink flex flex-col items-center p-6 pb-28 gap-6">
     <div class="flex items-center gap-2 mt-4">
         <img src="{% static 'images/logo_bg.svg' %}" alt="Logo Adsum" class="w-10 h-10">
         <h1 class="font-display text-2xl font-bold text-dark-blue">ADSUM</h1>
@@ -71,13 +72,7 @@
         </ul>
     </div>
 
-    <nav class="mt-auto flex gap-4 text-xs text-ink/60">
-        <a href="{% url 'checkin:qr_demo' %}" class="hover:underline">Fazer check-in</a>
-        <a href="{% url 'privacy:central' %}" class="hover:underline">Central de Privacidade</a>
-        <form method="post" action="{% url 'accounts:logout' %}">
-            {% csrf_token %}
-            <button type="submit" class="hover:underline">Sair</button>
-        </form>
-    </nav>
+    {% include "partials/bottom_nav.html" %}
+    <script>lucide.createIcons();</script>
 </body>
 </html>

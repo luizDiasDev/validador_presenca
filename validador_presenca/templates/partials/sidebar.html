@@ -3,7 +3,7 @@
     Menu lateral único do sistema. Toda tela faz: {% include "partials/sidebar.html" %}
 {% endcomment %}
 {% with tela=request.resolver_match item_ativo="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-gold text-dark-blue font-semibold" item_normal="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/50 hover:bg-white/5" %}
-<aside class="w-60 bg-dark-blue flex-shrink-0">
+<aside class="hidden md:block w-60 bg-dark-blue flex-shrink-0">
     <div class="flex flex-col h-full py-6 px-4">
 
         <!-- Logo -->
@@ -34,6 +34,9 @@
             {% if request.user.aluno %}
             <a href="{% url 'checkin:qr_demo' %}" class="{% if tela.namespace == 'checkin' and tela.url_name == 'qr_demo' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
                 <i data-lucide="scan-line" class="w-4 h-4"></i> Fazer check-in
+            </a>
+            <a href="{% url 'checkin:minhas_presencas' %}" class="{% if tela.namespace == 'checkin' and tela.url_name == 'minhas_presencas' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+                <i data-lucide="calendar-check" class="w-4 h-4"></i> Minhas presenças
             </a>
             {% endif %}
             {% if request.user.administrador %}
@@ -72,4 +75,7 @@
         </div>
     </div>
 </aside>
+<div class="md:hidden">
+    {% include "partials/bottom_nav.html" %}
+</div>
 {% endwith %}
