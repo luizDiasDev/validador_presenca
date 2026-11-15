@@ -1,0 +1,66 @@
+{% with tela=request.resolver_match item_ativo="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-semibold text-gold" item_normal="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] text-white/60" %}
+<nav class="fixed bottom-0 inset-x-0 z-40 bg-dark-blue border-t-2 border-gold pb-[env(safe-area-inset-bottom)]">
+    <div class="mx-auto flex h-16 max-w-md items-stretch px-2">
+        {% if request.user.aluno %}
+            <a href="{% url 'checkin:minhas_presencas' %}" class="{% if tela.url_name == 'minhas_presencas' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+                <i data-lucide="calendar-check" class="w-5 h-5"></i> Presenças
+            </a>
+            <a href="{% url 'checkin:qr_demo' %}" class="flex flex-1 flex-col items-center justify-end gap-1 pb-1 text-[11px] font-semibold text-gold">
+                <span class="-mt-7 flex h-14 w-14 items-center justify-center rounded-full border-4 border-dark-blue bg-gold text-dark-blue shadow-lg">
+                    <i data-lucide="scan-line" class="w-6 h-6"></i>
+                </span>
+                Check-in
+            </a>
+        {% elif request.user.professor %}
+            <a href="{% url 'teacher_panel:dashboard' %}" class="{% if tela.url_name == 'dashboard' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+                <i data-lucide="bar-chart-3" class="w-5 h-5"></i> Dashboard
+            </a>
+            <a href="{% url 'teacher_panel:turmas' %}" class="{% if tela.url_name == 'turmas' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+                <i data-lucide="book-open" class="w-5 h-5"></i> Turmas
+            </a>
+            <a href="{% url 'teacher_panel:pendencias' %}" class="{% if tela.url_name == 'pendencias' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+                <i data-lucide="alert-triangle" class="w-5 h-5"></i> Pendências
+            </a>
+            <a href="{% url 'validator:painel' %}" class="{% if tela.namespace == 'validator' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+                <i data-lucide="clipboard-list" class="w-5 h-5"></i> Histórico
+            </a>
+        {% elif request.user.administrador %}
+            <a href="{% url 'teacher_panel:dashboard' %}" class="{% if tela.url_name == 'dashboard' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+                <i data-lucide="bar-chart-3" class="w-5 h-5"></i> Dashboard
+            </a>
+            <a href="{% url 'institution:infraestrutura' %}" class="{% if tela.namespace == 'institution' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+                <i data-lucide="monitor" class="w-5 h-5"></i> Máquinas
+            </a>
+            <a href="{% url 'teacher_panel:alunos' %}" class="{% if tela.url_name == 'alunos' or tela.url_name == 'professores' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+                <i data-lucide="users" class="w-5 h-5"></i> Usuários
+            </a>
+        {% endif %}
+
+        <details id="menu-mais" class="relative flex flex-1">
+            <summary class="{% if tela.namespace == 'privacy' or tela.url_name == 'chamadas' or tela.url_name == 'alunos' and request.user.professor %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %} cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                <i data-lucide="menu" class="w-5 h-5"></i> Mais
+            </summary>
+            <div class="absolute bottom-full right-0 mb-3 w-60 overflow-hidden rounded-xl bg-white text-sm text-ink shadow-xl">
+                <p class="truncate border-b border-ink/10 px-4 py-3 text-xs text-ink/50">{{ request.user.get_full_name|default:request.user.email }}</p>
+                {% if request.user.professor %}
+                    <a href="{% url 'teacher_panel:alunos' %}" class="flex items-center gap-3 px-4 py-3 hover:bg-creme"><i data-lucide="users" class="w-4 h-4"></i> Gestão de Alunos</a>
+                    <a href="{% url 'teacher_panel:chamadas' %}" class="flex items-center gap-3 px-4 py-3 hover:bg-creme"><i data-lucide="settings" class="w-4 h-4"></i> Configurar Chamada</a>
+                {% endif %}
+                <a href="{% url 'privacy:central' %}" class="flex items-center gap-3 px-4 py-3 hover:bg-creme"><i data-lucide="shield-check" class="w-4 h-4"></i> Central de Privacidade</a>
+                <form method="post" action="{% url 'accounts:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="flex w-full items-center gap-3 border-t border-ink/10 px-4 py-3 text-red-700 hover:bg-creme"><i data-lucide="log-out" class="w-4 h-4"></i> Sair</button>
+                </form>
+            </div>
+        </details>
+    </div>
+</nav>
+<script>
+    document.addEventListener("click", (evento) => {
+        const menuMais = document.getElementById("menu-mais");
+        if (menuMais && menuMais.open && !menuMais.contains(evento.target)) {
+            menuMais.open = false;
+        }
+    });
+</script>
+{% endwith %}
