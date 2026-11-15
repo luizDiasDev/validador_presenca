@@ -211,4 +211,18 @@ def _motivo_qr_recusado(usuario, resultado, sessao) -> str:
     aluno = getattr(usuario, "aluno", None)
     if sessao.aula_id and (aluno is None or aluno.turma_id != sessao.aula.disciplina.turma_id):
         return "Você não está matriculado na turma desta chamada"
+    if resultado.maquina_id and _maquina_lotada(sessao, resultado.maquina_id, usuario.id):
+        return f"Este computador já atingiu o limite de {sessao.limite_por_maquina} aluno(s) nesta chamada"
     return ""
+
+
+def _maquina_lotada(sessao, maquina_id, usuario_id) -> bool:
+    outros_alunos = (
+        PresencaRecord.objects.filter(sessao=sessao, maquina_id=maquina_id)
+        .exclude(status="REJECTED")
+        .exclude(usuario_id=usuario_id)
+        .values("usuario_id")
+        .distinct()
+        .count()
+    )
+    return outros_alunos >= sessao.limite_por_maquina

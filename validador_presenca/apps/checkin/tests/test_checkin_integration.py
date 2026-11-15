@@ -1,17 +1,15 @@
 import uuid
-from datetime import time
 
 import pytest
 import requests
 from django.test import Client
 
-from apps.accounts.models import Professor, Usuario
+from apps.accounts.models import Usuario
 from django.core.cache import cache
 
-from apps.checkin.domain.services.chamada_service import ChamadaService
 from apps.checkin.domain.services.qr_service import QrTokenService
 from apps.institution.models import Campus, Institution, Room
-from apps.teacher_panel.models import Aluno, Aula, Disciplina, Turma
+from apps.teacher_panel.models import Aluno, Turma
 from apps.validator.models import PresencaRecord
 
 QR_PATH = "/checkin/"
@@ -32,19 +30,6 @@ def create_room():
         raio_metros=300,
     )
     return Room.objects.create(campus=campus, codigo=f"B-{suffix[:4]}", nome="Laboratório 7")
-
-
-def create_teacher():
-    user = Usuario.objects.create_user(email=f"prof.{uuid.uuid4().hex}@umc.br", password="senha-forte-123")
-    return Professor.objects.create(usuario=user, area_atuacao="Engenharia de Software")
-
-
-def create_lesson(room, teacher, subject_name):
-    class_group = Turma.objects.create(
-        sala=room, codigo="ES-8", nome="Turma 8", curso="Eng. Software", semestre_inicio="2026-08-01"
-    )
-    subject = Disciplina.objects.create(professor=teacher, turma=class_group, nome=subject_name)
-    return Aula.objects.create(disciplina=subject, dia_semana=5, hora_inicio=time(19), hora_fim=time(22))
 
 
 def logged_http_session():
