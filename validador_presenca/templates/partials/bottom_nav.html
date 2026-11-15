@@ -31,7 +31,7 @@
             <a href="{% url 'institution:infraestrutura' %}" class="{% if tela.namespace == 'institution' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
                 <i data-lucide="monitor" class="w-5 h-5"></i> Máquinas
             </a>
-            <a href="{% url 'teacher_panel:alunos' %}" class="{% if tela.url_name == 'alunos' or tela.url_name == 'professores' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+            <a href="{% url 'teacher_panel:alunos' %}" class="{% if tela.url_name == 'alunos' or tela.url_name == 'professores' or tela.url_name == 'gestao_turmas' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
                 <i data-lucide="users" class="w-5 h-5"></i> Usuários
             </a>
         {% endif %}

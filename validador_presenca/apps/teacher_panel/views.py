@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db.models import Count
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -35,14 +36,9 @@ from apps.validator.models import PresencaRecord
 @only_teacher
 def turmas_view(request):
     professor = request.user.professor
-    aba_ativa = request.GET.get("aba", "aulas")
+    aba_ativa = "disciplinas" if request.GET.get("aba") == "disciplinas" else "aulas"
 
-    salas = Room.objects.select_related("campus").order_by("codigo")
-    turmas = (
-        Turma.objects.select_related("sala")
-        .prefetch_related("alunos")
-        .order_by("codigo")
-    )
+    turmas = Turma.objects.order_by("codigo")
     disciplinas = (
         Disciplina.objects.filter(professor=professor)
         .select_related("turma__sala")
@@ -56,20 +52,31 @@ def turmas_view(request):
 
     context = {
         "aba_ativa": aba_ativa,
-        "salas": salas,
         "turmas": turmas,
         "disciplinas": disciplinas,
         "aulas": aulas,
         "dias_semana": Aula.DIAS_SEMANA,
-        "turma_form": TurmaForm(),
-        "disciplina_form": DisciplinaForm(),
-        "aula_form": AulaForm(professor=professor),
     }
     return render(request, "teacher_panel/turmas.html", context)
 
 
 @login_required
-@only_teacher
+@only_admin
+def gestao_turmas_view(request):
+    turmas = (
+        Turma.objects.select_related("sala")
+        .annotate(
+            total_alunos=Count("alunos", distinct=True),
+            total_disciplinas=Count("disciplinas", distinct=True),
+        )
+        .order_by("codigo")
+    )
+    salas = Room.objects.order_by("codigo")
+    return render(request, "teacher_panel/gestao_turmas.html", {"turmas": turmas, "salas": salas})
+
+
+@login_required
+@only_admin
 @require_POST
 def salvar_turma_view(request, turma_id: int | None = None):
     instancia = get_object_or_404(Turma, pk=turma_id) if turma_id else None
@@ -83,11 +90,11 @@ def salvar_turma_view(request, turma_id: int | None = None):
         for campo, erros in form.errors.items():
             messages.error(request, f"{campo}: {erros[0]}")
 
-    return redirect("/turmas/?aba=turmas")
+    return redirect("teacher_panel:gestao_turmas")
 
 
 @login_required
-@only_teacher
+@only_admin
 @require_POST
 def excluir_turma_view(request, turma_id: int):
     turma = get_object_or_404(Turma, pk=turma_id)
@@ -100,7 +107,7 @@ def excluir_turma_view(request, turma_id: int):
             request,
             "Não é possível excluir esta turma pois já existem disciplinas ou alunos vinculados a ela.",
         )
-    return redirect("/turmas/?aba=turmas")
+    return redirect("teacher_panel:gestao_turmas")
 
 
 @login_required

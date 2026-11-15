@@ -45,7 +45,7 @@
             </a>
             {% endif %}
             {% if request.user.administrador or request.user.professor %}
-            <a href="{% url 'teacher_panel:alunos' %}" class="{% if tela.namespace == 'teacher_panel' and tela.url_name == 'alunos' or tela.namespace == 'teacher_panel' and tela.url_name == 'professores' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+            <a href="{% url 'teacher_panel:alunos' %}" class="{% if tela.namespace == 'teacher_panel' and tela.url_name == 'alunos' or tela.namespace == 'teacher_panel' and tela.url_name == 'professores' or tela.namespace == 'teacher_panel' and tela.url_name == 'gestao_turmas' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
                 <i data-lucide="users" class="w-4 h-4"></i> {% if request.user.administrador %}Gestão de Usuários{% else %}Gestão de Alunos{% endif %}
             </a>
             {% endif %}
