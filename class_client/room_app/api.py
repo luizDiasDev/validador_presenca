@@ -25,6 +25,8 @@ class RoomApi:
         response = self._send("post", PAIRING_PATH, json={"codigo_pareamento": pairing_code}, authenticated=False)
         if response.status_code == 404:
             raise ApiError("Código de pareamento não encontrado.")
+        if response.status_code in (409, 429):
+            raise ApiError(response.json().get("erro", "O servidor recusou o pareamento."))
         data = self._json(response)
         self.machine_token = data["token"]
         return data
