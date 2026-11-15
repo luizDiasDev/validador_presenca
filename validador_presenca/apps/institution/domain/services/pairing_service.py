@@ -16,6 +16,10 @@ class CodigoPareamentoInvalidoError(Exception):
     pass
 
 
+class MaquinaJaPareadaError(Exception):
+    pass
+
+
 class MachinePairingService:
 
     def __init__(self, log_register=None, clock=timezone.now):
@@ -91,6 +95,10 @@ class MachinePairingService:
         )
         if not maquina:
             raise CodigoPareamentoInvalidoError("Codigo de pareamento nao encontrado")
+        if maquina.esta_pareada:
+            raise MaquinaJaPareadaError(
+                "Este computador já está pareado. Peça ao administrador para desconectá-lo ou gerar um novo código."
+            )
 
         maquina.visto_em = self.clock()
         if ip:

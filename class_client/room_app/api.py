@@ -10,6 +10,10 @@ class ApiError(RuntimeError):
     pass
 
 
+class MachineNotPairedError(ApiError):
+    pass
+
+
 class RoomApi:
     def __init__(self, server_url: str, machine_token: str = "", http=None, timeout_seconds: float = 10.0):
         self.server_url = server_url.rstrip("/")
@@ -21,6 +25,8 @@ class RoomApi:
         response = self._send("post", PAIRING_PATH, json={"codigo_pareamento": pairing_code}, authenticated=False)
         if response.status_code == 404:
             raise ApiError("Código de pareamento não encontrado.")
+        if response.status_code in (409, 429):
+            raise ApiError(response.json().get("erro", "O servidor recusou o pareamento."))
         data = self._json(response)
         self.machine_token = data["token"]
         return data
@@ -50,7 +56,7 @@ class RoomApi:
     @staticmethod
     def _json(response) -> dict:
         if response.status_code == 401:
-            raise ApiError("Máquina não pareada. Faça o pareamento de novo.")
+            raise MachineNotPairedError("Máquina não pareada. Faça o pareamento de novo.")
         if response.status_code >= 400:
             raise ApiError(f"Erro {response.status_code} do servidor.")
         return response.json()

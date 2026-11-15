@@ -91,6 +91,7 @@ def send_face(room, payload):
 # ---------- pareamento e QR ----------
 
 def test_pairing_returns_a_token_that_authenticates_the_machine(room):
+    MachinePairingService().desparear(maquina_id=room["machine"].id, autor_id=0)
     response = Client().post(reverse("institution:parear_maquina_api"),
                              data=json.dumps({"codigo_pareamento": "4321"}), content_type="application/json")
     token = response.json()["token"]
