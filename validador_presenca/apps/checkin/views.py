@@ -1,4 +1,5 @@
 import hashlib
+from django.conf import settings
 from django.core.cache import cache
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -180,8 +181,8 @@ def _registrar_checkin(request, svc):
             lon = float(lon_raw)
             geo_svc = GeolocationService()
             geo_resultado = geo_svc.validate(lat, lon, campus_id)
-            endereco_decoding = GeocodingService()
-            endereco_aluno = endereco_decoding.translate_location(lat_raw, lon_raw)
+            if settings.GEOCODING_ENABLED:
+                endereco_aluno = GeocodingService().translate_location(lat_raw, lon_raw)
             geo_valida = geo_resultado.valida
             geo_motivo = geo_resultado.motivo
         except (ValueError, Campus.DoesNotExist):

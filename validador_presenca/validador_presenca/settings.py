@@ -169,6 +169,8 @@ TOTP_ENCRYPTION_KEY = os.environ.get("TOTP_ENCRYPTION_KEY")
 
 BIOMETRIC_ENCRYPTION_KEY = os.environ.get("BIOMETRIC_ENCRYPTION_KEY")
 
+GEOCODING_ENABLED = os.environ.get("GEOCODING_ENABLED", "true").lower() != "false"
+
 EXECUTAVEL_DOWNLOAD_URL = os.environ.get(
     "EXECUTAVEL_DOWNLOAD_URL",
     "https://github.com/luizDiasDev/validador_presenca/releases/latest",
