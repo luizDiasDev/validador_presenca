@@ -16,5 +16,7 @@ class QrCodeValidator(ValidatorModel):
             block = self.block,
             score = 1.0 if token_exists else 0.0,
             weight = self.weight,
-            reason = "" if token_exists else "Token inválido ou expirado"
+            reason = "" if token_exists else (
+                factor_parameter.get("qr_motivo") or "Token inválido ou expirado"
+            )
         )

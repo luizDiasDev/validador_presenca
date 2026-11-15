@@ -82,6 +82,8 @@
                 <p class="text-xl font-bold text-red-700">Check-in não aceito</p>
                 {% if not token_valido %}
                     <p class="mt-2 text-sm text-ink/70">Este QR Code já foi usado, expirou ou a chamada não está aberta. Leia o QR da sala de novo.</p>
+                {% elif qr_motivo %}
+                    <p class="mt-2 text-sm text-ink/70">{{ qr_motivo }}.</p>
                 {% elif geo_resultado %}
                     <p class="mt-2 text-sm text-ink/70">{{ geo_resultado.motivo }}</p>
                 {% else %}
