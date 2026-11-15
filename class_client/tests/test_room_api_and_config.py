@@ -3,7 +3,7 @@ from types import SimpleNamespace
 import pytest
 import requests
 
-from room_app.api import ApiError, RoomApi
+from room_app.api import ApiError, MachineNotPairedError, RoomApi
 from room_app.config import RoomConfig, load_config, save_config
 
 
@@ -56,7 +56,7 @@ def test_wrong_pairing_code_is_explained():
 def test_revoked_token_asks_for_new_pairing():
     api = RoomApi("https://adsum.test", machine_token="old", http=FakeHttp(status=401))
 
-    with pytest.raises(ApiError, match="pareada"):
+    with pytest.raises(MachineNotPairedError, match="pareada"):
         api.current_qr()
 
 
