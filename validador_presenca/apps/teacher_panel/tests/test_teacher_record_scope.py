@@ -81,3 +81,12 @@ def test_review_keeps_the_engine_reason_in_the_audit(client, cenario_professor):
 
     log = AuditLog.objects.get(acao="REVISAO_MANUAL_PRESENCA", linha_tabela_id=record.id)
     assert log.payload["motivo_anterior"] == "Prova de vida abaixo do esperado"
+
+
+def test_pending_list_shows_why_the_record_is_pending(client, cenario_professor):
+    record_in(session_of(cenario_professor["professor"], cenario_professor), motivo="Rosto não capturado (falha na webcam ou no executável)")
+    client.force_login(cenario_professor["user"])
+
+    html = client.get(reverse("teacher_panel:pendencias")).content.decode()
+
+    assert "Rosto não capturado (falha na webcam ou no executável)" in html

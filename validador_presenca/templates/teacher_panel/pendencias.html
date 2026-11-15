@@ -81,6 +81,9 @@
                                     {% else %}
                                         #{{ item.id }}
                                     {% endif %}
+                                    {% if item.motivo %}
+                                        <p class="mt-1 max-w-56 text-xs font-normal text-ink/50">{{ item.motivo }}</p>
+                                    {% endif %}
                                 </td>
                                 <td class="py-3 text-ink/70">
                                     {% if item.sessao and item.sessao.aula %}
