@@ -353,6 +353,7 @@ def abrir_chamada_view(request):
     aula = form.cleaned_data["aula"]
     duracao_min = form.cleaned_data["duracao_min"]
     tempos_cobertos = form.cleaned_data["tempos_cobertos"]
+    limite_por_maquina = form.cleaned_data["limite_por_maquina"]
 
     sala = aula.disciplina.turma.sala
     service = ChamadaService()
@@ -364,6 +365,7 @@ def abrir_chamada_view(request):
             aula=aula,
             duracao_min=duracao_min,
             tempos_cobertos=tempos_cobertos,
+            limite_por_maquina=limite_por_maquina,
         )
         messages.success(
             request,

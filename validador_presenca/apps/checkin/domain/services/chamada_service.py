@@ -57,9 +57,12 @@ class ChamadaService:
         duracao_min: int = DURACAO_PADRAO_MIN,
         duracao_qr_s: int = 5,
         tempos_cobertos: int = 1,
+        limite_por_maquina: int = 1,
     ) -> ChamadaSession:
         if duracao_min <= 0:
             raise ValueError("A duração da chamada deve ser maior que zero")
+        if limite_por_maquina <= 0:
+            raise ValueError("O limite de alunos por computador deve ser maior que zero")
 
         Room.objects.select_for_update().get(pk=sala_id)
 
@@ -78,6 +81,7 @@ class ChamadaService:
             aula=aula,
             sequencia=sequencia,
             tempos_cobertos=tempos_cobertos,
+            limite_por_maquina=limite_por_maquina,
             duracao_qr_s=duracao_qr_s,
             abre_em=agora,
             fecha_em=agora + timedelta(minutes=duracao_min),
@@ -117,6 +121,7 @@ class ChamadaService:
                     "aula_id": sessao.aula_id,
                     "sequencia": sessao.sequencia,
                     "tempos_cobertos": sessao.tempos_cobertos,
+                    "limite_por_maquina": sessao.limite_por_maquina,
                     "abre_em": sessao.abre_em.isoformat(),
                     "fecha_em": sessao.fecha_em.isoformat(),
                 },

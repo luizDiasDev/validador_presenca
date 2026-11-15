@@ -74,6 +74,12 @@ class AbrirChamadaForm(forms.Form):
         initial=4,
         label="Tempos de aula cobertos",
     )
+    limite_por_maquina = forms.IntegerField(
+        min_value=1,
+        max_value=10,
+        initial=1,
+        label="Alunos por computador",
+    )
 
     def __init__(self, *args, professor=None, dia_semana=None, **kwargs):
         super().__init__(*args, **kwargs)

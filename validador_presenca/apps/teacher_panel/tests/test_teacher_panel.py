@@ -174,6 +174,7 @@ def test_professor_abre_e_encerra_chamada_pela_view(client, cenario_professor):
             "aula": aula.id,
             "duracao_min": 15,
             "tempos_cobertos": 4,
+            "limite_por_maquina": 2,
         },
     )
     assert resp.status_code == 302
@@ -181,6 +182,7 @@ def test_professor_abre_e_encerra_chamada_pela_view(client, cenario_professor):
     sessao = ChamadaSession.objects.get(aula=aula)
     assert sessao.sala_id == cenario_professor["sala"].id
     assert sessao.tempos_cobertos == 4
+    assert sessao.limite_por_maquina == 2
 
     resp_enc = client.post(
         reverse("teacher_panel:encerrar_chamada", kwargs={"sessao_id": sessao.id})
