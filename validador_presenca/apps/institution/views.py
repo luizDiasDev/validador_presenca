@@ -1,4 +1,6 @@
 import json
+
+from django.core.cache import cache
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -12,7 +14,11 @@ from apps.accounts.decorators import only_admin
 from apps.institution.domain.services.pairing_service import (
     CodigoPareamentoInvalidoError,
     MachinePairingService,
+    MaquinaJaPareadaError,
 )
+
+LIMITE_FALHAS_PAREAMENTO = 10
+JANELA_FALHAS_PAREAMENTO_S = 15 * 60
 from apps.institution.forms import CampusForm, MachineForm, RoomForm
 from apps.institution.models import Campus, Institution, Machine, Room
 
@@ -219,13 +225,23 @@ def parear_maquina_api(request):
         body = {}
 
     codigo = body.get("codigo_pareamento") or request.POST.get("codigo_pareamento", "")
-    ip_cliente = request.META.get("REMOTE_ADDR")
+    ip_cliente = _ip_do_cliente(request)
+    chave_falhas = f"pareamento_falhas:{ip_cliente}"
+
+    if cache.get(chave_falhas, 0) >= LIMITE_FALHAS_PAREAMENTO:
+        return JsonResponse(
+            {"pareado": False, "erro": "Muitas tentativas de pareamento. Tente de novo em alguns minutos."},
+            status=429,
+        )
 
     svc = MachinePairingService()
     try:
         maquina = svc.parear_cliente(codigo_pareamento=codigo, ip=ip_cliente)
-    except CodigoPareamentoInvalidoError as exc:
-        return JsonResponse({"pareado": False, "erro": str(exc)}, status=404)
+    except (CodigoPareamentoInvalidoError, MaquinaJaPareadaError) as exc:
+        cache.add(chave_falhas, 0, JANELA_FALHAS_PAREAMENTO_S)
+        cache.incr(chave_falhas)
+        status = 409 if isinstance(exc, MaquinaJaPareadaError) else 404
+        return JsonResponse({"pareado": False, "erro": str(exc)}, status=status)
 
     token = svc.emitir_token(maquina)
 
@@ -240,3 +256,10 @@ def parear_maquina_api(request):
             "campus_id": maquina.sala.campus_id,
         }
     )
+
+
+def _ip_do_cliente(request) -> str:
+    encaminhado = request.META.get("HTTP_X_FORWARDED_FOR", "")
+    if encaminhado:
+        return encaminhado.split(",")[-1].strip()
+    return request.META.get("REMOTE_ADDR", "")
