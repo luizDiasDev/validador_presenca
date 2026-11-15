@@ -7,4 +7,7 @@ __pycache__/
 .env
 .venv/
 .coverage
-staticfiles/lgpd_exports/
+staticfiles/
+lgpd_exports/
+loadtest/dados_carga.json
+loadtest/*.csv
