@@ -9,6 +9,7 @@ import base64
 from django.contrib.auth import login
 from django.contrib.auth.views import LoginView, LogoutView
 from apps.audit.domain.log_register import LogRegister
+from apps.privacy.domain.term_acceptance import registrar_aceite, termos_pendentes
 from django.conf import settings
 
 class AdsumLoginView(LoginView):
@@ -17,14 +18,19 @@ class AdsumLoginView(LoginView):
     def form_valid(self, form):
         user = form.get_user()
 
-        self.request.session["aceite_termos_dado"] = True  # repassa aceite pro signal do privacy processar após o login TOTP
-
-        if not user.totp_ativo:
+        if user.totp_ativo:
+            self.request.session["read_2fa_user"] = user.id
+            proximo_passo = "accounts:read_totp"
+        else:
             self.request.session["config_2fa_user"] = user.id
-            return redirect("accounts:config_totp")
+            proximo_passo = "accounts:config_totp"
 
-        self.request.session["read_2fa_user"] = user.id
-        return redirect("accounts:read_totp")
+        if termos_pendentes(user):
+            self.request.session["termos_user"] = user.id
+            self.request.session["apos_termos"] = proximo_passo
+            return redirect("accounts:aceitar_termos")
+
+        return redirect(proximo_passo)
 
     def form_invalid(self, form):
         LogRegister().register({
@@ -54,7 +60,38 @@ def csrf_failure(request, reason=""):
     messages.error(request, "Sua sessão expirou. Tente novamente.")
     return redirect("accounts:login")
 
+def aceitar_termos(request):
+    user_id = request.session.get("termos_user")
+
+    if not user_id:
+        return redirect("accounts:login")
+
+    user = Usuario.objects.get(id=user_id)
+    termos = termos_pendentes(user)
+
+    if request.method == "POST":
+        if request.POST.get("aceite") == "sim":
+            registrar_aceite(
+                user,
+                termos,
+                evidencia={
+                    "ip": request.META.get("REMOTE_ADDR", ""),
+                    "user_agent": request.META.get("HTTP_USER_AGENT", ""),
+                    "contexto": "login",
+                },
+            )
+            del request.session["termos_user"]
+            return redirect(request.session.pop("apos_termos", "accounts:login"))
+
+        messages.error(request, "Você precisa aceitar os documentos para continuar.")
+
+    return render(request, "accounts/aceitar_termos.html", {"termos": termos})
+
+
 def config_totp(request):
+    if request.session.get("termos_user"):
+        return redirect("accounts:aceitar_termos")
+
     user_id = request.session.get("config_2fa_user")
 
     if not user_id:
@@ -109,6 +146,9 @@ def config_totp(request):
     return render(request, "accounts/config_totp.html", {"qr_base64": qr_base64})
 
 def read_totp(request):
+    if request.session.get("termos_user"):
+        return redirect("accounts:aceitar_termos")
+
     user_id = request.session.get("read_2fa_user")
 
     if not user_id:
