@@ -27,6 +27,7 @@ from apps.teacher_panel.forms import (
     TurmaForm,
 )
 from apps.teacher_panel.models import Aluno, Aula, Disciplina, Turma
+from apps.privacy.domain.term_acceptance import situacao_da_biometria, situacao_dos_termos
 from apps.validator.models import PresencaRecord
 
 
@@ -198,11 +199,19 @@ def alunos_view(request):
     if turma_filtro.isdigit():
         alunos = alunos.filter(turma_id=int(turma_filtro))
 
+    alunos = list(alunos)
+    usuarios_ids = [aluno.usuario_id for aluno in alunos]
+    termos = situacao_dos_termos(usuarios_ids)
+    biometria = situacao_da_biometria(usuarios_ids)
+    for aluno in alunos:
+        aluno.situacao_termos = termos[aluno.usuario_id]
+        aluno.situacao_biometria = biometria[aluno.usuario_id]
+
     context = {
         "alunos": alunos,
         "turmas": turmas,
         "turma_filtro": int(turma_filtro) if turma_filtro.isdigit() else None,
-        "total_alunos": alunos.count(),
+        "total_alunos": len(alunos),
     }
     return render(request, "teacher_panel/alunos.html", context)
 

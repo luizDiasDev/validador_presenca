@@ -84,14 +84,16 @@
             </div>
 
             <div class="border border-ink/10 rounded-xl overflow-x-auto">
-                <table class="w-full min-w-[720px] text-sm">
+                <table class="w-full min-w-[900px] text-sm">
                     <thead>
                         <tr class="bg-tan text-ink/60 text-xs">
                             <th class="text-left font-semibold py-3 px-4">Matrícula</th>
                             <th class="text-left font-semibold py-3">Nome do Aluno</th>
                             <th class="text-left font-semibold py-3">E-mail Institucional</th>
                             <th class="text-left font-semibold py-3">Turma / Curso</th>
-                            <th class="text-left font-semibold py-3 {% if not request.user.administrador %}px-4{% endif %}">Sala</th>
+                            <th class="text-left font-semibold py-3">Sala</th>
+                            <th class="text-center font-semibold py-3">Termos</th>
+                            <th class="text-center font-semibold py-3 {% if not request.user.administrador %}px-4{% endif %}">Biometria</th>
                             {% if request.user.administrador %}
                             <th class="text-right font-semibold py-3 px-4">Ações</th>
                             {% endif %}
@@ -104,7 +106,23 @@
                                 <td class="py-3 font-medium text-ink">{{ al.usuario.get_full_name|default:"-" }}</td>
                                 <td class="py-3 text-ink/70">{{ al.usuario.email }}</td>
                                 <td class="py-3 text-ink/70">{{ al.turma.codigo }} ({{ al.turma.curso }})</td>
-                                <td class="py-3 text-ink/70 {% if not request.user.administrador %}px-4{% endif %}">{{ al.turma.sala.codigo }}</td>
+                                <td class="py-3 text-ink/70">{{ al.turma.sala.codigo }}</td>
+                                <td class="py-3 text-center">
+                                    {% if al.situacao_termos == "aceito" %}
+                                        <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-green-100 text-green-800">Aceitos</span>
+                                    {% else %}
+                                        <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800">Pendente</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 text-center {% if not request.user.administrador %}px-4{% endif %}">
+                                    {% if al.situacao_biometria == "aceito" %}
+                                        <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-green-100 text-green-800">Consentida</span>
+                                    {% elif al.situacao_biometria == "revogado" %}
+                                        <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-red-100 text-red-800">Revogada</span>
+                                    {% else %}
+                                        <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-ink/10 text-ink/60">Sem consentimento</span>
+                                    {% endif %}
+                                </td>
                                 {% if request.user.administrador %}
                                 <td class="py-3 px-4 text-right space-x-2">
                                     <button type="button"
@@ -122,7 +140,7 @@
                                 {% endif %}
                             </tr>
                         {% empty %}
-                            <tr><td colspan="6" class="py-8 text-center text-ink/40">Nenhum aluno matriculado ainda.</td></tr>
+                            <tr><td colspan="8" class="py-8 text-center text-ink/40">Nenhum aluno matriculado ainda.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
