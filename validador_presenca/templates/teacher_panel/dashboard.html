@@ -45,18 +45,34 @@
 
                 <!-- Filtro rapido por Turma -->
                 <div class="flex flex-wrap items-center gap-2">
-                    <a href="{% url 'teacher_panel:dashboard' %}"
+                    <a href="{% querystring turma=None %}"
                        class="px-3.5 py-1.5 rounded-lg text-xs font-semibold {% if not turma_selecionada %}bg-light-blue text-white{% else %}bg-creme text-ink/70 hover:bg-tan{% endif %}">
                         Todas as Turmas
                     </a>
                     {% for t in turmas %}
-                    <a href="{% url 'teacher_panel:dashboard' %}?turma={{ t.id }}"
+                    <a href="{% querystring turma=t.id %}"
                        class="px-3.5 py-1.5 rounded-lg text-xs font-semibold {% if turma_selecionada == t.id %}bg-light-blue text-white{% else %}bg-creme text-ink/70 hover:bg-tan{% endif %}">
                         {{ t.codigo }}
                     </a>
                     {% endfor %}
                 </div>
             </div>
+
+            <form method="get" class="flex flex-wrap items-end gap-3 mb-6">
+                {% if turma_selecionada %}<input type="hidden" name="turma" value="{{ turma_selecionada }}">{% endif %}
+                <div>
+                    <label for="filtro-de" class="block text-xs font-semibold text-ink/70 mb-1">De</label>
+                    <input id="filtro-de" type="date" name="de" value="{{ data_inicio|date:'Y-m-d' }}" class="px-3 py-1.5 rounded-lg border border-ink/15 bg-white text-sm text-ink">
+                </div>
+                <div>
+                    <label for="filtro-ate" class="block text-xs font-semibold text-ink/70 mb-1">Até</label>
+                    <input id="filtro-ate" type="date" name="ate" value="{{ data_fim|date:'Y-m-d' }}" class="px-3 py-1.5 rounded-lg border border-ink/15 bg-white text-sm text-ink">
+                </div>
+                <button type="submit" class="px-4 py-1.5 rounded-lg bg-light-blue text-white text-xs font-semibold">Filtrar período</button>
+                {% if data_inicio or data_fim %}
+                    <a href="{% querystring de=None ate=None %}" class="px-3 py-1.5 text-xs font-semibold text-ink/60 hover:underline">Limpar período</a>
+                {% endif %}
+            </form>
 
             <!-- Cards de KPI -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

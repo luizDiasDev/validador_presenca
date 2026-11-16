@@ -57,6 +57,9 @@
                 <i data-lucide="alert-triangle" class="w-4 h-4"></i> Pendências
             </a>
             {% endif %}
+            <a href="{% url 'audit:registro' %}" class="{% if tela.namespace == 'audit' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+                <i data-lucide="scroll-text" class="w-4 h-4"></i> Registro de Atividades
+            </a>
             <a href="{% url 'privacy:central' %}" class="{% if tela.namespace == 'privacy' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
                 <i data-lucide="shield-check" class="w-4 h-4"></i> Central de Privacidade
             </a>

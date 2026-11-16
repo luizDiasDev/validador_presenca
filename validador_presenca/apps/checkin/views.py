@@ -22,6 +22,7 @@ from apps.class_client.domain.services.face_authorization_service import (
     FaceAuthorizationService,
 )
 from apps.validator.models import PresencaRecord
+from validador_presenca.pagination import paginar
 
 
 @login_required
@@ -142,7 +143,9 @@ def minhas_presencas(request):
         "pendentes": registros.filter(status="PENDING").count(),
         "rejeitados": registros.filter(status="REJECTED").count(),
     }
-    return render(request, "checkin/minhas_presencas.html", {"registros": registros, "totais": totais})
+    return render(
+        request, "checkin/minhas_presencas.html", {"registros": paginar(request, registros), "totais": totais}
+    )
 
 
 def _registrar_checkin(request, svc):

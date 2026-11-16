@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from apps.audit.domain.log_register import registrar_acao
 from apps.privacy.forms import SolicitacaoLGPDForm
 from apps.privacy.models import SolicitacaoLGPD, Termo
 
@@ -36,6 +37,8 @@ def solicitar_direito(request):
             solicitacao = form.save(commit=False)
             solicitacao.usuario = request.user
             solicitacao.save()
+            registrar_acao(request.user, "privacy", "SOLICITACAO_LGPD_CRIADA", "solicitacao_lgpd", solicitacao.id,
+                           {"tipo": solicitacao.tipo})
             messages.success(
                 request,
                 f"Solicitação #{solicitacao.pk} registrada. Retorno em até 15 dias.",

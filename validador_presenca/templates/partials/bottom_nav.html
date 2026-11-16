@@ -37,7 +37,7 @@
         {% endif %}
 
         <details id="menu-mais" class="relative flex flex-1">
-            <summary class="{% if tela.namespace == 'privacy' or tela.url_name == 'chamadas' or tela.url_name == 'alunos' and request.user.professor %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %} cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+            <summary class="{% if tela.namespace == 'privacy' or tela.namespace == 'audit' or tela.url_name == 'chamadas' or tela.url_name == 'alunos' and request.user.professor %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %} cursor-pointer list-none [&::-webkit-details-marker]:hidden">
                 <i data-lucide="menu" class="w-5 h-5"></i> Mais
             </summary>
             <div class="absolute bottom-full right-0 mb-3 w-60 overflow-hidden rounded-xl bg-white text-sm text-ink shadow-xl">
@@ -46,6 +46,7 @@
                     <a href="{% url 'teacher_panel:alunos' %}" class="flex items-center gap-3 px-4 py-3 hover:bg-creme"><i data-lucide="users" class="w-4 h-4"></i> Gestão de Alunos</a>
                     <a href="{% url 'teacher_panel:chamadas' %}" class="flex items-center gap-3 px-4 py-3 hover:bg-creme"><i data-lucide="settings" class="w-4 h-4"></i> Configurar Chamada</a>
                 {% endif %}
+                <a href="{% url 'audit:registro' %}" class="flex items-center gap-3 px-4 py-3 hover:bg-creme"><i data-lucide="scroll-text" class="w-4 h-4"></i> Registro de Atividades</a>
                 <a href="{% url 'privacy:central' %}" class="flex items-center gap-3 px-4 py-3 hover:bg-creme"><i data-lucide="shield-check" class="w-4 h-4"></i> Central de Privacidade</a>
                 <form method="post" action="{% url 'accounts:logout' %}">
                     {% csrf_token %}

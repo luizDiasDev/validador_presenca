@@ -58,7 +58,8 @@ def test_checkin_capture_with_challenge_builds_the_checkin_payload():
     assert outcome.success
     assert outcome.challenge_passed is True
     assert set(outcome.payload) == {"embedding", "liveness_score", "liveness_status", "challenge_passed"}
-    assert "Vire a cabeça para a direita." in instructions
+    assert "Conferindo o seu rosto: leitura 1 de 5. Olhe para a câmera." in instructions
+    assert "Prova de vida: Vire a cabeça para a direita." in instructions
     assert instructions[-1] == "Prova de vida concluída."
 
 

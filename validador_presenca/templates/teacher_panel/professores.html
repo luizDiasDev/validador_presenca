@@ -73,6 +73,7 @@
                             <th class="text-left font-semibold py-3">E-mail Institucional</th>
                             <th class="text-left font-semibold py-3">Área de Atuação</th>
                             <th class="text-left font-semibold py-3">Disciplinas</th>
+                            <th class="text-center font-semibold py-3">Termos</th>
                             <th class="text-right font-semibold py-3 px-4">Ações</th>
                         </tr>
                     </thead>
@@ -82,7 +83,14 @@
                                 <td class="py-3 px-4 font-semibold text-light-blue">{{ prof.usuario.get_full_name|default:"-" }}</td>
                                 <td class="py-3 text-ink/70">{{ prof.usuario.email }}</td>
                                 <td class="py-3 text-ink/70">{{ prof.area_atuacao }}</td>
-                                <td class="py-3 text-ink/70">{{ prof.disciplinas.count }}</td>
+                                <td class="py-3 text-ink/70">{{ prof.total_disciplinas }}</td>
+                                <td class="py-3 text-center">
+                                    {% if prof.situacao_termos == "aceito" %}
+                                        <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-green-100 text-green-800">Aceitos</span>
+                                    {% else %}
+                                        <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800">Pendente</span>
+                                    {% endif %}
+                                </td>
                                 <td class="py-3 px-4 text-right space-x-2">
                                     <button type="button"
                                         onclick="abrirModal('{% url 'teacher_panel:editar_professor' prof.id %}', 'Editar Professor', {nome: '{{ prof.usuario.get_full_name|escapejs }}', email: '{{ prof.usuario.email|escapejs }}', area_atuacao: '{{ prof.area_atuacao|escapejs }}'})"
@@ -98,11 +106,12 @@
                                 </td>
                             </tr>
                         {% empty %}
-                            <tr><td colspan="5" class="py-8 text-center text-ink/40">Nenhum professor cadastrado ainda.</td></tr>
+                            <tr><td colspan="6" class="py-8 text-center text-ink/40">Nenhum professor cadastrado ainda.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+            {% include "partials/paginacao.html" with pagina=professores %}
 
             <dialog id="modal-form" class="m-auto rounded-2xl p-6 max-w-md w-full bg-white shadow-lg backdrop:bg-black/50">
                 <h3 class="font-display font-bold text-lg text-light-blue mb-4">Cadastrar Novo Professor</h3>

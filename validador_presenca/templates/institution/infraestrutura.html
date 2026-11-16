@@ -57,7 +57,7 @@
             <div class="flex items-center justify-between border-b border-ink/10 pb-3 mb-6">
                 <div class="flex items-center gap-2">
                     <a href="?aba=maquinas" class="px-4 py-2 rounded-lg text-xs font-semibold {% if aba_ativa == 'maquinas' %}bg-light-blue text-white{% else %}text-ink/60 hover:bg-creme{% endif %}">
-                        Máquinas ({{ maquinas|length }})
+                        Máquinas ({{ maquinas.paginator.count }})
                     </a>
                     <a href="?aba=salas" class="px-4 py-2 rounded-lg text-xs font-semibold {% if aba_ativa == 'salas' %}bg-light-blue text-white{% else %}text-ink/60 hover:bg-creme{% endif %}">
                         Salas ({{ salas|length }})
@@ -211,6 +211,9 @@
                     {% endif %}
                 </table>
             </div>
+            {% if aba_ativa == 'maquinas' %}
+                {% include "partials/paginacao.html" with pagina=maquinas %}
+            {% endif %}
 
             <dialog id="modal-form" class="m-auto rounded-2xl p-6 max-w-md w-full bg-white shadow-lg backdrop:bg-black/50">
                 <h3 class="font-display font-bold text-lg text-light-blue mb-4">Cadastro</h3>

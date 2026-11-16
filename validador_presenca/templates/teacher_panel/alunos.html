@@ -85,7 +85,7 @@
             </div>
 
             <div class="border border-ink/10 rounded-xl overflow-x-auto">
-                <table class="w-full min-w-[900px] text-sm">
+                <table class="w-full min-w-[1000px] text-sm">
                     <thead>
                         <tr class="bg-tan text-ink/60 text-xs">
                             <th class="text-left font-semibold py-3 px-4">Matrícula</th>
@@ -94,7 +94,8 @@
                             <th class="text-left font-semibold py-3">Turma / Curso</th>
                             <th class="text-left font-semibold py-3">Sala</th>
                             <th class="text-center font-semibold py-3">Termos</th>
-                            <th class="text-center font-semibold py-3 {% if not request.user.administrador %}px-4{% endif %}">Biometria</th>
+                            <th class="text-center font-semibold py-3">Biometria</th>
+                            <th class="text-center font-semibold py-3 {% if not request.user.administrador %}px-4{% endif %}">Rosto</th>
                             {% if request.user.administrador %}
                             <th class="text-right font-semibold py-3 px-4">Ações</th>
                             {% endif %}
@@ -115,13 +116,20 @@
                                         <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800">Pendente</span>
                                     {% endif %}
                                 </td>
-                                <td class="py-3 text-center {% if not request.user.administrador %}px-4{% endif %}">
+                                <td class="py-3 text-center">
                                     {% if al.situacao_biometria == "aceito" %}
                                         <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-green-100 text-green-800">Consentida</span>
                                     {% elif al.situacao_biometria == "revogado" %}
                                         <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-red-100 text-red-800">Revogada</span>
                                     {% else %}
                                         <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-ink/10 text-ink/60">Sem consentimento</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 text-center {% if not request.user.administrador %}px-4{% endif %}">
+                                    {% if al.rosto_cadastrado %}
+                                        <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-green-100 text-green-800">Cadastrado</span>
+                                    {% else %}
+                                        <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-ink/10 text-ink/60">Não cadastrado</span>
                                     {% endif %}
                                 </td>
                                 {% if request.user.administrador %}
@@ -141,11 +149,12 @@
                                 {% endif %}
                             </tr>
                         {% empty %}
-                            <tr><td colspan="8" class="py-8 text-center text-ink/40">Nenhum aluno matriculado ainda.</td></tr>
+                            <tr><td colspan="9" class="py-8 text-center text-ink/40">Nenhum aluno matriculado ainda.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+            {% include "partials/paginacao.html" with pagina=alunos %}
 
             {% if request.user.administrador %}
             <dialog id="modal-form" class="m-auto rounded-2xl p-6 max-w-md w-full bg-white shadow-lg backdrop:bg-black/50">

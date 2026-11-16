@@ -7,12 +7,14 @@ from PySide6.QtCore import Qt, QThread, QTimer, Signal
 from PySide6.QtGui import QFont, QImage, QPixmap
 from PySide6.QtWidgets import QApplication, QInputDialog, QLabel, QMessageBox, QVBoxLayout, QWidget
 
-from biometrics.camera import CameraUnavailableError, open_camera
+from biometrics.camera import open_camera
 from biometrics.face_engine import FaceEngine
 
 from .api import ApiError, MachineNotPairedError, RoomApi
-from .capture_session import MODE_ENROLLMENT, run_face_capture
+from .capture_flow import capture_and_send
+from .capture_session import MODE_ENROLLMENT
 from .config import RoomConfig, load_config, save_config
+from .logs import configure_logging
 from .polling import AUTHORIZATION_POLL_MS, PollingSchedule
 
 RESULT_SCREEN_MS = 4000
@@ -41,7 +43,7 @@ class EngineLoader(QThread):
 class CaptureWorker(QThread):
     frame_ready = Signal(object)
     instruction = Signal(str)
-    finished_with = Signal(str, str)   # status, mensagem
+    finished_with = Signal(str, str)
 
     def __init__(self, api: RoomApi, engine, config: RoomConfig, authorization: dict, camera_factory=open_camera):
         super().__init__()
@@ -52,36 +54,11 @@ class CaptureWorker(QThread):
         self.camera_factory = camera_factory
 
     def run(self):
-        try:
-            camera = self.camera_factory(self.config.camera_index, self.config.camera_backend)
-        except CameraUnavailableError as error:
-            # sem câmera o check-in não é perdido: fica pendente para o professor
-            self.finished_with.emit("PENDING", f"Câmera indisponível: {error}")
-            return
-
-        def read_frame():
-            ok, frame = camera.read()
-            if not ok:
-                return None
-            self.frame_ready.emit(frame)
-            return frame
-
-        try:
-            outcome = run_face_capture(
-                read_frame, self.engine.analyze, self.authorization["modo"], on_instruction=self.instruction.emit
-            )
-        finally:
-            camera.release()
-
-        if not outcome.success:
-            self.finished_with.emit("PENDING", outcome.capture.reason)
-            return
-        try:
-            answer = self.api.send_face(self.authorization["presenca_id"], outcome.payload)
-        except ApiError as error:
-            self.finished_with.emit("PENDING", str(error))
-            return
-        self.finished_with.emit(answer.get("status", "PENDING"), answer.get("mensagem", ""))
+        status, message = capture_and_send(
+            self.api, self.engine, self.config, self.authorization, self.camera_factory,
+            on_frame=self.frame_ready.emit, on_instruction=self.instruction.emit,
+        )
+        self.finished_with.emit(status, message)
 
 
 class RoomWindow(QWidget):
@@ -178,8 +155,12 @@ class RoomWindow(QWidget):
         self.message.setText(f"Aponte a câmera do celular para o QR Code · chamada até {data['fecha_em']}")
 
     def _start_capture(self, authorization: dict):
-        self.title.setText("Cadastro do rosto" if authorization["modo"] == MODE_ENROLLMENT else "Verificação facial")
-        self.message.setText("Olhe para a câmera.")
+        if authorization["modo"] == MODE_ENROLLMENT:
+            self.title.setText("Primeiro acesso: cadastro do rosto")
+            self.message.setText("Vamos registrar o seu rosto. Olhe para a câmera e siga as instruções.")
+        else:
+            self.title.setText("Verificação facial")
+            self.message.setText("Olhe para a câmera.")
         self.capture_worker = CaptureWorker(self.api, self.engine, self.config, authorization, self.camera_factory)
         self.capture_worker.frame_ready.connect(self._show_frame)
         self.capture_worker.instruction.connect(self.message.setText)
@@ -237,6 +218,7 @@ def pair_if_needed(config: RoomConfig, parent=None) -> RoomConfig:
 
 
 def main():
+    configure_logging()
     app = QApplication(sys.argv)
     config = pair_if_needed(load_config())
     window = RoomWindow(RoomApi(config.server_url, config.machine_token), config)
