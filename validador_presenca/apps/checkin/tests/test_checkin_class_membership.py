@@ -29,7 +29,7 @@ def test_student_from_another_class_is_refused(student_phone, open_session, cena
     Aluno.objects.filter(matricula="445566").update(turma=other_class)
 
     html = student_phone.post(
-        reverse("checkin:qr_demo"), {"token": room_token(open_session), **CAMPUS_CENTER}
+        reverse("checkin:student_checkin"), {"token": room_token(open_session), **CAMPUS_CENTER}
     ).content.decode()
 
     record = PresencaRecord.objects.get()
@@ -43,7 +43,7 @@ def test_qr_of_a_closed_call_is_refused_with_its_reason(student_phone, open_sess
     open_session.save()
 
     html = student_phone.post(
-        reverse("checkin:qr_demo"), {"token": room_token(open_session), **CAMPUS_CENTER}
+        reverse("checkin:student_checkin"), {"token": room_token(open_session), **CAMPUS_CENTER}
     ).content.decode()
 
     record = PresencaRecord.objects.get()
@@ -78,7 +78,7 @@ def test_machine_that_reached_the_teacher_limit_refuses_another_student(
     classmate_already_checked_in(open_session, room_machine, cenario_professor)
 
     html = student_phone.post(
-        reverse("checkin:qr_demo"), {"token": machine_token(open_session, room_machine), **CAMPUS_CENTER}
+        reverse("checkin:student_checkin"), {"token": machine_token(open_session, room_machine), **CAMPUS_CENTER}
     ).content.decode()
 
     record = PresencaRecord.objects.exclude(qr_token_hash="colega").get()
@@ -95,7 +95,7 @@ def test_machine_below_the_teacher_limit_accepts_another_student(
     classmate_already_checked_in(open_session, room_machine, cenario_professor)
 
     student_phone.post(
-        reverse("checkin:qr_demo"), {"token": machine_token(open_session, room_machine), **CAMPUS_CENTER}
+        reverse("checkin:student_checkin"), {"token": machine_token(open_session, room_machine), **CAMPUS_CENTER}
     )
 
     assert PresencaRecord.objects.exclude(qr_token_hash="colega").get().status == "PENDING"

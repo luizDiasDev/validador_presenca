@@ -1,4 +1,6 @@
 from django import forms
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import transaction
 from django.utils import timezone
@@ -188,15 +190,15 @@ def _minutos(horario) -> int:
 
 class RevisaoPresencaForm(forms.Form):
     DECISAO_CHOICES = [
-        ("APPROVED", "Aprovar presenca"),
-        ("REJECTED", "Rejeitar (manter falta)"),
+        ("APPROVED", "Aprovar presença"),
+        ("REJECTED", "Recusar presença"),
     ]
 
-    status = forms.ChoiceField(choices=DECISAO_CHOICES, label="Decisao")
+    status = forms.ChoiceField(choices=DECISAO_CHOICES, label="Decisão")
     motivo = forms.CharField(
         max_length=500,
         required=True,
-        label="Justificativa da revisao",
+        label="Justificativa da revisão",
     )
 
     def clean_motivo(self):
@@ -206,6 +208,15 @@ class RevisaoPresencaForm(forms.Form):
                 "Informe uma justificativa com pelo menos 5 caracteres."
             )
         return motivo
+
+
+def _validate_new_password(senha: str, usuario=None) -> str:
+    if senha:
+        try:
+            validate_password(senha, user=usuario)
+        except ValidationError as erro:
+            raise forms.ValidationError(list(erro.messages)) from erro
+    return senha
 
 
 class AlunoCadastroForm(forms.Form):
@@ -235,6 +246,10 @@ class AlunoCadastroForm(forms.Form):
                 "Já existe um aluno cadastrado com esta matrícula."
             )
         return matricula
+
+    def clean_senha(self):
+        usuario = self.aluno_instance.usuario if self.aluno_instance else None
+        return _validate_new_password(self.cleaned_data.get("senha", ""), usuario)
 
     def clean_email(self):
         email = self.cleaned_data["email"].strip().lower()
@@ -308,6 +323,10 @@ class ProfessorCadastroForm(forms.Form):
         if usuarios_com_email.exists():
             raise forms.ValidationError("Já existe um usuário cadastrado com este e-mail.")
         return email
+
+    def clean_senha(self):
+        usuario = self.professor_instance.usuario if self.professor_instance else None
+        return _validate_new_password(self.cleaned_data.get("senha", ""), usuario)
 
     def clean_area_atuacao(self):
         area_atuacao = self.cleaned_data["area_atuacao"].strip()

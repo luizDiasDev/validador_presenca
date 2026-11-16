@@ -16,7 +16,7 @@ from apps.institution.domain.services.pairing_service import MachinePairingServi
 from .domain.services.face_authorization_service import FaceAuthorizationService
 from .domain.services.face_checkin_service import FaceCheckinError, FaceCheckinService
 
-QR_TTL_MINIMUM_SECONDS = 30
+QR_TTL_SECONDS = 30
 QR_REFRESH_SECONDS = 10
 
 
@@ -58,11 +58,11 @@ def current_qr(request):
     qr = QrTokenService(cache=cache).gerar(
         sessao_id=session.id,
         maquina_id=request.machine.id,
-        ttl_s=max(session.duracao_qr_s, QR_TTL_MINIMUM_SECONDS),
+        ttl_s=QR_TTL_SECONDS,
     )
     return JsonResponse({
         "ativa": True,
-        "link": request.build_absolute_uri(f"{reverse('checkin:qr_demo')}?t={qr.token}"),
+        "link": request.build_absolute_uri(f"{reverse('checkin:student_checkin')}?t={qr.token}"),
         "atualizar_em_s": QR_REFRESH_SECONDS,
         "disciplina": disciplina,
         "fecha_em": fecha_em,

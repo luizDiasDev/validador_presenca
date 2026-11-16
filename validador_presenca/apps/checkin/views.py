@@ -28,7 +28,7 @@ from validador_presenca.pagination import paginar
 
 @login_required
 @only_student
-def qr_demo(request):
+def student_checkin(request):
     if request.method != "POST":
         return render(request, "checkin/checkin_aluno.html", {"token": request.GET.get("t", "")})
 
@@ -90,11 +90,11 @@ def _liberar_camera(maquina_id, registro, results_pack, modo):
 def consentimento_biometrico(request):
     pendente = request.session.pop("checkin_aguardando_termo", None)
     if not pendente:
-        return redirect("checkin:qr_demo")
+        return redirect("checkin:student_checkin")
 
     registro = PresencaRecord.objects.filter(pk=pendente["presenca_id"], usuario=request.user).first()
     if registro is None:
-        return redirect("checkin:qr_demo")
+        return redirect("checkin:student_checkin")
 
     contexto = {"enviado": True, "status": registro.status, "token_valido": True, "registro": registro}
     if request.POST.get("resposta") != "aceito":

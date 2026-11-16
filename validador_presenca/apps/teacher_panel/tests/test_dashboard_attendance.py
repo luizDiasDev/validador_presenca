@@ -101,7 +101,7 @@ def test_dashboard_page_shows_the_absences(client, attendance):
     html = client.get(reverse("teacher_panel:dashboard")).content.decode()
 
     assert "Faltas" in html
-    assert "50.0%" in html
+    assert "50,0%" in html
 
 
 def test_date_filter_keeps_only_the_calls_inside_the_period(attendance):

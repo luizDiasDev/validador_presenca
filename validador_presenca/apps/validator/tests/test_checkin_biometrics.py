@@ -8,7 +8,7 @@ from apps.audit.models import AuditLog
 from apps.biometrics.domain.services.biometric_service import BiometricService
 from apps.institution.models import Institution
 from apps.privacy.models import Termo
-from apps.validator.domain.case import try_checkin
+from apps.validator.domain.case import register_checkin
 from apps.validator.domain.values.verdict import Verdict
 from apps.validator.models import PresencaRecord
 
@@ -26,6 +26,10 @@ def unit_vector(seed, base=None, noise=0.0):
     else:
         vector = base + noise * random_generator.normal(size=EMBEDDING_SIZE)
     return vector / np.linalg.norm(vector)
+
+
+def evaluate(results_pack):
+    return register_checkin(results_pack).veredict
 
 
 STUDENT_FACE = unit_vector(1)
@@ -75,7 +79,7 @@ def checkin_pack(student, face=None, liveness=REAL_PERSON, **overrides):
 def test_enrolled_student_with_matching_face_is_approved_and_recorded():
     student = enrolled_student()
 
-    verdict = try_checkin(checkin_pack(student, face=STUDENT_FACE))
+    verdict = evaluate(checkin_pack(student, face=STUDENT_FACE))
 
     assert verdict == Verdict.APPROVED
     record = PresencaRecord.objects.get()
@@ -89,7 +93,7 @@ def test_enrolled_student_with_matching_face_is_approved_and_recorded():
 def test_someone_else_in_front_of_the_camera_is_rejected():
     student = enrolled_student()
 
-    verdict = try_checkin(checkin_pack(student, face=SOMEONE_ELSE_FACE))
+    verdict = evaluate(checkin_pack(student, face=SOMEONE_ELSE_FACE))
 
     assert verdict == Verdict.REJECTED
     assert PresencaRecord.objects.get().motivo == "Rosto não confere com o cadastro"
@@ -98,7 +102,7 @@ def test_someone_else_in_front_of_the_camera_is_rejected():
 def test_photo_on_screen_goes_to_the_professor():
     student = enrolled_student()
 
-    verdict = try_checkin(checkin_pack(student, face=STUDENT_FACE, liveness=PHOTO_ON_SCREEN))
+    verdict = evaluate(checkin_pack(student, face=STUDENT_FACE, liveness=PHOTO_ON_SCREEN))
 
     assert verdict == Verdict.PENDING
     record = PresencaRecord.objects.get()
@@ -109,7 +113,7 @@ def test_photo_on_screen_goes_to_the_professor():
 def test_student_without_biometrics_goes_to_the_professor():
     student = create_student()
 
-    verdict = try_checkin(checkin_pack(student, face=STUDENT_FACE))
+    verdict = evaluate(checkin_pack(student, face=STUDENT_FACE))
 
     assert verdict == Verdict.PENDING
     assert PresencaRecord.objects.get().motivo == "Biometria não cadastrada"
@@ -118,7 +122,7 @@ def test_student_without_biometrics_goes_to_the_professor():
 def test_webcam_failure_goes_to_the_professor():
     student = enrolled_student()
 
-    verdict = try_checkin(checkin_pack(student, face=None))
+    verdict = evaluate(checkin_pack(student, face=None))
 
     assert verdict == Verdict.PENDING
     assert "Rosto não capturado" in PresencaRecord.objects.get().motivo
@@ -127,7 +131,7 @@ def test_webcam_failure_goes_to_the_professor():
 def test_checkin_of_the_enrollment_day_goes_to_the_professor():
     student = enrolled_student()
 
-    verdict = try_checkin(checkin_pack(student, face=STUDENT_FACE, biometric_enrolled_in_this_checkin=True))
+    verdict = evaluate(checkin_pack(student, face=STUDENT_FACE, biometric_enrolled_in_this_checkin=True))
 
     assert verdict == Verdict.PENDING
     assert "Primeiro check-in após o cadastro facial" in PresencaRecord.objects.get().motivo
@@ -137,7 +141,7 @@ def test_student_who_revoked_biometrics_goes_to_the_professor():
     student = enrolled_student()
     BiometricService().revoke(student)
 
-    verdict = try_checkin(checkin_pack(student, face=STUDENT_FACE))
+    verdict = evaluate(checkin_pack(student, face=STUDENT_FACE))
 
     assert verdict == Verdict.PENDING
 
@@ -145,7 +149,7 @@ def test_student_who_revoked_biometrics_goes_to_the_professor():
 def test_invalid_qr_code_is_rejected_even_with_a_matching_face():
     student = enrolled_student()
 
-    verdict = try_checkin(checkin_pack(student, face=STUDENT_FACE, qr_code=False))
+    verdict = evaluate(checkin_pack(student, face=STUDENT_FACE, qr_code=False))
 
     assert verdict == Verdict.REJECTED
     assert PresencaRecord.objects.get().motivo == "Token inválido ou expirado"
@@ -154,7 +158,7 @@ def test_invalid_qr_code_is_rejected_even_with_a_matching_face():
 def test_outside_the_campus_is_rejected_even_with_a_matching_face():
     student = enrolled_student()
 
-    verdict = try_checkin(checkin_pack(student, face=STUDENT_FACE,
+    verdict = evaluate(checkin_pack(student, face=STUDENT_FACE,
                                        geo_valida=False, geo_motivo="Localização fora do raio do campus"))
 
     assert verdict == Verdict.REJECTED
@@ -164,6 +168,6 @@ def test_outside_the_campus_is_rejected_even_with_a_matching_face():
 def test_invalid_qr_code_wins_over_missing_biometrics():
     student = create_student()
 
-    verdict = try_checkin(checkin_pack(student, face=STUDENT_FACE, qr_code=False))
+    verdict = evaluate(checkin_pack(student, face=STUDENT_FACE, qr_code=False))
 
     assert verdict == Verdict.REJECTED

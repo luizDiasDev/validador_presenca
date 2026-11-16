@@ -47,7 +47,7 @@ def logged_http_session():
     return http, user
 
 
-# ---------- POST /checkin/ (qr_demo: consome o token e registra presença) ----------
+# ---------- POST /checkin/ (student_checkin: consome o token e registra presença) ----------
 
 def test_qrDemo_postComTokenValido_deveRegistrarPresencaNoBanco(live_server):
     http, aluno = logged_http_session()
@@ -63,7 +63,7 @@ def test_qrDemo_postComTokenValido_deveRegistrarPresencaNoBanco(live_server):
 
     assert response.status_code == 200
     assert "Check-in não aceito" in response.text  # sessão 1 não existe, então a chamada não está aberta
-    # Efeito persistido: um registro de presença foi gravado pelo try_checkin
+    # Efeito persistido: um registro de presença foi gravado pelo register_checkin
     registro = PresencaRecord.objects.get()
     assert registro.origem == "qr"
     assert registro.geo_valida is False

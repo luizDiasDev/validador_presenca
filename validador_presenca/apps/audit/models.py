@@ -12,6 +12,7 @@ class AuditLog(models.Model):
     payload =  models.JSONField()
     hash_anterior = models.CharField(max_length=64)
     hash_atual = models.CharField(max_length=64)
+    hash_version = models.PositiveSmallIntegerField(default=2)
 
     class Meta:
         db_table  = "log_auditoria"

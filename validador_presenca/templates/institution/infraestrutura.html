@@ -197,7 +197,7 @@
                                 <tr class="hover:bg-creme/40">
                                     <td class="py-3 px-4 font-semibold text-ink">{{ c.nome }}</td>
                                     <td class="py-3 text-ink/70">{{ c.instituicao.nome }}</td>
-                                    <td class="py-3 text-center text-ink/70">{{ c.latitude }}, {{ c.longitude }}</td>
+                                    <td class="py-3 text-center text-ink/70">{{ c.latitude|stringformat:'s' }}, {{ c.longitude|stringformat:'s' }}</td>
                                     <td class="py-3 text-center font-semibold text-light-blue">{{ c.raio_metros }} m</td>
                                     <td class="py-3 px-4 text-right space-x-2">
                                         <button type="button" onclick="abrirModal('{% url 'institution:editar_campus' c.id %}', 'Editar Campus', {nome: '{{ c.nome|escapejs }}', latitude: '{{ c.latitude|stringformat:'s' }}', longitude: '{{ c.longitude|stringformat:'s' }}', raio_metros: '{{ c.raio_metros }}'})" class="inline-flex items-center gap-1 text-xs font-medium text-light-blue hover:underline"><i data-lucide="pencil" class="w-3.5 h-3.5"></i> Editar</button>

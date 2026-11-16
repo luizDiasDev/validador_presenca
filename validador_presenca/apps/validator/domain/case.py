@@ -8,10 +8,6 @@ from apps.institution.models import Machine
 from apps.accounts.models import Usuario
 
 
-def try_checkin(results_pack: dict):
-    return register_checkin(results_pack).veredict
-
-
 def register_checkin(results_pack: dict) -> PresencaRecord:
     engine = build_engine()
     veredict, results, final_score, reason = engine.calculate(results_pack)

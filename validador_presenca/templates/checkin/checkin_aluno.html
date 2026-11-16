@@ -95,7 +95,7 @@
         {% if geo_resultado and geo_resultado.valida %}
             <p class="text-sm text-ink/60 text-center">Você está a {{ geo_resultado.distancia_m|floatformat:0 }} m do campus{% if endereco_aluno %}<br>{{ endereco_aluno }}{% endif %}</p>
         {% endif %}
-        <a href="{% url 'checkin:qr_demo' %}" class="text-sm text-dark-blue underline">Voltar</a>
+        <a href="{% url 'checkin:student_checkin' %}" class="text-sm text-dark-blue underline">Voltar</a>
     {% elif not token %}
         <div class="w-full max-w-sm bg-white rounded-2xl p-6 text-center">
             <p class="text-lg font-semibold text-dark-blue">Fazer check-in</p>
@@ -116,7 +116,7 @@
             const aviso = document.getElementById("aviso-leitura");
             const botaoLer = document.getElementById("botao-ler-qr");
             const botaoCancelar = document.getElementById("botao-cancelar-qr");
-            const caminhoCheckin = "{% url 'checkin:qr_demo' %}";
+            const caminhoCheckin = "{% url 'checkin:student_checkin' %}";
             let scanner = null;
 
             const mostrarAviso = (texto) => {

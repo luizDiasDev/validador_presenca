@@ -75,7 +75,7 @@ def read_room_qr(room, phone):
     """O celular lê o QR que o executável está exibindo."""
     link = room["computer"].get(reverse("class_client:qr")).json()["link"]
     token = link.split("?t=")[1]
-    return phone.post(reverse("checkin:qr_demo"), {"token": token, **CAMPUS_CENTER}).content.decode()
+    return phone.post(reverse("checkin:student_checkin"), {"token": token, **CAMPUS_CENTER}).content.decode()
 
 
 def send_face(room, payload):

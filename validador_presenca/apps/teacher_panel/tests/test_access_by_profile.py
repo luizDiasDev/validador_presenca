@@ -38,7 +38,7 @@ def test_student_sent_to_the_dashboard_lands_on_the_live_checkin(student_client)
     response = student_client.get(reverse("teacher_panel:dashboard"))
 
     assert response.status_code == 302
-    assert response.url == reverse("checkin:qr_demo")
+    assert response.url == reverse("checkin:student_checkin")
 
 
 def test_student_menu_hides_the_team_pages(student_client):
@@ -52,4 +52,4 @@ def test_student_cannot_open_the_users_page(student_client):
     response = student_client.get(reverse("teacher_panel:alunos"))
 
     assert response.status_code == 302
-    assert response.url == reverse("checkin:qr_demo")
+    assert response.url == reverse("checkin:student_checkin")
