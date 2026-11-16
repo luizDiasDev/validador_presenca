@@ -83,7 +83,7 @@ class DashboardService:
         resumo_disciplinas = [
             {
                 "nome": disciplina.nome,
-                "turma_codigo": disciplina.turma.codigo,
+                "turma_nome": disciplina.turma.nome,
                 "chamadas": chamadas_por_disciplina[disciplina.id],
                 "tempos": tempos_por_disciplina[disciplina.id],
                 "frequencia": _frequencia(tempos_por_disciplina[disciplina.id]),
@@ -95,7 +95,7 @@ class DashboardService:
             {
                 "matricula": aluno.matricula,
                 "nome": aluno.usuario.get_full_name() or aluno.usuario.email,
-                "turma_codigo": aluno.turma.codigo,
+                "turma_nome": aluno.turma.nome,
                 "tempos": tempos_por_aluno[aluno.id],
                 "tempos_total": sum(tempos_por_aluno[aluno.id].values()),
                 "frequencia": _frequencia(tempos_por_aluno[aluno.id]),

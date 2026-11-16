@@ -78,7 +78,7 @@
                     {% for t in turmas %}
                     <a href="{% url 'teacher_panel:alunos' %}?turma={{ t.id }}"
                        class="px-3.5 py-1.5 rounded-lg text-xs font-semibold {% if turma_filtro == t.id %}bg-light-blue text-white{% else %}text-ink/60 hover:bg-creme{% endif %}">
-                        {{ t.codigo }}
+                        {{ t.nome }}
                     </a>
                     {% endfor %}
                 </div>
@@ -107,7 +107,7 @@
                                 <td class="py-3 px-4 font-semibold text-light-blue">{{ al.matricula }}</td>
                                 <td class="py-3 font-medium text-ink">{{ al.usuario.get_full_name|default:"-" }}</td>
                                 <td class="py-3 text-ink/70">{{ al.usuario.email }}</td>
-                                <td class="py-3 text-ink/70">{{ al.turma.codigo }} ({{ al.turma.curso }})</td>
+                                <td class="py-3 text-ink/70">{{ al.turma.nome }} <span class="text-ink/40">({{ al.turma.curso }})</span></td>
                                 <td class="py-3 text-ink/70">{{ al.turma.sala.codigo }}</td>
                                 <td class="py-3 text-center">
                                     {% if al.situacao_termos == "aceito" %}
@@ -165,7 +165,7 @@
                         <div>
                             <label class="block text-xs font-semibold text-ink/70 mb-1">Turma</label>
                             <select name="turma" required class="w-full px-3.5 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
-                                {% for t in turmas %}<option value="{{ t.id }}">{{ t.codigo }} ({{ t.curso }})</option>{% endfor %}
+                                {% for t in turmas %}<option value="{{ t.id }}">{{ t.nome }} ({{ t.curso }})</option>{% endfor %}
                             </select>
                         </div>
                         <div>

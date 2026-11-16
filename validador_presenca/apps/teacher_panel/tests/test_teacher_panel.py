@@ -81,9 +81,9 @@ def test_usuario_sem_perfil_professor_eh_redirecionado(client, cenario_professor
 
 
 @pytest.mark.django_db
-def test_formato_concatenado_da_aula_com_turma_e_curso(cenario_professor):
+def test_formato_concatenado_da_aula_com_nome_da_turma(cenario_professor):
     texto = str(cenario_professor["aula"])
-    assert texto.startswith("2324 (Engenharia de Software) - IOT2 (")
+    assert texto.startswith("8 Semestre B - IOT2 (")
 
 
 @pytest.mark.django_db

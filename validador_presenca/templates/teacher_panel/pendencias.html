@@ -87,7 +87,7 @@
                                 </td>
                                 <td class="py-3 text-ink/70">
                                     {% if item.sessao and item.sessao.aula %}
-                                        {{ item.sessao.aula.disciplina.turma.codigo }} - {{ item.sessao.aula.disciplina.nome }}
+                                        {{ item.sessao.aula.disciplina.turma.nome }} - {{ item.sessao.aula.disciplina.nome }}
                                     {% else %}
                                         -
                                     {% endif %}
@@ -151,7 +151,7 @@
                                 </td>
                                 <td class="py-3 text-ink/70">
                                     {% if rev.sessao and rev.sessao.aula %}
-                                        {{ rev.sessao.aula.disciplina.turma.codigo }} - {{ rev.sessao.aula.disciplina.nome }}
+                                        {{ rev.sessao.aula.disciplina.turma.nome }} - {{ rev.sessao.aula.disciplina.nome }}
                                     {% else %}
                                         -
                                     {% endif %}
