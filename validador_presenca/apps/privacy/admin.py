@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.utils import timezone
+from apps.audit.domain.log_register import registrar_acao
 from apps.biometrics.domain.services.biometric_service import BiometricService
 from apps.privacy.models import AceiteTermo, SolicitacaoLGPD, Termo
 
@@ -45,11 +46,16 @@ class SolicitacaoLGPDAdmin(admin.ModelAdmin):
     usuario_email.short_description = "Usuário"
 
     def marcar_como_em_analise(self, request, queryset):
+        solicitacoes = list(queryset)
         atualizadas = queryset.update(status=SolicitacaoLGPD.STATUS_EM_ANALISE)
+        for solicitacao in solicitacoes:
+            _auditar_status(request.user, solicitacao, SolicitacaoLGPD.STATUS_EM_ANALISE)
         self.message_user(request, f"{atualizadas} solicitação(ões) marcada(s) como 'em análise'.")
     marcar_como_em_analise.short_description = "Marcar como 'Em análise'"
 
     def marcar_como_atendida(self, request, queryset):
+        for solicitacao in queryset:
+            _auditar_status(request.user, solicitacao, SolicitacaoLGPD.STATUS_ATENDIDA)
         revogacoes = list(queryset.filter(tipo=SolicitacaoLGPD.TIPO_REVOGAR_BIOMETRIA))
         for solicitacao in revogacoes:
             BiometricService().fulfill_revocation_request(solicitacao)
@@ -67,9 +73,16 @@ class SolicitacaoLGPDAdmin(admin.ModelAdmin):
             if not obj.data_resposta:
                 obj.data_resposta = timezone.now()
         super().save_model(request, obj, form, change)
+        if "status" in form.changed_data:
+            _auditar_status(request.user, obj, obj.status)
         if (
             obj.tipo == SolicitacaoLGPD.TIPO_REVOGAR_BIOMETRIA
             and obj.status == SolicitacaoLGPD.STATUS_ATENDIDA
             and "status" in form.changed_data
         ):
             BiometricService().fulfill_revocation_request(obj)
+
+
+def _auditar_status(dpo, solicitacao, status):
+    registrar_acao(dpo, "privacy", "SOLICITACAO_LGPD_STATUS", "solicitacao_lgpd", solicitacao.id,
+                   {"tipo": solicitacao.tipo, "status": status, "titular_id": solicitacao.usuario_id})

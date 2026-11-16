@@ -11,6 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from apps.accounts.decorators import only_admin
+from apps.audit.domain.log_register import registrar_acao
 from apps.institution.domain.services.pairing_service import (
     CodigoPareamentoInvalidoError,
     MachinePairingService,
@@ -75,6 +76,8 @@ def salvar_campus_view(request, campus_id: int | None = None):
             campus.instituicao = _obter_instituicao_atual(request.user)
         campus.save()
         acao = "atualizado" if campus_id else "cadastrado"
+        registrar_acao(request.user, "institution", "CAMPUS_ATUALIZADO" if campus_id else "CAMPUS_CRIADO", "campus",
+                       campus.id, {"nome": campus.nome, "raio_metros": campus.raio_metros})
         messages.success(request, f"Campus {campus.nome} {acao} com sucesso.")
     else:
         for campo, erros in form.errors.items():
@@ -92,6 +95,7 @@ def excluir_campus_view(request, campus_id: int):
     try:
         nome = campus.nome
         campus.delete()
+        registrar_acao(request.user, "institution", "CAMPUS_EXCLUIDO", "campus", campus_id, {"nome": nome})
         messages.success(request, f"Campus {nome} excluído com sucesso.")
     except ProtectedError:
         messages.error(
@@ -112,6 +116,8 @@ def salvar_sala_view(request, sala_id: int | None = None):
     if form.is_valid():
         sala = form.save()
         acao = "atualizada" if sala_id else "cadastrada"
+        registrar_acao(request.user, "institution", "SALA_ATUALIZADA" if sala_id else "SALA_CRIADA", "sala", sala.id,
+                       {"codigo": sala.codigo})
         messages.success(request, f"Sala {sala.codigo} {acao} com sucesso.")
     else:
         for campo, erros in form.errors.items():
@@ -129,6 +135,7 @@ def excluir_sala_view(request, sala_id: int):
     try:
         codigo = sala.codigo
         sala.delete()
+        registrar_acao(request.user, "institution", "SALA_EXCLUIDA", "sala", sala_id, {"codigo": codigo})
         messages.success(request, f"Sala {codigo} excluída com sucesso.")
     except ProtectedError:
         messages.error(
@@ -149,6 +156,8 @@ def salvar_maquina_view(request, maquina_id: int | None = None):
     if form.is_valid():
         if maquina_id:
             maquina = form.save()
+            registrar_acao(request.user, "institution", "MAQUINA_ATUALIZADA", "maquina", maquina.id,
+                           {"apelido": maquina.apelido, "sala_id": maquina.sala_id})
             messages.success(
                 request, f"Máquina {maquina.apelido} atualizada com sucesso."
             )
@@ -179,6 +188,7 @@ def excluir_maquina_view(request, maquina_id: int):
     try:
         apelido = maquina.apelido
         maquina.delete()
+        registrar_acao(request.user, "institution", "MAQUINA_EXCLUIDA", "maquina", maquina_id, {"apelido": apelido})
         messages.success(request, f"Máquina {apelido} excluída com sucesso.")
     except ProtectedError:
         messages.error(

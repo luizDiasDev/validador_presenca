@@ -38,3 +38,15 @@ class LogRegister:
         #sha256 transforma os bytes em um hash 
         #hexdigest pega o resultado de tudo e transforma em um hash de 64 caracteres
         return hashlib.sha256(concat.encode()).hexdigest()
+
+def registrar_acao(autor, origem: str, acao: str, tabela: str, linha_tabela_id: int, payload: dict | None = None):
+    LogRegister().register(
+        {
+            "autor_id": getattr(autor, "id", None) or 0,
+            "origem": origem,
+            "acao": acao,
+            "tabela": tabela,
+            "linha_tabela_id": linha_tabela_id or 0,
+            "payload": payload or {},
+        }
+    )

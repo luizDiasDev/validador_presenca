@@ -30,6 +30,7 @@ from apps.teacher_panel.forms import (
     TurmaForm,
 )
 from apps.teacher_panel.models import Aluno, Aula, Disciplina, Turma
+from apps.audit.domain.log_register import registrar_acao
 from apps.biometrics.models import Biometria
 from apps.privacy.domain.term_acceptance import situacao_da_biometria, situacao_dos_termos
 from apps.validator.models import PresencaRecord
@@ -89,6 +90,8 @@ def salvar_turma_view(request, turma_id: int | None = None):
     if form.is_valid():
         turma = form.save()
         acao = "atualizada" if turma_id else "cadastrada"
+        registrar_acao(request.user, "teacher_panel", "TURMA_ATUALIZADA" if turma_id else "TURMA_CRIADA",
+                       "turma", turma.id, {"codigo": turma.codigo, "nome": turma.nome})
         messages.success(request, f"Turma {turma.codigo} {acao} com sucesso.")
     else:
         for campo, erros in form.errors.items():
@@ -105,6 +108,7 @@ def excluir_turma_view(request, turma_id: int):
     try:
         codigo = turma.codigo
         turma.delete()
+        registrar_acao(request.user, "teacher_panel", "TURMA_EXCLUIDA", "turma", turma_id, {"codigo": codigo})
         messages.success(request, f"Turma {codigo} excluída com sucesso.")
     except ProtectedError:
         messages.error(
@@ -131,6 +135,8 @@ def salvar_disciplina_view(request, disciplina_id: int | None = None):
         disciplina.professor = professor
         disciplina.save()
         acao = "atualizada" if disciplina_id else "cadastrada"
+        registrar_acao(request.user, "teacher_panel", "DISCIPLINA_ATUALIZADA" if disciplina_id else "DISCIPLINA_CRIADA",
+                       "disciplina", disciplina.id, {"nome": disciplina.nome, "turma_id": disciplina.turma_id})
         messages.success(request, f"Disciplina {disciplina.nome} {acao} com sucesso.")
     else:
         for campo, erros in form.errors.items():
@@ -148,6 +154,7 @@ def excluir_disciplina_view(request, disciplina_id: int):
     try:
         nome = disciplina.nome
         disciplina.delete()
+        registrar_acao(request.user, "teacher_panel", "DISCIPLINA_EXCLUIDA", "disciplina", disciplina_id, {"nome": nome})
         messages.success(request, f"Disciplina {nome} excluída com sucesso.")
     except ProtectedError:
         messages.error(
@@ -170,8 +177,10 @@ def salvar_aula_view(request, aula_id: int | None = None):
     form = AulaForm(request.POST, instance=instancia, professor=professor)
 
     if form.is_valid():
-        form.save()
+        aula = form.save()
         acao = "atualizado" if aula_id else "cadastrado"
+        registrar_acao(request.user, "teacher_panel", "AULA_ATUALIZADA" if aula_id else "AULA_CRIADA", "aula", aula.id,
+                       {"disciplina_id": aula.disciplina_id, "dia_semana": aula.dia_semana})
         messages.success(request, f"Horário de aula {acao} com sucesso.")
     else:
         for campo, erros in form.errors.items():
@@ -188,6 +197,7 @@ def excluir_aula_view(request, aula_id: int):
     aula = get_object_or_404(Aula, pk=aula_id, disciplina__professor=professor)
     try:
         aula.delete()
+        registrar_acao(request.user, "teacher_panel", "AULA_EXCLUIDA", "aula", aula_id)
         messages.success(request, "Horário de aula excluído com sucesso.")
     except ProtectedError:
         messages.error(
@@ -242,6 +252,8 @@ def salvar_aluno_view(request, aluno_id: int | None = None):
 
     if form.is_valid():
         aluno = form.save(instituicao=getattr(request.user, "instituicao", None))
+        registrar_acao(request.user, "teacher_panel", "ALUNO_ATUALIZADO" if aluno_id else "ALUNO_CADASTRADO", "aluno",
+                       aluno.id, {"usuario_id": aluno.usuario_id, "matricula": aluno.matricula, "turma_id": aluno.turma_id})
         acao = (
             "atualizado" if aluno_id else f"matriculado na turma {aluno.turma.codigo}"
         )
@@ -263,8 +275,10 @@ def excluir_aluno_view(request, aluno_id: int):
     try:
         nome = aluno.usuario.get_full_name() or aluno.usuario.email
         usuario = aluno.usuario
+        usuario_id = usuario.id
         aluno.delete()
         usuario.delete()
+        registrar_acao(request.user, "teacher_panel", "ALUNO_EXCLUIDO", "aluno", aluno_id, {"usuario_id": usuario_id})
         messages.success(request, f"Aluno {nome} excluído com sucesso.")
     except ProtectedError:
         messages.error(
@@ -306,6 +320,8 @@ def salvar_professor_view(request, professor_id: int | None = None):
 
     if form.is_valid():
         professor = form.save(instituicao=getattr(request.user, "instituicao", None))
+        registrar_acao(request.user, "teacher_panel", "PROFESSOR_ATUALIZADO" if professor_id else "PROFESSOR_CADASTRADO",
+                       "professor", professor.id, {"usuario_id": professor.usuario_id})
         acao = "atualizado" if professor_id else "cadastrado"
         messages.success(
             request, f"Professor {professor.usuario.get_full_name()} {acao} com sucesso."
@@ -325,8 +341,10 @@ def excluir_professor_view(request, professor_id: int):
     try:
         nome = professor.usuario.get_full_name() or professor.usuario.email
         usuario = professor.usuario
+        usuario_id = usuario.id
         professor.delete()
         usuario.delete()
+        registrar_acao(request.user, "teacher_panel", "PROFESSOR_EXCLUIDO", "professor", professor_id, {"usuario_id": usuario_id})
         messages.success(request, f"Professor {nome} excluído com sucesso.")
     except ProtectedError:
         messages.error(
