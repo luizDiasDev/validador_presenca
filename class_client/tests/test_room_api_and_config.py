@@ -84,7 +84,7 @@ def test_refused_face_comes_back_as_pending_with_the_reason():
 
     answer = api.send_face(7, {"samples": []})
 
-    assert answer == {"status": "PENDING", "mensagem": "Amostras de pessoas diferentes."}
+    assert answer == {"status": "PENDING", "mensagem": "Amostras de pessoas diferentes.", "aceito": False}
 
 
 def test_config_is_saved_and_loaded(tmp_path):

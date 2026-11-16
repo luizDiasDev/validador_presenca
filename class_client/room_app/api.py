@@ -41,7 +41,7 @@ class RoomApi:
         response = self._send("post", FACE_PATH, json={"presenca_id": presenca_id, "payload": payload})
         if response.status_code in (409, 422):
             # 409: a liberação expirou; 422: o rosto não pôde ser usado. O servidor explica.
-            return response.json() | {"status": response.json().get("status", "PENDING")}
+            return response.json() | {"status": response.json().get("status", "PENDING"), "aceito": False}
         return self._json(response)
 
     def _send(self, method: str, path: str, authenticated: bool = True, **kwargs):

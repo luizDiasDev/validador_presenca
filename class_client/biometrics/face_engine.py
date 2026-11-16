@@ -18,7 +18,7 @@ class FaceEngine:
     def __init__(
         self,
         model_name: str = "buffalo_l",
-        detection_size: tuple = (640, 640),
+        detection_size: tuple = (320, 320),
         use_liveness: bool = True,
         providers: tuple = ("CPUExecutionProvider",),
         allowed_modules: tuple = ("detection", "recognition", "landmark_3d_68"),

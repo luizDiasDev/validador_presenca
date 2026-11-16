@@ -81,7 +81,7 @@ def test_running_out_of_time_fails():
     clock = FakeClock()
     challenge = HeadTurnChallenge((Direction.RIGHT,), clock=clock)
 
-    clock.now = 7.0
+    clock.now = 13.0
     challenge.update(LOOKING_FORWARD)
 
     assert challenge.state is ChallengeState.FAILED
@@ -94,7 +94,7 @@ def test_no_face_does_not_advance_but_time_keeps_running():
     challenge.update(None)
     assert challenge.state is ChallengeState.IN_PROGRESS
 
-    clock.now = 7.0
+    clock.now = 13.0
     challenge.update(None)
     assert challenge.state is ChallengeState.FAILED
 

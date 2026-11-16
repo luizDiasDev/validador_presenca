@@ -1,3 +1,4 @@
+import functools
 import itertools
 import threading
 import time
@@ -5,8 +6,9 @@ import time
 import numpy as np
 
 from biometrics.camera import CameraUnavailableError
+from biometrics.challenge import ChallengeConfig
 from room_app.capture_flow import ENROLLMENT_DONE, capture_and_send
-from room_app.capture_session import MODE_CHECKIN, MODE_ENROLLMENT
+from room_app.capture_session import MODE_CHECKIN, MODE_ENROLLMENT, run_face_capture
 from room_app.config import RoomConfig
 from room_app.live_camera import LiveCamera
 from tests.test_room_capture_session import reading
@@ -45,6 +47,14 @@ class CooperativeEngine:
             return [reading(seed=self.calls)]
         yaw = (-30.0, 0.0, 30.0, 0.0)[self.calls % 4]
         return [reading(yaw=yaw, seed=self.calls)]
+
+
+class FlakyEngine(CooperativeEngine):
+    def analyze(self, frame):
+        if self.calls in (2, 7):
+            self.calls += 1
+            raise AttributeError("'NoneType' object has no attribute 'shape'")
+        return super().analyze(frame)
 
 
 class BrokenEngine:
@@ -122,3 +132,32 @@ def test_missing_camera_keeps_the_presence_pending():
 
     assert status == "PENDING"
     assert "Câmera indisponível" in message
+
+
+def test_a_single_bad_frame_is_skipped_and_the_capture_goes_on():
+    api = FakeApi({"status": "APPROVED", "mensagem": "Presença confirmada."})
+
+    status, message, _, _ = run(FlakyEngine(), MODE_CHECKIN, FakeCamera(), api)
+
+    assert (status, message) == ("APPROVED", "Presença confirmada.")
+    assert api.sent
+
+
+class ImpatientEngine(CooperativeEngine):
+    def analyze(self, frame):
+        self.calls += 1
+        if self.calls <= 5:
+            return [reading(seed=self.calls)]
+        return [reading(yaw=0.0, seed=self.calls)]
+
+
+def test_a_refused_enrollment_shows_the_server_reason_instead_of_success(monkeypatch):
+    quick_challenge = functools.partial(run_face_capture, challenge_config=ChallengeConfig(step_timeout_seconds=0.05))
+    monkeypatch.setattr("room_app.capture_flow.run_face_capture", quick_challenge)
+    api = FakeApi({"status": "PENDING", "mensagem": "Desafio de prova de vida não cumprido.", "aceito": False})
+
+    status, message, _, instructions = run(ImpatientEngine(), MODE_ENROLLMENT, FakeCamera(), api)
+
+    assert (status, message) == ("PENDING", "Desafio de prova de vida não cumprido.")
+    assert api.sent[0][1]["challenge_passed"] is False
+    assert "Não deu tempo. Vamos tentar de novo, um pouco mais devagar." in instructions
