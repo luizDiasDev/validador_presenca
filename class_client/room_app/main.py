@@ -151,6 +151,10 @@ class RoomWindow(QWidget):
             self.message.setText(data.get("mensagem", "Nenhuma chamada aberta nesta sala."))
             return
         self.title.setText(data["disciplina"])
+        if data.get("lotada") or "link" not in data:
+            self.picture.clear()
+            self.message.setText(data.get("mensagem", "Este computador não recebe mais check-ins nesta chamada."))
+            return
         self.picture.setPixmap(_qr_pixmap(data["link"], size=460))
         self.message.setText(f"Aponte a câmera do celular para o QR Code · chamada até {data['fecha_em']}")
 

@@ -39,3 +39,24 @@ def test_a_disconnected_machine_asks_for_pairing_again_and_uses_the_new_token(qt
     assert window.config.machine_name == "PC-02"
     assert "PC-02" in window.footer.text()
     window.timer.stop()
+
+
+class FullMachineApi:
+    def current_qr(self):
+        return {"ativa": True, "lotada": True, "mensagem": "Este computador já recebeu 1 aluno(s) nesta chamada.",
+                "disciplina": "IOT2", "fecha_em": "19:25", "atualizar_em_s": 10}
+
+    def pending_authorization(self):
+        return {"pendente": False}
+
+
+def test_a_full_machine_hides_the_qr_but_keeps_waiting_for_the_face_step(qt_app):
+    window = RoomWindow(FullMachineApi(), RoomConfig(machine_token="ok"), engine_factory=lambda: object())
+    window.loader.wait()
+
+    window._tick()
+
+    assert window.picture.pixmap().isNull()
+    assert "já recebeu 1 aluno" in window.message.text()
+    assert window.schedule.should_check_authorization() is True
+    window.timer.stop()
