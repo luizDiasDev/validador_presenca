@@ -17,7 +17,7 @@ class ChallengeConfig:
     # entre um passo e outro
     neutral_yaw_degrees: float = 10.0
     # tempo máximo de cada passo
-    step_timeout_seconds: float = 6.0
+    step_timeout_seconds: float = 12.0
     
     right_turn_yaw_sign: int = -1
 

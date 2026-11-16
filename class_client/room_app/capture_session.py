@@ -11,6 +11,7 @@ MODE_CHECKIN = "checkin"
 MODE_ENROLLMENT = "cadastro"
 # o rosto do desafio tem que ser o mesmo das leituras (impede trocar de pessoa no meio)
 MIN_COSINE_SAME_PERSON = 0.50
+CHALLENGE_ATTEMPTS = 2
 
 
 @dataclass(frozen=True)
@@ -34,7 +35,6 @@ def run_face_capture(
     challenge_steps=None,
     clock=time.monotonic,
 ) -> FaceCaptureOutcome:
-    # 1) leituras de frente: o vetor do rosto e a nota de prova de vida
     if mode == MODE_ENROLLMENT:
         capture_config = CaptureConfig(
             samples_needed=max(capture_config.samples_needed, 5),
@@ -54,16 +54,21 @@ def run_face_capture(
         on_instruction(capture.reason)
         return FaceCaptureOutcome(capture, None, None)
 
-    # 2) desafio de virar a cabeça, com o mesmo rosto
-    challenge = HeadTurnChallenge(challenge_steps or draw_challenge(), challenge_config, clock=clock)
-    on_instruction(_challenge_text(challenge))
-    while challenge.state is ChallengeState.IN_PROGRESS:
-        frame = read_frame()
-        yaw = _yaw_of_the_same_person(analyze_frame(frame), capture.mean_embedding) if frame is not None else None
-        challenge.update(yaw)
+    challenge_passed = False
+    for attempt in range(CHALLENGE_ATTEMPTS):
+        if attempt:
+            on_instruction("Não deu tempo. Vamos tentar de novo, um pouco mais devagar.")
+        challenge = HeadTurnChallenge(challenge_steps or draw_challenge(), challenge_config, clock=clock)
         on_instruction(_challenge_text(challenge))
+        while challenge.state is ChallengeState.IN_PROGRESS:
+            frame = read_frame()
+            yaw = _yaw_of_the_same_person(analyze_frame(frame), capture.mean_embedding) if frame is not None else None
+            challenge.update(yaw)
+            on_instruction(_challenge_text(challenge))
+        challenge_passed = challenge.state is ChallengeState.PASSED
+        if challenge_passed:
+            break
 
-    challenge_passed = challenge.state is ChallengeState.PASSED
     build = build_enrollment_payload if mode == MODE_ENROLLMENT else build_checkin_payload
     return FaceCaptureOutcome(capture, challenge_passed, build(capture, challenge_passed))
 
