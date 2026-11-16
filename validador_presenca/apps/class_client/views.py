@@ -8,7 +8,8 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
-from apps.checkin.domain.services.chamada_service import ChamadaService
+from apps.checkin.domain.services.chamada_service import ChamadaService, maquina_lotada
+from apps.checkin.domain.services.faltas_service import registrar_faltas_pendentes
 from apps.checkin.domain.services.qr_service import QrTokenService
 from apps.institution.domain.services.pairing_service import MachinePairingService
 
@@ -35,9 +36,24 @@ def machine_required(view_func):
 @require_GET
 @machine_required
 def current_qr(request):
-    session = ChamadaService().sessao_aberta_da_sala(request.machine.sala_id)
+    registrar_faltas_pendentes()
+    service = ChamadaService()
+    service.abrir_agendada(request.machine.sala_id)
+    session = service.sessao_aberta_da_sala(request.machine.sala_id)
     if session is None:
         return JsonResponse({"ativa": False, "mensagem": "Nenhuma chamada aberta nesta sala."})
+
+    disciplina = session.aula.disciplina.nome if session.aula else "Chamada"
+    fecha_em = timezone.localtime(session.fecha_em).strftime("%H:%M")
+    if maquina_lotada(session, request.machine.id):
+        return JsonResponse({
+            "ativa": True,
+            "lotada": True,
+            "mensagem": f"Este computador já recebeu {session.limite_por_maquina} aluno(s) nesta chamada.",
+            "atualizar_em_s": QR_REFRESH_SECONDS,
+            "disciplina": disciplina,
+            "fecha_em": fecha_em,
+        })
 
     qr = QrTokenService(cache=cache).gerar(
         sessao_id=session.id,
@@ -48,8 +64,8 @@ def current_qr(request):
         "ativa": True,
         "link": request.build_absolute_uri(f"{reverse('checkin:qr_demo')}?t={qr.token}"),
         "atualizar_em_s": QR_REFRESH_SECONDS,
-        "disciplina": session.aula.disciplina.nome if session.aula else "Chamada",
-        "fecha_em": timezone.localtime(session.fecha_em).strftime("%H:%M"),
+        "disciplina": disciplina,
+        "fecha_em": fecha_em,
     })
 
 

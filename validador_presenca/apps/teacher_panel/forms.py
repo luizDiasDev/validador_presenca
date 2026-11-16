@@ -1,7 +1,9 @@
 from django import forms
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import transaction
 from django.utils import timezone
 from apps.accounts.models import Professor, Usuario
+from apps.checkin.models import AgendamentoChamada
 from apps.institution.models import Institution
 from apps.teacher_panel.models import Turma, Disciplina, Aula, Aluno
 
@@ -108,6 +110,54 @@ class AbrirChamadaForm(forms.Form):
                 )
 
         return cleaned
+
+
+class AgendamentoChamadaForm(forms.ModelForm):
+    class Meta:
+        model = AgendamentoChamada
+        fields = ["aula", "horario", "duracao_min", "tempos_cobertos", "limite_por_maquina"]
+
+    def __init__(self, *args, professor=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["aula"].queryset = (
+            Aula.objects.filter(disciplina__professor=professor)
+            .select_related("disciplina__turma")
+            .order_by("dia_semana", "hora_inicio")
+        )
+        self.fields["duracao_min"].validators.append(MinValueValidator(1))
+        self.fields["duracao_min"].validators.append(MaxValueValidator(180))
+        self.fields["tempos_cobertos"].validators.append(MinValueValidator(1))
+        self.fields["limite_por_maquina"].validators.append(MinValueValidator(1))
+        self.fields["limite_por_maquina"].validators.append(MaxValueValidator(10))
+
+    def clean(self):
+        cleaned = super().clean()
+        aula = cleaned.get("aula")
+        horario = cleaned.get("horario")
+        duracao = cleaned.get("duracao_min")
+        tempos = cleaned.get("tempos_cobertos")
+        if not (aula and horario and duracao):
+            return cleaned
+
+        inicio = _minutos(horario)
+        fim = inicio + duracao
+        if inicio < _minutos(aula.hora_inicio) or fim > _minutos(aula.hora_fim):
+            raise forms.ValidationError(
+                f"A chamada precisa abrir e fechar dentro da aula ({aula.hora_inicio:%H:%M} às {aula.hora_fim:%H:%M})."
+            )
+        if tempos and tempos > aula.tempos_aula:
+            raise forms.ValidationError(f"Esta aula tem {aula.tempos_aula} tempo(s).")
+        for outro in AgendamentoChamada.objects.filter(aula=aula).exclude(pk=self.instance.pk):
+            outro_inicio = _minutos(outro.horario)
+            if inicio < outro_inicio + outro.duracao_min and outro_inicio < fim:
+                raise forms.ValidationError(
+                    f"Já existe uma chamada agendada às {outro.horario:%H:%M} nesse intervalo."
+                )
+        return cleaned
+
+
+def _minutos(horario) -> int:
+    return horario.hour * 60 + horario.minute
 
 
 class RevisaoPresencaForm(forms.Form):

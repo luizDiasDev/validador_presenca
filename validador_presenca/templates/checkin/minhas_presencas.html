@@ -57,6 +57,8 @@
                             <span class="text-xs font-semibold text-green-700">Confirmada</span>
                         {% elif registro.status == "PENDING" %}
                             <span class="text-xs font-semibold text-gold">Em revisão</span>
+                        {% elif registro.origem == "ausencia" %}
+                            <span class="text-xs font-semibold text-red-700">Falta</span>
                         {% else %}
                             <span class="text-xs font-semibold text-red-700">Não aceita</span>
                         {% endif %}

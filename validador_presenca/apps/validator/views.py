@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.shortcuts import render
 
 from apps.accounts.decorators import only_teacher
+from apps.checkin.domain.services.faltas_service import registrar_faltas_pendentes
 from validador_presenca.pagination import paginar
 
 from .models import PresencaRecord
@@ -22,6 +23,7 @@ def _data(valor):
 @login_required
 @only_teacher
 def painel(request):
+    registrar_faltas_pendentes()
     status_filter = request.GET.get("status", "")
     busca = request.GET.get("busca", "").strip()
     data_inicio = _data(request.GET.get("de"))

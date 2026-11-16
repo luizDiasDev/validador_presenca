@@ -52,13 +52,14 @@
         <div class="bg-white rounded-2xl p-6">
             <div class="mb-6">
                 <h1 class="font-[family-name:var(--font-display)] text-3xl font-bold text-light-blue">
-                    CONFIGURAR E INICIAR CHAMADA
+                    CHAMADAS
                 </h1>
                 <p class="text-xs text-ink/50 mt-1">
                     Exibindo apenas as suas aulas de hoje ({{ dia_hoje_nome }}, {{ data_hoje|date:"d/m/Y" }}).
                 </p>
             </div>
 
+            <h2 class="text-sm font-semibold text-ink/70 uppercase tracking-wide mb-3">Abrir agora</h2>
             <form method="post" action="{% url 'teacher_panel:abrir_chamada' %}" class="bg-creme rounded-xl p-5 mb-8">
                 {% csrf_token %}
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
@@ -92,6 +93,80 @@
                 </div>
             </form>
 
+            <h2 class="text-sm font-semibold text-ink/70 uppercase tracking-wide mb-1">Chamadas Agendadas</h2>
+            <p class="text-xs text-ink/50 mb-3">Abrem sozinhas no horário marcado, toda semana, no dia da aula. Os computadores da sala mostram o QR Code em até 15 segundos.</p>
+            <form method="post" action="{% url 'teacher_panel:agendar_chamada' %}" class="bg-creme rounded-xl p-5 mb-4">
+                {% csrf_token %}
+                <div class="grid grid-cols-2 md:grid-cols-6 gap-3 items-end">
+                    <div class="col-span-2">
+                        <label for="agendar-aula" class="block text-xs font-semibold text-ink/70 mb-1">Aula</label>
+                        <select id="agendar-aula" name="aula" required class="w-full px-3 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
+                            {% for a in aulas_do_professor %}
+                                <option value="{{ a.id }}">{{ a.get_dia_semana_display }} {{ a.hora_inicio|time:"H:i" }}-{{ a.hora_fim|time:"H:i" }} · {{ a.disciplina.nome }} ({{ a.disciplina.turma.nome }})</option>
+                            {% empty %}
+                                <option value="" disabled selected>Cadastre uma aula em Minhas Turmas</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="agendar-horario" class="block text-xs font-semibold text-ink/70 mb-1">Abre às</label>
+                        <input id="agendar-horario" type="time" name="horario" required class="w-full px-3 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
+                    </div>
+                    <div>
+                        <label for="agendar-duracao" class="block text-xs font-semibold text-ink/70 mb-1">Janela (min)</label>
+                        <input id="agendar-duracao" type="number" name="duracao_min" min="1" max="180" value="10" required class="w-full px-3 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
+                    </div>
+                    <div>
+                        <label for="agendar-tempos" class="block text-xs font-semibold text-ink/70 mb-1">Tempos</label>
+                        <input id="agendar-tempos" type="number" name="tempos_cobertos" min="1" max="8" value="2" required class="w-full px-3 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
+                    </div>
+                    <div>
+                        <label for="agendar-limite" class="block text-xs font-semibold text-ink/70 mb-1">Alunos por PC</label>
+                        <input id="agendar-limite" type="number" name="limite_por_maquina" min="1" max="10" value="1" required class="w-full px-3 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
+                    </div>
+                </div>
+                <div class="mt-4 flex justify-end">
+                    <button type="submit" {% if not aulas_do_professor %}disabled{% endif %} class="flex items-center gap-2 bg-light-blue text-white text-xs font-semibold px-5 py-2.5 rounded-lg hover:bg-dark-blue disabled:opacity-40">
+                        <i data-lucide="calendar-clock" class="w-4 h-4"></i> AGENDAR CHAMADA
+                    </button>
+                </div>
+            </form>
+            <div class="border border-ink/10 rounded-xl overflow-x-auto mb-8">
+                <table class="w-full min-w-[720px] text-sm">
+                    <thead>
+                        <tr class="bg-tan text-ink/60 text-xs">
+                            <th class="text-left font-semibold py-3 px-4">Dia</th>
+                            <th class="text-left font-semibold py-3">Disciplina / Turma</th>
+                            <th class="text-center font-semibold py-3">Abre às</th>
+                            <th class="text-center font-semibold py-3">Janela</th>
+                            <th class="text-center font-semibold py-3">Tempos</th>
+                            <th class="text-center font-semibold py-3">Alunos por PC</th>
+                            <th class="text-right font-semibold py-3 px-4">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-ink/5">
+                        {% for ag in agendamentos %}
+                            <tr class="hover:bg-creme/40">
+                                <td class="py-3 px-4 text-ink/80">{{ ag.aula.get_dia_semana_display }}</td>
+                                <td class="py-3 text-ink/80">{{ ag.aula.disciplina.nome }} ({{ ag.aula.disciplina.turma.nome }})</td>
+                                <td class="py-3 text-center font-semibold text-light-blue">{{ ag.horario|time:"H:i" }}</td>
+                                <td class="py-3 text-center text-ink/70">{{ ag.duracao_min }} min</td>
+                                <td class="py-3 text-center text-ink/70">{{ ag.tempos_cobertos }}</td>
+                                <td class="py-3 text-center text-ink/70">{{ ag.limite_por_maquina }}</td>
+                                <td class="py-3 px-4 text-right">
+                                    <form method="post" action="{% url 'teacher_panel:excluir_agendamento' ag.id %}" class="inline" onsubmit="return confirm('Remover este agendamento?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="text-xs font-medium text-red-700 hover:underline">Remover</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="7" class="py-6 text-center text-ink/40">Nenhuma chamada agendada.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
             <h2 class="text-sm font-semibold text-ink/70 uppercase tracking-wide mb-3">Sessões Recentes</h2>
             <div class="border border-ink/10 rounded-xl overflow-x-auto">
                 <table class="w-full min-w-[720px] text-sm">
@@ -114,7 +189,7 @@
                                 <td class="py-3 px-4 font-medium text-ink">#{{ sessao.id }}</td>
                                 <td class="py-3 text-ink/80">
                                     {% if sessao.aula %}
-                                        {{ sessao.aula.disciplina.turma.codigo }} ({{ sessao.aula.disciplina.turma.curso }}) - {{ sessao.aula.disciplina.nome }}
+                                        {{ sessao.aula.disciplina.turma.nome }} - {{ sessao.aula.disciplina.nome }}
                                     {% else %}
                                         Chamada Avulsa
                                     {% endif %}

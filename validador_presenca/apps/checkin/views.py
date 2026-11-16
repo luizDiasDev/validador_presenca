@@ -4,7 +4,8 @@ from django.core.cache import cache
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
-from apps.checkin.domain.services.chamada_service import ChamadaService
+from apps.checkin.domain.services.chamada_service import ChamadaService, maquina_lotada
+from apps.checkin.domain.services.faltas_service import registrar_faltas_pendentes
 from apps.checkin.domain.services.qr_service import QrTokenService
 from apps.checkin.models import ChamadaSession
 from apps.validator.domain.case import register_checkin
@@ -133,6 +134,7 @@ def status_presenca(request, presenca_id: int):
 @login_required
 @only_student
 def minhas_presencas(request):
+    registrar_faltas_pendentes()
     registros = (
         PresencaRecord.objects.filter(usuario=request.user)
         .select_related("sessao__aula__disciplina", "sessao__sala")
@@ -215,18 +217,12 @@ def _motivo_qr_recusado(usuario, resultado, sessao) -> str:
     aluno = getattr(usuario, "aluno", None)
     if sessao.aula_id and (aluno is None or aluno.turma_id != sessao.aula.disciplina.turma_id):
         return "Você não está matriculado na turma desta chamada"
-    if resultado.maquina_id and _maquina_lotada(sessao, resultado.maquina_id, usuario.id):
+    ja_registrou = (
+        PresencaRecord.objects.filter(sessao=sessao, usuario_id=usuario.id).exclude(status="REJECTED").exists()
+    )
+    if ja_registrou:
+        return "Você já registrou presença nesta chamada"
+    if resultado.maquina_id and maquina_lotada(sessao, resultado.maquina_id, usuario.id):
         return f"Este computador já atingiu o limite de {sessao.limite_por_maquina} aluno(s) nesta chamada"
     return ""
 
-
-def _maquina_lotada(sessao, maquina_id, usuario_id) -> bool:
-    outros_alunos = (
-        PresencaRecord.objects.filter(sessao=sessao, maquina_id=maquina_id)
-        .exclude(status="REJECTED")
-        .exclude(usuario_id=usuario_id)
-        .values("usuario_id")
-        .distinct()
-        .count()
-    )
-    return outros_alunos >= sessao.limite_por_maquina

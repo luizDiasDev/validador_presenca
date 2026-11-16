@@ -1,10 +1,10 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from django.db import transaction
 from django.utils import timezone
 
 from apps.audit.domain.log_register import LogRegister
-from apps.checkin.models import ChamadaSession
+from apps.checkin.models import AgendamentoChamada, ChamadaSession
 from apps.institution.models import Room
 
 # Duração padrão que o popup do QR Code fica aberto na tela (5 minutos)
@@ -46,6 +46,42 @@ class ChamadaService:
             )
             .first()
         )
+
+    @transaction.atomic
+    def abrir_agendada(self, sala_id: int) -> ChamadaSession | None:
+        agora = timezone.localtime(self.clock())
+        agendamentos = AgendamentoChamada.objects.select_related("aula__disciplina__professor").filter(
+            aula__disciplina__turma__sala_id=sala_id,
+            aula__dia_semana=agora.weekday(),
+            horario__lte=agora.time(),
+        )
+        for agendamento in agendamentos:
+            abre_em = timezone.make_aware(datetime.combine(agora.date(), agendamento.horario))
+            fecha_em = abre_em + timedelta(minutes=agendamento.duracao_min)
+            if agora >= fecha_em:
+                continue
+
+            Room.objects.select_for_update().get(pk=sala_id)
+            if ChamadaSession.objects.filter(agendamento=agendamento, abre_em=abre_em).exists():
+                continue
+            if self.sessao_aberta_da_sala(sala_id):
+                return None
+
+            professor = agendamento.aula.disciplina.professor
+            sessao = ChamadaSession.objects.create(
+                sala_id=sala_id,
+                professor=professor,
+                aula=agendamento.aula,
+                agendamento=agendamento,
+                sequencia=ChamadaSession.objects.filter(sala_id=sala_id).count() + 1,
+                tempos_cobertos=agendamento.tempos_cobertos,
+                limite_por_maquina=agendamento.limite_por_maquina,
+                abre_em=abre_em,
+                fecha_em=fecha_em,
+            )
+            self._auditar("SESSAO_ABERTA", sessao, professor)
+            return sessao
+        return None
 
     # Garante que se o log ou o banco falharem, desfaz tudo (rollback).
     @transaction.atomic
@@ -122,8 +158,18 @@ class ChamadaService:
                     "sequencia": sessao.sequencia,
                     "tempos_cobertos": sessao.tempos_cobertos,
                     "limite_por_maquina": sessao.limite_por_maquina,
+                    "agendamento_id": sessao.agendamento_id,
                     "abre_em": sessao.abre_em.isoformat(),
                     "fecha_em": sessao.fecha_em.isoformat(),
                 },
             }
         )
+
+
+def maquina_lotada(sessao: ChamadaSession, maquina_id: int, exceto_usuario_id: int | None = None) -> bool:
+    from apps.validator.models import PresencaRecord
+
+    alunos = PresencaRecord.objects.filter(sessao=sessao, maquina_id=maquina_id).exclude(status="REJECTED")
+    if exceto_usuario_id:
+        alunos = alunos.exclude(usuario_id=exceto_usuario_id)
+    return alunos.values("usuario_id").distinct().count() >= sessao.limite_por_maquina

@@ -50,6 +50,12 @@ urlpatterns = [
     # Sessoes de chamada
     path("chamadas/", views.chamadas_view, name="chamadas"),
     path("chamadas/abrir/", views.abrir_chamada_view, name="abrir_chamada"),
+    path("chamadas/agendar/", views.agendar_chamada_view, name="agendar_chamada"),
+    path(
+        "chamadas/agendamentos/<int:agendamento_id>/excluir/",
+        views.excluir_agendamento_view,
+        name="excluir_agendamento",
+    ),
     path(
         "chamadas/<int:sessao_id>/encerrar/",
         views.encerrar_chamada_view,

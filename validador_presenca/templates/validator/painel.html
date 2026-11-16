@@ -130,7 +130,7 @@
                                         {% if register.status == 'APPROVED' %}text-green-700 bg-green-50
                                         {% elif register.status == 'PENDING' %}text-amber-800 bg-amber-50
                                         {% else %}text-red-700 bg-red-50{% endif %}">
-                                        {% if register.status == 'APPROVED' %}Aprovado{% elif register.status == 'PENDING' %}Pendente{% else %}Recusado{% endif %}
+                                        {% if register.status == 'APPROVED' %}Aprovado{% elif register.status == 'PENDING' %}Pendente{% elif register.origem == 'ausencia' %}Falta{% else %}Recusado{% endif %}
                                     </span>
                                     {% if register.revisado_por %}<span class="block mt-1 text-[10px] text-ink/40">revisado pelo professor</span>{% endif %}
                                 </td>

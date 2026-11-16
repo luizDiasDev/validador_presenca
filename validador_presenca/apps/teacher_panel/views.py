@@ -22,6 +22,7 @@ from apps.teacher_panel.domain.services.dashboard_service import DashboardServic
 from apps.teacher_panel.domain.services.revisao_service import RevisaoPresencaService
 from apps.teacher_panel.forms import (
     AbrirChamadaForm,
+    AgendamentoChamadaForm,
     AlunoCadastroForm,
     ProfessorCadastroForm,
     AulaForm,
@@ -31,6 +32,8 @@ from apps.teacher_panel.forms import (
 )
 from apps.teacher_panel.models import Aluno, Aula, Disciplina, Turma
 from apps.audit.domain.log_register import registrar_acao
+from apps.checkin.domain.services.faltas_service import registrar_faltas_pendentes
+from apps.checkin.models import AgendamentoChamada
 from apps.biometrics.models import Biometria
 from apps.privacy.domain.term_acceptance import situacao_da_biometria, situacao_dos_termos
 from apps.validator.models import PresencaRecord
@@ -357,6 +360,7 @@ def excluir_professor_view(request, professor_id: int):
 @login_required
 @only_teacher
 def chamadas_view(request):
+    registrar_faltas_pendentes()
     professor = request.user.professor
     agora = timezone.now()
     data_hoje = timezone.localdate()
@@ -364,6 +368,9 @@ def chamadas_view(request):
     dia_hoje_nome = dict(Aula.DIAS_SEMANA).get(dia_semana_hoje, "")
 
     form = AbrirChamadaForm(professor=professor, dia_semana=dia_semana_hoje)
+    agendamentos = AgendamentoChamada.objects.filter(aula__disciplina__professor=professor).select_related(
+        "aula__disciplina__turma"
+    )
 
     sessoes = paginar(
         request,
@@ -377,6 +384,8 @@ def chamadas_view(request):
         "form": form,
         "sessoes": sessoes,
         "sessoes_abertas_ids": sessoes_abertas_ids,
+        "agendamentos": agendamentos,
+        "aulas_do_professor": AgendamentoChamadaForm(professor=professor).fields["aula"].queryset,
         "data_hoje": data_hoje,
         "dia_hoje_nome": dia_hoje_nome,
     }
@@ -438,6 +447,45 @@ def encerrar_chamada_view(request, sessao_id: int):
     except (ChamadaJaEncerradaError, ChamadaSemPermissaoError) as exc:
         messages.error(request, str(exc))
 
+    return redirect("teacher_panel:chamadas")
+
+
+@login_required
+@only_teacher
+@require_POST
+def agendar_chamada_view(request):
+    form = AgendamentoChamadaForm(request.POST, professor=request.user.professor)
+    if form.is_valid():
+        agendamento = form.save()
+        registrar_acao(request.user, "checkin", "CHAMADA_AGENDADA", "agendamento_chamada", agendamento.id, {
+            "aula_id": agendamento.aula_id, "horario": agendamento.horario.strftime("%H:%M"),
+            "duracao_min": agendamento.duracao_min,
+        })
+        messages.success(
+            request,
+            f"Chamada agendada para {agendamento.aula.get_dia_semana_display()} às {agendamento.horario:%H:%M}.",
+        )
+    else:
+        for erro in form.non_field_errors():
+            messages.error(request, erro)
+        for campo, erros in form.errors.items():
+            if campo != "__all__":
+                messages.error(request, f"{form.fields[campo].label}: {erros[0]}")
+    return redirect("teacher_panel:chamadas")
+
+
+@login_required
+@only_teacher
+@require_POST
+def excluir_agendamento_view(request, agendamento_id: int):
+    agendamento = get_object_or_404(
+        AgendamentoChamada, pk=agendamento_id, aula__disciplina__professor=request.user.professor
+    )
+    horario = agendamento.horario.strftime("%H:%M")
+    agendamento.delete()
+    registrar_acao(request.user, "checkin", "AGENDAMENTO_EXCLUIDO", "agendamento_chamada", agendamento_id,
+                   {"horario": horario})
+    messages.success(request, f"Agendamento das {horario} removido.")
     return redirect("teacher_panel:chamadas")
 
 
@@ -514,6 +562,7 @@ def revisar_pendencia_view(request, registro_id: int):
 @login_required
 @only_teacher_or_admin
 def dashboard_view(request):
+    registrar_faltas_pendentes()
 
     professor = getattr(request.user, "professor", None)
     turma_param = request.GET.get("turma", "")
