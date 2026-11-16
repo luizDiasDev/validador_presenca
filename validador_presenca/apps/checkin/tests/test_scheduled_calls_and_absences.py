@@ -139,7 +139,7 @@ def test_student_cannot_check_in_twice_in_the_same_call(cenario_professor, machi
 
     def scan():
         token = QrTokenService(cache=cache).gerar(sessao_id=session.id, maquina_id=machine[0].id, ttl_s=30).token
-        return phone.post(reverse("checkin:qr_demo"), {"token": token, **CAMPUS_CENTER}).content.decode()
+        return phone.post(reverse("checkin:student_checkin"), {"token": token, **CAMPUS_CENTER}).content.decode()
 
     scan()
     second = scan()

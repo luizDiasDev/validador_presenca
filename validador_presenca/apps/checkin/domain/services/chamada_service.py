@@ -100,7 +100,6 @@ class ChamadaService:
         professor,
         aula=None,
         duracao_min: int = DURACAO_PADRAO_MIN,
-        duracao_qr_s: int = 5,
         tempos_cobertos: int = 1,
         limite_por_maquina: int = 1,
     ) -> ChamadaSession:
@@ -127,7 +126,6 @@ class ChamadaService:
             sequencia=sequencia,
             tempos_cobertos=tempos_cobertos,
             limite_por_maquina=limite_por_maquina,
-            duracao_qr_s=duracao_qr_s,
             abre_em=agora,
             fecha_em=agora + timedelta(minutes=duracao_min),
         )

@@ -24,7 +24,7 @@ def test_student_sees_the_address_when_geocoding_is_enabled(student_phone, open_
     calls = []
     fake_address(monkeypatch, calls)
 
-    html = student_phone.post(reverse("checkin:qr_demo"), {"token": room_token(open_session), **CAMPUS_CENTER}).content.decode()
+    html = student_phone.post(reverse("checkin:student_checkin"), {"token": room_token(open_session), **CAMPUS_CENTER}).content.decode()
 
     assert calls == [(CAMPUS_CENTER["lat"], CAMPUS_CENTER["lon"])]
     assert "Mogi das Cruzes" in html
@@ -35,6 +35,6 @@ def test_geocoding_can_be_switched_off_for_load_tests(student_phone, open_sessio
     calls = []
     fake_address(monkeypatch, calls)
 
-    student_phone.post(reverse("checkin:qr_demo"), {"token": room_token(open_session), **CAMPUS_CENTER})
+    student_phone.post(reverse("checkin:student_checkin"), {"token": room_token(open_session), **CAMPUS_CENTER})
 
     assert calls == []

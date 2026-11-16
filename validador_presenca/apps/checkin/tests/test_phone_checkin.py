@@ -38,7 +38,7 @@ def room_token(session):
 
 
 def test_phone_without_a_token_offers_the_qr_reader(student_phone):
-    html = student_phone.get(reverse("checkin:qr_demo")).content.decode()
+    html = student_phone.get(reverse("checkin:student_checkin")).content.decode()
 
     assert 'id="botao-ler-qr"' in html
     assert "html5-qrcode" in html
@@ -46,7 +46,7 @@ def test_phone_without_a_token_offers_the_qr_reader(student_phone):
 
 
 def test_phone_opening_the_link_gets_the_location_form(student_phone):
-    html = student_phone.get(reverse("checkin:qr_demo") + "?t=abc123").content.decode()
+    html = student_phone.get(reverse("checkin:student_checkin") + "?t=abc123").content.decode()
 
     assert 'name="token" value="abc123"' in html
     assert "getCurrentPosition" in html
@@ -54,7 +54,7 @@ def test_phone_opening_the_link_gets_the_location_form(student_phone):
 
 
 def test_phone_scan_inside_campus_registers_a_pending_presence(student_phone, open_session):
-    html = student_phone.post(reverse("checkin:qr_demo"), {"token": room_token(open_session), **CAMPUS_CENTER}).content.decode()
+    html = student_phone.post(reverse("checkin:student_checkin"), {"token": room_token(open_session), **CAMPUS_CENTER}).content.decode()
 
     record = PresencaRecord.objects.get()
     assert record.status == "PENDING"
@@ -64,16 +64,16 @@ def test_phone_scan_inside_campus_registers_a_pending_presence(student_phone, op
 
 def test_same_qr_read_twice_is_refused(student_phone, open_session):
     token = room_token(open_session)
-    student_phone.post(reverse("checkin:qr_demo"), {"token": token, **CAMPUS_CENTER})
+    student_phone.post(reverse("checkin:student_checkin"), {"token": token, **CAMPUS_CENTER})
 
-    html = student_phone.post(reverse("checkin:qr_demo"), {"token": token, **CAMPUS_CENTER}).content.decode()
+    html = student_phone.post(reverse("checkin:student_checkin"), {"token": token, **CAMPUS_CENTER}).content.decode()
 
     assert "já foi usado" in html
     assert PresencaRecord.objects.filter(status="REJECTED").count() == 1
 
 
 def test_phone_far_from_campus_is_refused(student_phone, open_session):
-    html = student_phone.post(reverse("checkin:qr_demo"), {"token": room_token(open_session), **FAR_AWAY}).content.decode()
+    html = student_phone.post(reverse("checkin:student_checkin"), {"token": room_token(open_session), **FAR_AWAY}).content.decode()
 
     assert PresencaRecord.objects.get().status == "REJECTED"
     assert "acima do raio" in html
@@ -82,7 +82,7 @@ def test_phone_far_from_campus_is_refused(student_phone, open_session):
 def test_teacher_cannot_check_in_through_the_phone_page(client, cenario_professor):
     client.force_login(cenario_professor["user"])
 
-    response = client.get(reverse("checkin:qr_demo") + "?t=abc")
+    response = client.get(reverse("checkin:student_checkin") + "?t=abc")
 
     assert response.status_code == 302
 

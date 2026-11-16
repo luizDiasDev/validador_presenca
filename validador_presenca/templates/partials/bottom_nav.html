@@ -5,7 +5,7 @@
             <a href="{% url 'checkin:minhas_presencas' %}" class="{% if tela.url_name == 'minhas_presencas' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
                 <i data-lucide="calendar-check" class="w-5 h-5"></i> Presenças
             </a>
-            <a href="{% url 'checkin:qr_demo' %}" class="flex flex-1 flex-col items-center justify-end gap-1 pb-1 text-[11px] font-semibold text-gold">
+            <a href="{% url 'checkin:student_checkin' %}" class="flex flex-1 flex-col items-center justify-end gap-1 pb-1 text-[11px] font-semibold text-gold">
                 <span class="-mt-7 flex h-14 w-14 items-center justify-center rounded-full border-4 border-dark-blue bg-gold text-dark-blue shadow-lg">
                     <i data-lucide="scan-line" class="w-6 h-6"></i>
                 </span>

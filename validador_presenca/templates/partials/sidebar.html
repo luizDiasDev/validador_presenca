@@ -32,7 +32,7 @@
             </a>
             {% endif %}
             {% if request.user.aluno %}
-            <a href="{% url 'checkin:qr_demo' %}" class="{% if tela.namespace == 'checkin' and tela.url_name == 'qr_demo' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
+            <a href="{% url 'checkin:student_checkin' %}" class="{% if tela.namespace == 'checkin' and tela.url_name == 'student_checkin' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">
                 <i data-lucide="scan-line" class="w-4 h-4"></i> Fazer check-in
             </a>
             <a href="{% url 'checkin:minhas_presencas' %}" class="{% if tela.namespace == 'checkin' and tela.url_name == 'minhas_presencas' %}{{ item_ativo }}{% else %}{{ item_normal }}{% endif %}">

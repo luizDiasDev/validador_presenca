@@ -65,7 +65,6 @@ class ChamadaSession(models.Model):
     faltas_registradas = models.BooleanField(default=False)
     abre_em = models.DateTimeField()
     fecha_em = models.DateTimeField()
-    duracao_qr_s = models.PositiveSmallIntegerField(default=5)
     data_criacao = models.DateTimeField(auto_now_add=True)
     data_atualizacao = models.DateTimeField(auto_now=True)
 
