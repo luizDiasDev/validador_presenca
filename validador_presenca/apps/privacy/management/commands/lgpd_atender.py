@@ -2,6 +2,8 @@ from django.core.management.base import BaseCommand, CommandError
 
 from apps.accounts.models import Usuario
 from apps.privacy.domain.lgpd_service import (
+    AutoAtendimentoError,
+    SolicitacaoEncerradaError,
     SolicitacaoNaoAutomatizavelError,
     atender_solicitacao,
     gravar_exportacao,
@@ -25,8 +27,8 @@ class Command(BaseCommand):
         )
         if solicitacao is None:
             raise CommandError(f"Solicitação #{options['solicitacao_id']} não encontrada.")
-        if solicitacao.status == SolicitacaoLGPD.STATUS_ATENDIDA:
-            raise CommandError(f"A solicitação #{solicitacao.id} já foi atendida.")
+        if solicitacao.status in (SolicitacaoLGPD.STATUS_ATENDIDA, SolicitacaoLGPD.STATUS_RECUSADA):
+            raise CommandError(f"A solicitação #{solicitacao.id} já foi {solicitacao.get_status_display().lower()}.")
 
         dpo = Usuario.objects.filter(email=options["dpo"]).first() if options["dpo"] else None
         autor_id = dpo.id if dpo else 0
@@ -37,7 +39,7 @@ class Command(BaseCommand):
 
         try:
             atender_solicitacao(solicitacao, autor_id)
-        except SolicitacaoNaoAutomatizavelError as exc:
+        except (SolicitacaoNaoAutomatizavelError, SolicitacaoEncerradaError, AutoAtendimentoError) as exc:
             raise CommandError(str(exc)) from exc
 
         self.stdout.write(

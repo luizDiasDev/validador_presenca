@@ -52,7 +52,7 @@ class AdsumLogoutView(LogoutView):
                 "acao": "LOGOUT",
                 "tabela": "usuario",
                 "linha_tabela_id": request.user.id,
-                "payload": {"email": request.user.email},
+                "payload": {},
             })
         return super().post(request, *args, **kwargs)
 
@@ -119,7 +119,7 @@ def config_totp(request):
                 "acao": "TOTP_CONFIGURADO",
                 "tabela": "usuario",
                 "linha_tabela_id": user.id,
-                "payload": {"email": user.email},
+                "payload": {},
             })
 
             login(request, user)
@@ -131,7 +131,7 @@ def config_totp(request):
             "acao": "TOTP_CONFIG_FALHA",
             "tabela": "usuario",
             "linha_tabela_id": user.id,
-            "payload": {"email": user.email},
+            "payload": {},
         })
         
         messages.error(request, "Código inválido. Tente novamente.")
@@ -170,7 +170,7 @@ def read_totp(request):
                 "acao": "LOGIN_SUCESSO",
                 "tabela": "usuario",
                 "linha_tabela_id": user.id,
-                "payload": {"email": user.email},
+                "payload": {},
             })
 
             login(request, user)
@@ -182,7 +182,7 @@ def read_totp(request):
             "acao": "TOTP_FALHA",
             "tabela": "usuario",
             "linha_tabela_id": user.id,
-            "payload": {"email": user.email},
+            "payload": {},
         })
         
         messages.error(request, "Código incorreto.")

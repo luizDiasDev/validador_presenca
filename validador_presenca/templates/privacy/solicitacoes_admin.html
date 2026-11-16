@@ -1,0 +1,171 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    {% include "partials/favicon.html" %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitações LGPD | ADSUM</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style type="text/tailwindcss">
+        @theme {
+            --color-dark-blue: #0F1B2E;
+            --color-light-blue: #17263D;
+            --color-gold: #C9962C;
+            --color-creme: #F7F3EA;
+            --color-tan: #E9DEC4;
+            --color-ink: #1F2A3C;
+            --font-display: 'Cinzel', serif;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-creme h-dvh overflow-hidden flex">
+
+    {% include "partials/sidebar.html" %}
+
+    <div class="hidden md:block w-6 bg-dark-blue"><img src="{% static 'images/divisao.svg' %}" alt="Divisao"></div>
+
+    <div class="flex-1 min-w-0 p-4 pb-24 md:p-8 overflow-y-auto space-y-6">
+
+        {% if messages %}
+            <div id="mensagens-alerta" class="space-y-2 transition-opacity duration-500">
+                {% for message in messages %}
+                    <div class="px-4 py-3 rounded-xl text-sm font-medium {% if message.tags == 'error' %}bg-red-100 text-red-800{% else %}bg-green-100 text-green-800{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="bg-white rounded-2xl p-6">
+            <div class="mb-6">
+                <h1 class="font-[family-name:var(--font-display)] text-3xl font-bold text-light-blue">SOLICITAÇÕES LGPD</h1>
+                <p class="text-xs text-ink/50 mt-1">Pedidos dos titulares (art. 18 da LGPD). O prazo de resposta é de {{ prazo_dias }} dias. Toda decisão fica no Registro de Atividades.</p>
+            </div>
+
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <a href="{% querystring status='abertas' pagina=None %}" class="bg-amber-50 rounded-xl p-4 hover:bg-amber-100 {% if status_selecionado == 'abertas' %}ring-2 ring-amber-600/40{% endif %}">
+                    <div class="flex items-center justify-between text-[10px] font-semibold text-amber-800 tracking-wide mb-2">EM ABERTO <i data-lucide="inbox" class="w-4 h-4"></i></div>
+                    <div class="text-3xl font-bold text-amber-800">{{ totais.abertas }}</div>
+                </a>
+                <div class="bg-red-50 rounded-xl p-4">
+                    <div class="flex items-center justify-between text-[10px] font-semibold text-red-700 tracking-wide mb-2">FORA DO PRAZO <i data-lucide="alarm-clock" class="w-4 h-4"></i></div>
+                    <div class="text-3xl font-bold text-red-700">{{ totais.atrasadas }}</div>
+                </div>
+                <a href="{% querystring status='atendida' pagina=None %}" class="bg-green-50 rounded-xl p-4 hover:bg-green-100 {% if status_selecionado == 'atendida' %}ring-2 ring-green-600/40{% endif %}">
+                    <div class="flex items-center justify-between text-[10px] font-semibold text-green-700 tracking-wide mb-2">ATENDIDAS <i data-lucide="check-circle-2" class="w-4 h-4"></i></div>
+                    <div class="text-3xl font-bold text-green-700">{{ totais.atendidas }}</div>
+                </a>
+                <a href="{% querystring status='recusada' pagina=None %}" class="bg-creme rounded-xl p-4 hover:bg-tan {% if status_selecionado == 'recusada' %}ring-2 ring-light-blue/30{% endif %}">
+                    <div class="flex items-center justify-between text-[10px] font-semibold text-ink/50 tracking-wide mb-2">RECUSADAS <i data-lucide="x-circle" class="w-4 h-4"></i></div>
+                    <div class="text-3xl font-bold text-light-blue">{{ totais.recusadas }}</div>
+                </a>
+            </div>
+
+            <form method="get" class="flex flex-wrap items-end gap-3 mb-6">
+                <div>
+                    <label for="filtro-status" class="block text-xs font-semibold text-ink/70 mb-1">Situação</label>
+                    <select id="filtro-status" name="status" class="px-3 py-1.5 rounded-lg border border-ink/15 bg-white text-sm text-ink">
+                        <option value="abertas" {% if status_selecionado == 'abertas' %}selected{% endif %}>Em aberto</option>
+                        <option value="todas" {% if status_selecionado == 'todas' %}selected{% endif %}>Todas</option>
+                        {% for codigo, rotulo in status_opcoes %}
+                            <option value="{{ codigo }}" {% if codigo == status_selecionado %}selected{% endif %}>{{ rotulo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="filtro-tipo" class="block text-xs font-semibold text-ink/70 mb-1">Tipo</label>
+                    <select id="filtro-tipo" name="tipo" class="px-3 py-1.5 rounded-lg border border-ink/15 bg-white text-sm text-ink">
+                        <option value="">Todos</option>
+                        {% for codigo, rotulo in tipo_opcoes %}
+                            <option value="{{ codigo }}" {% if codigo == tipo_selecionado %}selected{% endif %}>{{ rotulo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if status_selecionado != 'abertas' or tipo_selecionado %}{% url 'privacy:solicitacoes_admin' as limpar_url %}{% endif %}
+                {% include "partials/botoes_filtro.html" with limpar_url=limpar_url %}
+            </form>
+
+            <div class="space-y-3">
+                {% for s in solicitacoes %}
+                    <div class="border border-ink/10 rounded-xl p-5 {% if s.atrasada %}border-red-300 bg-red-50/40{% endif %}">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                                <p class="font-semibold text-ink">#{{ s.id }} · {{ s.get_tipo_display }}</p>
+                                <p class="text-sm text-ink/70 mt-0.5">{{ s.usuario.get_full_name|default:s.usuario.email }} <span class="text-ink/40">· {{ s.usuario.email }}</span></p>
+                                <p class="text-xs text-ink/50 mt-1">
+                                    Pedido em {{ s.data_solicitacao|date:"d/m/Y H:i" }}
+                                    {% if s.data_resposta %} · respondido em {{ s.data_resposta|date:"d/m/Y H:i" }}{% else %} · há {{ s.dias }} dia{{ s.dias|pluralize }}{% endif %}
+                                    {% if s.atrasada %}<span class="font-semibold text-red-700"> · fora do prazo</span>{% endif %}
+                                </p>
+                            </div>
+                            <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap
+                                {% if s.status == 'pendente' %}bg-amber-50 text-amber-800
+                                {% elif s.status == 'em_analise' %}bg-blue-50 text-blue-700
+                                {% elif s.status == 'atendida' %}bg-green-50 text-green-700
+                                {% else %}bg-red-50 text-red-700{% endif %}">{{ s.get_status_display }}</span>
+                        </div>
+
+                        {% if s.justificativa %}
+                            <p class="text-sm text-ink/80 mt-3"><span class="font-semibold">Justificativa do titular:</span> {{ s.justificativa }}</p>
+                        {% endif %}
+                        {% if s.resposta_dpo %}
+                            <p class="text-sm text-ink/80 mt-2"><span class="font-semibold">Resposta:</span> {{ s.resposta_dpo }}</p>
+                        {% endif %}
+
+                        {% if s.status == 'pendente' or s.status == 'em_analise' %}
+                            <p class="text-xs text-ink/60 mt-3">
+                                {% if s.tipo == 'revogar_biometria' %}Atender apaga o vetor facial e revoga o consentimento biométrico.
+                                {% elif s.tipo == 'excluir_conta' %}Atender anonimiza a conta (nome, e-mail, matrícula, IP dos aceites), desativa o acesso e apaga a biometria. As presenças ficam, sem identificação. Não dá para desfazer.
+                                {% elif s.tipo == 'exportar_dados' %}Atender libera o botão Baixar meus dados para o titular, em Minhas solicitações.
+                                {% else %}Corrija os dados em Gestão de Usuários e descreva na resposta o que foi corrigido.{% endif %}
+                            </p>
+                            {% if s.propria and s.tipo == tipo_exclusao %}
+                                <p class="text-xs font-semibold text-red-700 mt-2">Este pedido é seu: outro administrador precisa atendê-lo.</p>
+                            {% else %}
+                                <form method="post" action="{% url 'privacy:decidir_solicitacao' s.id %}" class="mt-3 flex flex-wrap items-center gap-2"
+                                      {% if s.tipo == tipo_exclusao %}onsubmit="return event.submitter.value !== 'atender' || confirm('Anonimizar esta conta? Não dá para desfazer.');"{% endif %}>
+                                    {% csrf_token %}
+                                    <input type="hidden" name="voltar" value="{{ request.get_full_path }}">
+                                    <input type="text" name="resposta" placeholder="{% if s.tipo == tipo_correcao %}O que foi corrigido (obrigatório para atender){% else %}Resposta ao titular (obrigatória para recusar){% endif %}" class="flex-1 min-w-64 bg-creme border border-ink/20 rounded-lg px-3 py-1.5 text-xs">
+                                    {% if s.status == 'pendente' %}
+                                        <button type="submit" name="decisao" value="analisar" class="flex items-center gap-1.5 border border-ink/20 text-ink/70 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-creme">
+                                            <i data-lucide="search" class="w-4 h-4"></i> Em análise
+                                        </button>
+                                    {% endif %}
+                                    <button type="submit" name="decisao" value="recusar" class="flex items-center gap-1.5 border border-red-300 text-red-700 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-red-50">
+                                        <i data-lucide="x" class="w-4 h-4"></i> Recusar
+                                    </button>
+                                    <button type="submit" name="decisao" value="atender" class="flex items-center gap-1.5 bg-light-blue text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-dark-blue">
+                                        <i data-lucide="check" class="w-4 h-4"></i> Atender
+                                    </button>
+                                </form>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                {% empty %}
+                    <div class="py-10 text-center text-ink/40 text-sm">Nenhuma solicitação encontrada.</div>
+                {% endfor %}
+            </div>
+            {% include "partials/paginacao.html" with pagina=solicitacoes %}
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        const alerta = document.getElementById('mensagens-alerta');
+        if (alerta) {
+            setTimeout(() => {
+                alerta.classList.add('opacity-0');
+                setTimeout(() => alerta.remove(), 500);
+            }, 3500);
+        }
+    </script>
+</body>
+</html>

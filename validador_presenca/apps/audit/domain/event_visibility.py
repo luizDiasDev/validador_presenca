@@ -30,6 +30,7 @@ ROTULOS_DE_ACAO = {
     "AGENDAMENTO_EXCLUIDO": "Agendamento de chamada removido",
     "SOLICITACAO_LGPD_CRIADA": "Solicitação LGPD enviada",
     "SOLICITACAO_LGPD_STATUS": "Solicitação LGPD atualizada pelo DPO",
+    "DADOS_BAIXADOS": "Titular baixou os próprios dados",
     "CONTA_ANONIMIZADA": "Conta anonimizada",
     "MAQUINA_CRIADA": "Computador de sala criado",
     "MAQUINA_ATUALIZADA": "Computador de sala editado",

@@ -78,6 +78,12 @@
                                     <p class="text-sm text-ink/80">{{ s.resposta_dpo }}</p>
                                 </div>
                             {% endif %}
+
+                            {% if s.tipo == "exportar_dados" and s.status == "atendida" and pode_baixar %}
+                                <a href="{% url 'privacy:baixar_meus_dados' %}" class="mt-4 inline-flex items-center gap-2 bg-dark-blue hover:bg-light-blue text-creme font-semibold text-sm py-2.5 px-5 rounded-lg transition">
+                                    <i data-lucide="download" class="w-4 h-4"></i> Baixar meus dados
+                                </a>
+                            {% endif %}
                         </div>
                     {% endfor %}
                 </div>
