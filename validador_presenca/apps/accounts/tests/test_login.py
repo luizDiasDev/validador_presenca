@@ -118,3 +118,24 @@ def test_logout_logs_and_ends_session(usuario_com_totp):
     log = AuditLog.objects.filter(acao="LOGOUT").first()
     assert log is not None
     assert log.autor_id == usuario_com_totp.id
+
+def test_totp_setup_page_lets_a_phone_user_add_the_account_without_scanning(usuario_sem_totp):
+    client = Client()
+    client.post(reverse("accounts:login"), {
+        "username": "aluno.teste@umc.br",
+        "password": "SenhaForte123",
+    })
+
+    html = client.get(reverse("accounts:config_totp")).content.decode()
+
+    usuario_sem_totp.refresh_from_db()
+    segredo = Cipher(settings.TOTP_ENCRYPTION_KEY).decrypt_text(bytes(usuario_sem_totp.totp_cifrado))
+    assert 'href="otpauth://totp/' in html
+    assert f'data-chave="{segredo}"' in html
+    assert " ".join(segredo[i:i + 4] for i in range(0, len(segredo), 4)) in html
+
+    codigo_digitado_do_app = pyotp.TOTP(segredo).now()
+    response = client.post(reverse("accounts:config_totp"), {"code": codigo_digitado_do_app})
+    usuario_sem_totp.refresh_from_db()
+    assert usuario_sem_totp.totp_ativo is True
+    assert response.status_code == 302
