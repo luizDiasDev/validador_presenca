@@ -44,7 +44,7 @@ class FaceEngine:
 
         # ctx_id=-1 = rodar na CPU
         self._face_analysis.prepare(ctx_id=-1, det_size=self.detection_size)
-        
+        _ensure_pose_model_is_complete(self._face_analysis)
         return self
 
     def analyze(self, frame_bgr) -> list[FaceModel]:
@@ -93,3 +93,12 @@ class FaceEngine:
             pitch=pitch,
             roll=roll,
         )
+
+
+def _ensure_pose_model_is_complete(face_analysis) -> None:
+    for model in getattr(face_analysis, "models", {}).values():
+        if getattr(model, "require_pose", False) and getattr(model, "mean_lmk", None) is None:
+            raise RuntimeError(
+                "O InsightFace não encontrou o arquivo meanshape_68.pkl, usado para medir o giro da cabeça. "
+                "Gere o executável de novo com o build_exe.ps1 atualizado."
+            )
