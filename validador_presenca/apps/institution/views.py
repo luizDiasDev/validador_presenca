@@ -21,6 +21,7 @@ LIMITE_FALHAS_PAREAMENTO = 10
 JANELA_FALHAS_PAREAMENTO_S = 15 * 60
 from apps.institution.forms import CampusForm, MachineForm, RoomForm
 from apps.institution.models import Campus, Institution, Machine, Room
+from validador_presenca.pagination import paginar
 
 
 def _obter_instituicao_atual(user):
@@ -49,7 +50,7 @@ def infraestrutura_view(request):
         "instituicao_atual": instituicao_atual,
         "campi": campi,
         "salas": salas,
-        "maquinas": maquinas,
+        "maquinas": paginar(request, maquinas),
         "campus_form": CampusForm(),
         "room_form": RoomForm(),
         "machine_form": MachineForm(),

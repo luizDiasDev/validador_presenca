@@ -70,6 +70,7 @@
                 <li class="bg-white rounded-xl p-6 text-center text-sm text-ink/60">Nenhum check-in registrado ainda.</li>
             {% endfor %}
         </ul>
+        {% include "partials/paginacao.html" with pagina=registros %}
     </div>
 
     {% include "partials/bottom_nav.html" %}

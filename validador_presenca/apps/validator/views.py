@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
 from apps.accounts.decorators import only_teacher
+from validador_presenca.pagination import paginar
 
 from .models import PresencaRecord
 
@@ -17,7 +18,7 @@ def painel(request):
         registers = registers.filter(status=status_filter)
 
     content = {
-        "registers": registers,
+        "registers": paginar(request, registers),
         "total": teacher_records.count(),
         "approved": teacher_records.filter(status="APPROVED").count(),
         "pending": teacher_records.filter(status="PENDING").count(),
