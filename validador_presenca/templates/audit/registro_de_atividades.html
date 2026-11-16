@@ -69,10 +69,8 @@
                     <label for="filtro-ate" class="block text-xs font-semibold text-ink/70 mb-1">Até</label>
                     <input id="filtro-ate" type="date" name="ate" value="{{ data_fim|date:'Y-m-d' }}" class="px-3 py-1.5 rounded-lg border border-ink/15 bg-white text-sm text-ink">
                 </div>
-                <button type="submit" class="px-4 py-1.5 rounded-lg bg-light-blue text-white text-xs font-semibold">Filtrar</button>
-                {% if acao_selecionada or data_inicio or data_fim %}
-                    <a href="{% url 'audit:registro' %}" class="px-3 py-1.5 text-xs font-semibold text-ink/60 hover:underline">Limpar</a>
-                {% endif %}
+                {% if acao_selecionada or data_inicio or data_fim %}{% url 'audit:registro' as limpar_url %}{% endif %}
+                {% include "partials/botoes_filtro.html" with limpar_url=limpar_url %}
             </form>
 
             <div class="border border-ink/10 rounded-xl overflow-x-auto">

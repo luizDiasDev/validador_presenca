@@ -109,11 +109,11 @@
                                         {% csrf_token %}
                                         <select name="status" class="bg-creme border border-ink/20 rounded-lg px-2.5 py-1.5 text-xs">
                                             <option value="APPROVED">Aprovar presença</option>
-                                            <option value="REJECTED">Rejeitar (falta)</option>
+                                            <option value="REJECTED">Recusar presença</option>
                                         </select>
                                         <input type="text" name="motivo" placeholder="Justificativa obrigatória..." required minlength="5" class="flex-1 bg-creme border border-ink/20 rounded-lg px-3 py-1.5 text-xs">
-                                        <button type="submit" class="bg-light-blue text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-dark-blue">
-                                            Confirmar
+                                        <button type="submit" class="flex items-center gap-1.5 bg-light-blue text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-dark-blue">
+                                            <i data-lucide="check" class="w-4 h-4"></i> Confirmar
                                         </button>
                                     </form>
                                 </td>
@@ -159,9 +159,7 @@
                                 <td class="py-3 text-center text-ink/70">{{ rev.data_revisao|date:"d/m H:i" }}</td>
                                 <td class="py-3 text-center text-ink/70">{{ rev.score_final }}</td>
                                 <td class="py-3 text-center">
-                                    <span class="text-[11px] font-medium px-2.5 py-1 rounded-full {% if rev.status == 'APPROVED' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
-                                        {{ rev.status }}
-                                    </span>
+                                    {% include "partials/status_presenca.html" with registro=rev %}
                                 </td>
                                 <td class="py-3 px-4 text-ink/70">{{ rev.motivo }}</td>
                             </tr>

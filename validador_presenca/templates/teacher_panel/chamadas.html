@@ -126,7 +126,7 @@
                                 <td class="py-3 px-4 text-right">
                                     <form method="post" action="{% url 'teacher_panel:excluir_agendamento' ag.id %}" class="inline" onsubmit="return confirm('Remover este agendamento?');">
                                         {% csrf_token %}
-                                        <button type="submit" class="text-xs font-medium text-red-700 hover:underline">Remover</button>
+                                        <button type="submit" class="inline-flex items-center gap-1 text-xs font-medium text-red-700 hover:underline"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Remover</button>
                                     </form>
                                 </td>
                             </tr>
@@ -180,8 +180,8 @@
                                     {% if sessao.id in sessoes_abertas_ids %}
                                         <form method="post" action="{% url 'teacher_panel:encerrar_chamada' sessao.id %}" class="inline">
                                             {% csrf_token %}
-                                            <button type="submit" class="bg-red-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-red-700">
-                                                Encerrar Agora
+                                            <button type="submit" class="inline-flex items-center gap-1.5 bg-red-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-red-700">
+                                                <i data-lucide="square" class="w-3.5 h-3.5"></i> Encerrar Agora
                                             </button>
                                         </form>
                                     {% else %}
