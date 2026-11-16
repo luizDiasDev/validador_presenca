@@ -55,7 +55,7 @@ def termo_biometrico(request):
 @login_required
 def solicitar_direito(request):
     if request.method == "POST":
-        form = SolicitacaoLGPDForm(request.POST)
+        form = SolicitacaoLGPDForm(request.POST, usuario=request.user)
         if form.is_valid():
             solicitacao = form.save(commit=False)
             solicitacao.usuario = request.user
@@ -68,7 +68,7 @@ def solicitar_direito(request):
             )
             return redirect("privacy:minhas_solicitacoes")
     else:
-        form = SolicitacaoLGPDForm()
+        form = SolicitacaoLGPDForm(usuario=request.user)
 
     prazo = timezone.now() + timedelta(days=15)
     return render(request, "privacy/solicitar.html", {"form": form, "prazo": prazo})

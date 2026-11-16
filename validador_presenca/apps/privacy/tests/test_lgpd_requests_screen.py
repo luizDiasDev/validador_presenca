@@ -210,3 +210,30 @@ def test_login_events_no_longer_copy_the_email_into_the_audit_log(client):
 
     log = AuditLog.objects.get(acao="LOGOUT", autor_id=user.id)
     assert "prof@umc.br" not in json.dumps(log.payload)
+
+
+def test_a_user_without_biometrics_cannot_ask_to_revoke_them(client):
+    professor = Usuario.objects.create_user(email="prof.sem.rosto@umc.br", password="SenhaForte123")
+    client.force_login(professor)
+
+    page = client.get(reverse("privacy:solicitar_direito")).content.decode()
+    resp = client.post(reverse("privacy:solicitar_direito"), {
+        "tipo": SolicitacaoLGPD.TIPO_REVOGAR_BIOMETRIA, "justificativa": "Teste", "confirmo_impacto": "on",
+    })
+
+    assert 'value="revogar_biometria"' not in page
+    assert resp.status_code == 200
+    assert not SolicitacaoLGPD.objects.filter(usuario=professor).exists()
+
+
+def test_a_student_with_biometrics_can_ask_to_revoke_them_once_at_a_time(client):
+    student = enrolled_student()
+    client.force_login(student)
+    data = {"tipo": SolicitacaoLGPD.TIPO_REVOGAR_BIOMETRIA, "justificativa": "", "confirmo_impacto": "on"}
+
+    assert 'value="revogar_biometria"' in client.get(reverse("privacy:solicitar_direito")).content.decode()
+    client.post(reverse("privacy:solicitar_direito"), data)
+    resp = client.post(reverse("privacy:solicitar_direito"), data)
+
+    assert SolicitacaoLGPD.objects.filter(usuario=student).count() == 1
+    assert "já tem uma solicitação deste tipo" in resp.content.decode()
