@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
@@ -28,8 +30,10 @@ from apps.teacher_panel.forms import (
     TurmaForm,
 )
 from apps.teacher_panel.models import Aluno, Aula, Disciplina, Turma
+from apps.biometrics.models import Biometria
 from apps.privacy.domain.term_acceptance import situacao_da_biometria, situacao_dos_termos
 from apps.validator.models import PresencaRecord
+from validador_presenca.pagination import paginar
 
 
 @login_required
@@ -72,7 +76,7 @@ def gestao_turmas_view(request):
         .order_by("codigo")
     )
     salas = Room.objects.order_by("codigo")
-    return render(request, "teacher_panel/gestao_turmas.html", {"turmas": turmas, "salas": salas})
+    return render(request, "teacher_panel/gestao_turmas.html", {"turmas": paginar(request, turmas), "salas": salas})
 
 
 @login_required
@@ -206,19 +210,21 @@ def alunos_view(request):
     if turma_filtro.isdigit():
         alunos = alunos.filter(turma_id=int(turma_filtro))
 
-    alunos = list(alunos)
-    usuarios_ids = [aluno.usuario_id for aluno in alunos]
+    pagina = paginar(request, alunos)
+    usuarios_ids = [aluno.usuario_id for aluno in pagina]
     termos = situacao_dos_termos(usuarios_ids)
     biometria = situacao_da_biometria(usuarios_ids)
-    for aluno in alunos:
+    com_rosto = set(Biometria.objects.filter(usuario_id__in=usuarios_ids).values_list("usuario_id", flat=True))
+    for aluno in pagina:
         aluno.situacao_termos = termos[aluno.usuario_id]
         aluno.situacao_biometria = biometria[aluno.usuario_id]
+        aluno.rosto_cadastrado = aluno.usuario_id in com_rosto
 
     context = {
-        "alunos": alunos,
+        "alunos": pagina,
         "turmas": turmas,
         "turma_filtro": int(turma_filtro) if turma_filtro.isdigit() else None,
-        "total_alunos": len(alunos),
+        "total_alunos": pagina.paginator.count,
     }
     return render(request, "teacher_panel/alunos.html", context)
 
@@ -270,12 +276,19 @@ def excluir_aluno_view(request, aluno_id: int):
 @login_required
 @only_admin
 def professores_view(request):
-    professores = Professor.objects.select_related("usuario").order_by(
-        "usuario__first_name", "usuario__last_name"
+    pagina = paginar(
+        request,
+        Professor.objects.select_related("usuario")
+        .annotate(total_disciplinas=Count("disciplinas"))
+        .order_by("usuario__first_name", "usuario__last_name"),
     )
+    termos = situacao_dos_termos([professor.usuario_id for professor in pagina])
+    for professor in pagina:
+        professor.situacao_termos = termos[professor.usuario_id]
+
     context = {
-        "professores": professores,
-        "total_professores": professores.count(),
+        "professores": pagina,
+        "total_professores": pagina.paginator.count,
     }
     return render(request, "teacher_panel/professores.html", context)
 
@@ -334,10 +347,11 @@ def chamadas_view(request):
 
     form = AbrirChamadaForm(professor=professor, dia_semana=dia_semana_hoje)
 
-    sessoes = (
+    sessoes = paginar(
+        request,
         ChamadaSession.objects.filter(professor=professor)
         .select_related("aula__disciplina__turma", "sala")
-        .order_by("-abre_em")[:20]
+        .order_by("-abre_em"),
     )
     sessoes_abertas_ids = {s.id for s in sessoes if s.abre_em <= agora < s.fecha_em}
 
@@ -438,7 +452,7 @@ def pendencias_view(request):
     )
 
     context = {
-        "pendentes": pendentes,
+        "pendentes": paginar(request, pendentes),
         "revisados": revisados,
         "total_pendentes": pendentes.count(),
     }
@@ -487,6 +501,17 @@ def dashboard_view(request):
     turma_param = request.GET.get("turma", "")
     turma_id = int(turma_param) if turma_param.isdigit() else None
 
-    service = DashboardService()
-    context = service.gerar_dados(professor=professor, turma_id=turma_id)
+    context = DashboardService().gerar_dados(
+        professor=professor,
+        turma_id=turma_id,
+        data_inicio=_data_do_filtro(request.GET.get("de")),
+        data_fim=_data_do_filtro(request.GET.get("ate")),
+    )
     return render(request, "teacher_panel/dashboard.html", context)
+
+
+def _data_do_filtro(valor):
+    try:
+        return date.fromisoformat(valor) if valor else None
+    except ValueError:
+        return None
