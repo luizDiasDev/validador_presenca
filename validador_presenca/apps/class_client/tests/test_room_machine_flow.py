@@ -46,7 +46,7 @@ def room(cenario_professor):
     now = timezone.now()
     session = ChamadaSession.objects.create(
         sala=cenario_professor["sala"], professor=cenario_professor["professor"], aula=cenario_professor["aula"],
-        sequencia=1, abre_em=now - timedelta(minutes=5), fecha_em=now + timedelta(minutes=10),
+        sequencia=1, limite_por_maquina=5, abre_em=now - timedelta(minutes=5), fecha_em=now + timedelta(minutes=10),
     )
     machine = Machine.objects.create(sala=cenario_professor["sala"], apelido="PC-01", codigo_pareamento="4321")
     token = MachinePairingService().emitir_token(machine)

@@ -120,3 +120,21 @@ def test_history_page_has_a_working_filter_and_no_call_shortcut(client, cenario_
     assert "INICIAR CHAMADA" not in html
     assert 'name="busca"' in html
     assert "Pendente" in html
+
+
+def test_reviewed_records_show_the_same_portuguese_status_as_the_history(client, cenario_professor):
+    client.force_login(cenario_professor["user"])
+    session = session_of(cenario_professor["professor"], cenario_professor)
+    approved = record_in(session)
+    rejected = record_in(session)
+    review(client, approved, "APPROVED")
+    review(client, rejected, "REJECTED")
+
+    pending_page = client.get(reverse("teacher_panel:pendencias")).content.decode()
+    history_page = client.get(reverse("validator:painel")).content.decode()
+
+    for html in (pending_page, history_page):
+        assert ">Aprovado</span>" in html
+        assert ">Recusado</span>" in html
+    assert "REJECTED</span>" not in pending_page
+    assert "APPROVED</span>" not in pending_page

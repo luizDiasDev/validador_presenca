@@ -1,4 +1,4 @@
-from datetime import date, time
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 import pytest
 from django.urls import reverse
@@ -81,13 +81,31 @@ def test_usuario_sem_perfil_professor_eh_redirecionado(client, cenario_professor
 
 
 @pytest.mark.django_db
-def test_formato_concatenado_da_aula_com_turma_e_curso(cenario_professor):
+def test_formato_concatenado_da_aula_com_nome_da_turma(cenario_professor):
     texto = str(cenario_professor["aula"])
-    assert texto.startswith("2324 (Engenharia de Software) - IOT2 (")
+    assert texto.startswith("8 Semestre B - IOT2 (")
+
+
+def _no_horario(aula, hora, minuto):
+    hoje = timezone.localdate()
+    deslocamento = (aula.dia_semana - hoje.weekday()) % 7
+    dia = hoje + timedelta(days=deslocamento)
+    return timezone.make_aware(datetime.combine(dia, time(hora, minuto)))
+
+
+def _com_agora(init_original, agora):
+    def init(self, *args, **kwargs):
+        kwargs.setdefault("agora", agora)
+        init_original(self, *args, **kwargs)
+    return init
+
+
+def _dados_abrir(aula, **extra):
+    return {"aula": aula.id, "duracao_min": 10, "tempos_cobertos": 2, "limite_por_maquina": 1, **extra}
 
 
 @pytest.mark.django_db
-def test_abrir_chamada_form_filtra_dia_vigente_e_limita_tempos_da_grade(
+def test_open_call_form_lists_all_teacher_classes_and_caps_periods(
     cenario_professor,
 ):
     aula_hoje = cenario_professor["aula"]
@@ -100,24 +118,69 @@ def test_abrir_chamada_form_filtra_dia_vigente_e_limita_tempos_da_grade(
         tempos_aula=2,
     )
 
-    form_hoje = AbrirChamadaForm(professor=cenario_professor["professor"])
-    ids_disponiveis = list(
-        form_hoje.fields["aula"].queryset.values_list("id", flat=True)
-    )
-    assert aula_hoje.id in ids_disponiveis
-    assert aula_outro_dia.id not in ids_disponiveis
+    form = AbrirChamadaForm(professor=cenario_professor["professor"])
+    ids_disponiveis = set(form.fields["aula"].queryset.values_list("id", flat=True))
+    assert ids_disponiveis == {aula_hoje.id, aula_outro_dia.id}
 
-    # Tenta enviar tempos_cobertos = 6 para uma aula que tem tempos_aula = 4 na grade
     form_invalido = AbrirChamadaForm(
-        data={
-            "aula": aula_hoje.id,
-            "duracao_min": 10,
-            "tempos_cobertos": 6,
-        },
+        data=_dados_abrir(aula_hoje, tempos_cobertos=6),
         professor=cenario_professor["professor"],
+        agora=_no_horario(aula_hoje, 20, 0),
     )
     assert form_invalido.is_valid() is False
     assert "tempos_cobertos" in form_invalido.errors
+
+
+@pytest.mark.django_db
+def test_open_call_form_rejects_before_and_after_class_time(cenario_professor):
+    aula = cenario_professor["aula"]
+    for hora, minuto in ((19, 0), (22, 0), (23, 30)):
+        form = AbrirChamadaForm(
+            data=_dados_abrir(aula),
+            professor=cenario_professor["professor"],
+            agora=_no_horario(aula, hora, minuto),
+        )
+        assert form.is_valid() is False
+        assert "só pode ser aberta durante a aula" in form.non_field_errors()[0]
+
+
+@pytest.mark.django_db
+def test_open_call_form_rejects_class_from_another_day(cenario_professor):
+    aula = cenario_professor["aula"]
+    ontem = _no_horario(aula, 20, 0) - timedelta(days=1)
+    form = AbrirChamadaForm(
+        data=_dados_abrir(aula),
+        professor=cenario_professor["professor"],
+        agora=ontem,
+    )
+    assert form.is_valid() is False
+    assert "não é hoje" in form.non_field_errors()[0]
+
+
+@pytest.mark.django_db
+def test_open_call_form_accepts_during_class_and_ignores_opening_time(cenario_professor):
+    aula = cenario_professor["aula"]
+    form = AbrirChamadaForm(
+        data=_dados_abrir(aula, horario="08:00"),
+        professor=cenario_professor["professor"],
+        agora=_no_horario(aula, 19, 10),
+    )
+    assert form.is_valid(), form.errors
+    assert form.cleaned_data["duracao_min"] == 10
+    assert form.duracao_ajustada is False
+
+
+@pytest.mark.django_db
+def test_open_call_form_shortens_window_to_close_at_class_end(cenario_professor):
+    aula = cenario_professor["aula"]
+    form = AbrirChamadaForm(
+        data=_dados_abrir(aula, duracao_min=30),
+        professor=cenario_professor["professor"],
+        agora=_no_horario(aula, 21, 52),
+    )
+    assert form.is_valid(), form.errors
+    assert form.cleaned_data["duracao_min"] == 8
+    assert form.duracao_ajustada is True
 
 
 @pytest.mark.django_db
@@ -164,9 +227,11 @@ def test_professor_edita_e_exclui_aula(client, cenario_professor):
 
 
 @pytest.mark.django_db
-def test_professor_abre_e_encerra_chamada_pela_view(client, cenario_professor):
+def test_professor_abre_e_encerra_chamada_pela_view(client, cenario_professor, monkeypatch):
     client.force_login(cenario_professor["user"])
     aula = cenario_professor["aula"]
+    durante_a_aula = _no_horario(aula, 20, 0)
+    monkeypatch.setattr(AbrirChamadaForm, "__init__", _com_agora(AbrirChamadaForm.__init__, durante_a_aula))
 
     resp = client.post(
         reverse("teacher_panel:abrir_chamada"),
@@ -236,3 +301,55 @@ def test_revisao_manual_atualiza_registro_e_gera_auditoria(client, cenario_profe
         linha_tabela_id=registro.id,
     ).first()
     assert log is not None
+
+
+@pytest.mark.django_db
+def test_open_call_view_rejects_outside_class_day(client, cenario_professor):
+    client.force_login(cenario_professor["user"])
+    aula = cenario_professor["aula"]
+    aula.dia_semana = (timezone.localdate().weekday() + 1) % 7
+    aula.save()
+
+    resp = client.post(reverse("teacher_panel:abrir_chamada"), data=_dados_abrir(aula), follow=True)
+
+    assert ChamadaSession.objects.filter(aula=aula).exists() is False
+    assert "não é hoje" in resp.content.decode()
+
+
+@pytest.mark.django_db
+def test_calls_page_has_single_block_with_open_now_and_schedule(client, cenario_professor):
+    client.force_login(cenario_professor["user"])
+
+    html = client.get(reverse("teacher_panel:chamadas")).content.decode()
+
+    assert html.count('name="aula"') == 1
+    assert reverse("teacher_panel:abrir_chamada") in html
+    assert reverse("teacher_panel:agendar_chamada") in html
+    assert "ABRIR AGORA" in html
+    assert "AGENDAR" in html
+
+
+@pytest.mark.django_db
+def test_schedule_without_opening_time_shows_clear_error(client, cenario_professor):
+    client.force_login(cenario_professor["user"])
+    aula = cenario_professor["aula"]
+
+    resp = client.post(reverse("teacher_panel:agendar_chamada"), data=_dados_abrir(aula), follow=True)
+
+    assert "Preencha o campo Abre às" in resp.content.decode()
+
+
+@pytest.mark.django_db
+def test_schedule_too_close_to_class_end_tells_latest_opening_time(client, cenario_professor):
+    client.force_login(cenario_professor["user"])
+    aula = cenario_professor["aula"]
+
+    resp = client.post(
+        reverse("teacher_panel:agendar_chamada"),
+        data=_dados_abrir(aula, horario="21:55"),
+        follow=True,
+    )
+
+    html = resp.content.decode()
+    assert "Abrindo às 21:55 com janela de 10 min" in html
+    assert "entre 19:10 e 21:50" in html

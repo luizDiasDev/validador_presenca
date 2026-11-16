@@ -39,23 +39,47 @@ def test_attending_a_revocation_with_the_admin_action_deletes_the_biometric(dpo_
     assert BiometricService().get_active_consent(student) is None
 
 
-def test_attending_a_revocation_in_the_edit_form_deletes_the_biometric(dpo_client):
+def test_the_edit_form_cannot_close_a_request_without_doing_it(dpo_client):
     student = enrolled_student()
     request = revocation_request_of(student)
 
     dpo_client.post(
         reverse("admin:privacy_solicitacaolgpd_change", args=[request.id]),
-        {
-            "status": SolicitacaoLGPD.STATUS_ATENDIDA,
-            "resposta_dpo": "",
-            "data_resposta_0": "",
-            "data_resposta_1": "",
-        },
+        {"status": SolicitacaoLGPD.STATUS_ATENDIDA, "resposta_dpo": "ok"},
     )
 
     request.refresh_from_db()
+    assert request.status == SolicitacaoLGPD.STATUS_PENDENTE
+    assert Biometria.objects.filter(usuario=student).exists()
+
+
+def test_attending_an_account_deletion_with_the_admin_action_anonymizes_it(dpo_client):
+    student = enrolled_student()
+    request = SolicitacaoLGPD.objects.create(usuario=student, tipo=SolicitacaoLGPD.TIPO_EXCLUIR_CONTA)
+
+    dpo_client.post(
+        reverse("admin:privacy_solicitacaolgpd_changelist"),
+        {"action": "marcar_como_atendida", "_selected_action": [request.id]},
+    )
+
+    student.refresh_from_db()
+    request.refresh_from_db()
     assert request.status == SolicitacaoLGPD.STATUS_ATENDIDA
-    assert not Biometria.objects.filter(usuario=student).exists()
+    assert student.email.endswith("@anonimizado.adsum")
+    assert student.is_active is False
+
+
+def test_the_admin_action_skips_a_correction_without_closing_it(dpo_client):
+    student = enrolled_student()
+    request = SolicitacaoLGPD.objects.create(usuario=student, tipo=SolicitacaoLGPD.TIPO_CORRIGIR_DADOS)
+
+    dpo_client.post(
+        reverse("admin:privacy_solicitacaolgpd_changelist"),
+        {"action": "marcar_como_atendida", "_selected_action": [request.id]},
+    )
+
+    request.refresh_from_db()
+    assert request.status == SolicitacaoLGPD.STATUS_PENDENTE
 
 
 def test_attending_another_request_type_keeps_the_biometric(dpo_client):

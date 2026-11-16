@@ -1,7 +1,12 @@
-from django.contrib import admin
-from django.utils import timezone
-from apps.audit.domain.log_register import registrar_acao
-from apps.biometrics.domain.services.biometric_service import BiometricService
+from django.contrib import admin, messages
+
+from apps.privacy.domain.lgpd_service import (
+    AutoAtendimentoError,
+    SolicitacaoEncerradaError,
+    SolicitacaoNaoAutomatizavelError,
+    atender_solicitacao,
+    colocar_em_analise,
+)
 from apps.privacy.models import AceiteTermo, SolicitacaoLGPD, Termo
 
 # Register your models here.
@@ -28,13 +33,14 @@ class SolicitacaoLGPDAdmin(admin.ModelAdmin):
     list_filter = ["status", "tipo"]
     search_fields = ["usuario__email"]
 
-    readonly_fields = ["usuario", "tipo", "justificativa", "data_solicitacao"]
+    readonly_fields = ["usuario", "tipo", "justificativa", "data_solicitacao", "status", "data_resposta"]
 
     fieldsets = [
         ("Solicitação (do titular)", {
             "fields": ["usuario", "tipo", "justificativa", "data_solicitacao"],
         }),
         ("Resposta (do DPO)", {
+            "description": "Para atender ou recusar, use a tela Solicitações LGPD do painel ou as ações da lista.",
             "fields": ["status", "resposta_dpo", "data_resposta"],
         }),
     ]
@@ -46,43 +52,23 @@ class SolicitacaoLGPDAdmin(admin.ModelAdmin):
     usuario_email.short_description = "Usuário"
 
     def marcar_como_em_analise(self, request, queryset):
-        solicitacoes = list(queryset)
-        atualizadas = queryset.update(status=SolicitacaoLGPD.STATUS_EM_ANALISE)
-        for solicitacao in solicitacoes:
-            _auditar_status(request.user, solicitacao, SolicitacaoLGPD.STATUS_EM_ANALISE)
+        atualizadas = 0
+        for solicitacao in queryset:
+            try:
+                colocar_em_analise(solicitacao, request.user.id)
+                atualizadas += 1
+            except SolicitacaoEncerradaError as exc:
+                self.message_user(request, str(exc), level=messages.WARNING)
         self.message_user(request, f"{atualizadas} solicitação(ões) marcada(s) como 'em análise'.")
     marcar_como_em_analise.short_description = "Marcar como 'Em análise'"
 
     def marcar_como_atendida(self, request, queryset):
-        for solicitacao in queryset:
-            _auditar_status(request.user, solicitacao, SolicitacaoLGPD.STATUS_ATENDIDA)
-        revogacoes = list(queryset.filter(tipo=SolicitacaoLGPD.TIPO_REVOGAR_BIOMETRIA))
-        for solicitacao in revogacoes:
-            BiometricService().fulfill_revocation_request(solicitacao)
-        atualizadas = len(revogacoes) + queryset.exclude(
-            tipo=SolicitacaoLGPD.TIPO_REVOGAR_BIOMETRIA
-        ).update(
-            status=SolicitacaoLGPD.STATUS_ATENDIDA,
-            data_resposta=timezone.now(),
-        )
-        self.message_user(request, f"{atualizadas} solicitação(ões) marcada(s) como 'atendida'.")
-    marcar_como_atendida.short_description = "Marcar como 'Atendida'"
-
-    def save_model(self, request, obj, form, change):
-        if obj.status in [SolicitacaoLGPD.STATUS_ATENDIDA, SolicitacaoLGPD.STATUS_RECUSADA]:
-            if not obj.data_resposta:
-                obj.data_resposta = timezone.now()
-        super().save_model(request, obj, form, change)
-        if "status" in form.changed_data:
-            _auditar_status(request.user, obj, obj.status)
-        if (
-            obj.tipo == SolicitacaoLGPD.TIPO_REVOGAR_BIOMETRIA
-            and obj.status == SolicitacaoLGPD.STATUS_ATENDIDA
-            and "status" in form.changed_data
-        ):
-            BiometricService().fulfill_revocation_request(obj)
-
-
-def _auditar_status(dpo, solicitacao, status):
-    registrar_acao(dpo, "privacy", "SOLICITACAO_LGPD_STATUS", "solicitacao_lgpd", solicitacao.id,
-                   {"tipo": solicitacao.tipo, "status": status, "titular_id": solicitacao.usuario_id})
+        atendidas = 0
+        for solicitacao in queryset.select_related("usuario"):
+            try:
+                atender_solicitacao(solicitacao, request.user.id)
+                atendidas += 1
+            except (SolicitacaoNaoAutomatizavelError, SolicitacaoEncerradaError, AutoAtendimentoError) as exc:
+                self.message_user(request, f"#{solicitacao.id}: {exc}", level=messages.WARNING)
+        self.message_user(request, f"{atendidas} solicitação(ões) atendida(s).")
+    marcar_como_atendida.short_description = "Atender (revoga, anonimiza ou libera a exportação)"

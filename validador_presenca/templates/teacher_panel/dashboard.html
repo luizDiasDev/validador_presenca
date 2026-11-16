@@ -52,7 +52,7 @@
                     {% for t in turmas %}
                     <a href="{% querystring turma=t.id %}"
                        class="px-3.5 py-1.5 rounded-lg text-xs font-semibold {% if turma_selecionada == t.id %}bg-light-blue text-white{% else %}bg-creme text-ink/70 hover:bg-tan{% endif %}">
-                        {{ t.codigo }}
+                        {{ t.nome }}
                     </a>
                     {% endfor %}
                 </div>
@@ -68,10 +68,8 @@
                     <label for="filtro-ate" class="block text-xs font-semibold text-ink/70 mb-1">Até</label>
                     <input id="filtro-ate" type="date" name="ate" value="{{ data_fim|date:'Y-m-d' }}" class="px-3 py-1.5 rounded-lg border border-ink/15 bg-white text-sm text-ink">
                 </div>
-                <button type="submit" class="px-4 py-1.5 rounded-lg bg-light-blue text-white text-xs font-semibold">Filtrar período</button>
-                {% if data_inicio or data_fim %}
-                    <a href="{% querystring de=None ate=None %}" class="px-3 py-1.5 text-xs font-semibold text-ink/60 hover:underline">Limpar período</a>
-                {% endif %}
+                {% if data_inicio or data_fim %}{% querystring de=None ate=None as limpar_url %}{% endif %}
+                {% include "partials/botoes_filtro.html" with limpar_url=limpar_url rotulo="Filtrar período" rotulo_limpar="Limpar período" %}
             </form>
 
             <!-- Cards de KPI -->
@@ -154,7 +152,7 @@
                         {% for d in resumo_disciplinas %}
                             <tr class="hover:bg-creme/40">
                                 <td class="py-3 px-4 font-medium text-ink">{{ d.nome }}</td>
-                                <td class="py-3 text-ink/70">{{ d.turma_codigo }}</td>
+                                <td class="py-3 text-ink/70">{{ d.turma_nome }}</td>
                                 <td class="py-3 text-center text-ink/70">{{ d.chamadas }}</td>
                                 <td class="py-3 text-center font-medium text-green-700">{{ d.tempos.presente }}</td>
                                 <td class="py-3 text-center font-medium text-amber-700">{{ d.tempos.pendente }}</td>
@@ -189,7 +187,7 @@
                             <tr class="hover:bg-creme/40">
                                 <td class="py-3 px-4 font-semibold text-light-blue">{{ al.matricula }}</td>
                                 <td class="py-3 font-medium text-ink">{{ al.nome }}</td>
-                                <td class="py-3 text-ink/70">{{ al.turma_codigo }}</td>
+                                <td class="py-3 text-ink/70">{{ al.turma_nome }}</td>
                                 <td class="py-3 text-center text-green-700 font-medium">{{ al.tempos.presente }}</td>
                                 <td class="py-3 text-center text-amber-700 font-medium">{{ al.tempos.pendente }}</td>
                                 <td class="py-3 text-center text-red-700 font-medium">{{ al.tempos.falta }}</td>
@@ -243,7 +241,7 @@
         // Grafico 2: Barras (Frequencia por Disciplina)
         const ctxDisciplinas = document.getElementById('chartDisciplinas');
         if (ctxDisciplinas) {
-            const labelsDisc = [{% for d in resumo_disciplinas %}'{{ d.nome|escapejs }} ({{ d.turma_codigo|escapejs }})'{% if not forloop.last %}, {% endif %}{% endfor %}];
+            const labelsDisc = [{% for d in resumo_disciplinas %}'{{ d.nome|escapejs }} ({{ d.turma_nome|escapejs }})'{% if not forloop.last %}, {% endif %}{% endfor %}];
             const valoresDisc = [{% for d in resumo_disciplinas %}{{ d.frequencia|stringformat:"f" }}{% if not forloop.last %}, {% endif %}{% endfor %}];
 
             new Chart(ctxDisciplinas, {

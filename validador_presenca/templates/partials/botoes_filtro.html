@@ -1,0 +1,8 @@
+<button type="submit" class="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-light-blue text-white text-xs font-semibold hover:bg-dark-blue">
+    <i data-lucide="filter" class="w-4 h-4"></i> {{ rotulo|default:"Filtrar" }}
+</button>
+{% if limpar_url %}
+    <a href="{{ limpar_url }}" class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:underline">
+        <i data-lucide="x" class="w-3.5 h-3.5"></i> {{ rotulo_limpar|default:"Limpar filtros" }}
+    </a>
+{% endif %}

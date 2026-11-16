@@ -52,45 +52,90 @@
         <div class="bg-white rounded-2xl p-6">
             <div class="mb-6">
                 <h1 class="font-[family-name:var(--font-display)] text-3xl font-bold text-light-blue">
-                    CONFIGURAR E INICIAR CHAMADA
+                    CHAMADAS
                 </h1>
                 <p class="text-xs text-ink/50 mt-1">
-                    Exibindo apenas as suas aulas de hoje ({{ dia_hoje_nome }}, {{ data_hoje|date:"d/m/Y" }}).
+                    Hoje é {{ dia_hoje_nome }}, {{ data_hoje|date:"d/m/Y" }}.
                 </p>
             </div>
 
             <form method="post" action="{% url 'teacher_panel:abrir_chamada' %}" class="bg-creme rounded-xl p-5 mb-8">
                 {% csrf_token %}
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                    <div>
-                        <label class="block text-xs font-semibold text-ink/70 mb-1">Aula do Dia (Turma e Disciplina)</label>
-                        <select id="select-aula" name="aula" required onchange="atualizarLimiteTempos()" class="w-full px-3.5 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
+                <div class="grid grid-cols-2 md:grid-cols-6 gap-3 items-end">
+                    <div class="col-span-2">
+                        <label for="select-aula" class="block text-xs font-semibold text-ink/70 mb-1">Aula</label>
+                        <select id="select-aula" name="aula" required onchange="atualizarLimiteTempos()" class="w-full px-3 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
                             {% for a in form.fields.aula.queryset %}
-                                <option value="{{ a.id }}" data-tempos="{{ a.tempos_aula }}">{{ a }}</option>
+                                <option value="{{ a.id }}" data-tempos="{{ a.tempos_aula }}" {% if a.id == aula_sugerida_id %}selected{% endif %}>{{ a.get_dia_semana_display }} {{ a.hora_inicio|time:"H:i" }}-{{ a.hora_fim|time:"H:i" }} · {{ a.disciplina.nome }} ({{ a.disciplina.turma.nome }})</option>
                             {% empty %}
-                                <option value="" disabled selected>Nenhuma aula cadastrada para {{ dia_hoje_nome }}</option>
+                                <option value="" disabled selected>Cadastre uma aula em Minhas Turmas</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-ink/70 mb-1">Janela na tela (minutos)</label>
-                        <input type="number" name="duracao_min" min="1" max="180" value="10" required class="w-full px-3.5 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
+                        <label for="input-horario" class="block text-xs font-semibold text-ink/70 mb-1">Abre às <span class="font-normal text-ink/40">(só agendar)</span></label>
+                        <input id="input-horario" type="time" name="horario" class="w-full px-3 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
                     </div>
                     <div>
-                        <label id="label-tempos" class="block text-xs font-semibold text-ink/70 mb-1">Tempos de aula cobertos</label>
-                        <input id="input-tempos" type="number" name="tempos_cobertos" min="1" max="8" value="4" required class="w-full px-3.5 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
+                        <label for="input-duracao" class="block text-xs font-semibold text-ink/70 mb-1">Janela (min)</label>
+                        <input id="input-duracao" type="number" name="duracao_min" min="1" max="180" value="10" required class="w-full px-3 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-ink/70 mb-1">Alunos por computador</label>
-                        <input type="number" name="limite_por_maquina" min="1" max="10" value="1" required class="w-full px-3.5 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
+                        <label id="label-tempos" for="input-tempos" class="block text-xs font-semibold text-ink/70 mb-1">Tempos</label>
+                        <input id="input-tempos" type="number" name="tempos_cobertos" min="1" max="8" value="4" required class="w-full px-3 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
+                    </div>
+                    <div>
+                        <label for="input-limite" class="block text-xs font-semibold text-ink/70 mb-1">Alunos por PC</label>
+                        <input id="input-limite" type="number" name="limite_por_maquina" min="1" max="10" value="1" required class="w-full px-3 py-2 rounded-lg border border-ink/15 bg-white text-sm text-ink">
                     </div>
                 </div>
-                <div class="mt-4 flex justify-end">
-                    <button type="submit" {% if not form.fields.aula.queryset %}disabled{% endif %} class="flex items-center gap-2 bg-gold text-dark-blue text-xs font-semibold px-5 py-2.5 rounded-lg hover:bg-gold/80 disabled:opacity-40 disabled:cursor-not-allowed">
-                        <i data-lucide="play" class="w-4 h-4"></i> ABRIR SESSÃO DE CHAMADA
+                <p class="text-xs text-ink/50 mt-3">Abrir agora só funciona durante a aula escolhida e ignora o campo Abre às. Agendar repete toda semana no dia da aula; os computadores da sala mostram o QR Code em até 15 segundos.</p>
+                <div class="mt-4 flex flex-wrap justify-end gap-3">
+                    <button type="submit" formaction="{% url 'teacher_panel:agendar_chamada' %}" onclick="return exigirHorario()" {% if not form.fields.aula.queryset %}disabled{% endif %} class="flex items-center gap-2 bg-light-blue text-white text-xs font-semibold px-5 py-2.5 rounded-lg hover:bg-dark-blue disabled:opacity-40 disabled:cursor-not-allowed">
+                        <i data-lucide="calendar-clock" class="w-4 h-4"></i> AGENDAR
+                    </button>
+                    <button type="submit" formaction="{% url 'teacher_panel:abrir_chamada' %}" {% if not form.fields.aula.queryset %}disabled{% endif %} class="flex items-center gap-2 bg-gold text-dark-blue text-xs font-semibold px-5 py-2.5 rounded-lg hover:bg-gold/80 disabled:opacity-40 disabled:cursor-not-allowed">
+                        <i data-lucide="play" class="w-4 h-4"></i> ABRIR AGORA
                     </button>
                 </div>
             </form>
+
+            <h2 class="text-sm font-semibold text-ink/70 uppercase tracking-wide mb-3">Chamadas Agendadas</h2>
+            <div class="border border-ink/10 rounded-xl overflow-x-auto mb-8">
+                <table class="w-full min-w-[720px] text-sm">
+                    <thead>
+                        <tr class="bg-tan text-ink/60 text-xs">
+                            <th class="text-left font-semibold py-3 px-4">Dia</th>
+                            <th class="text-left font-semibold py-3">Disciplina / Turma</th>
+                            <th class="text-center font-semibold py-3">Abre às</th>
+                            <th class="text-center font-semibold py-3">Janela</th>
+                            <th class="text-center font-semibold py-3">Tempos</th>
+                            <th class="text-center font-semibold py-3">Alunos por PC</th>
+                            <th class="text-right font-semibold py-3 px-4">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-ink/5">
+                        {% for ag in agendamentos %}
+                            <tr class="hover:bg-creme/40">
+                                <td class="py-3 px-4 text-ink/80">{{ ag.aula.get_dia_semana_display }}</td>
+                                <td class="py-3 text-ink/80">{{ ag.aula.disciplina.nome }} ({{ ag.aula.disciplina.turma.nome }})</td>
+                                <td class="py-3 text-center font-semibold text-light-blue">{{ ag.horario|time:"H:i" }}</td>
+                                <td class="py-3 text-center text-ink/70">{{ ag.duracao_min }} min</td>
+                                <td class="py-3 text-center text-ink/70">{{ ag.tempos_cobertos }}</td>
+                                <td class="py-3 text-center text-ink/70">{{ ag.limite_por_maquina }}</td>
+                                <td class="py-3 px-4 text-right">
+                                    <form method="post" action="{% url 'teacher_panel:excluir_agendamento' ag.id %}" class="inline" onsubmit="return confirm('Remover este agendamento?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="inline-flex items-center gap-1 text-xs font-medium text-red-700 hover:underline"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Remover</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="7" class="py-6 text-center text-ink/40">Nenhuma chamada agendada.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 
             <h2 class="text-sm font-semibold text-ink/70 uppercase tracking-wide mb-3">Sessões Recentes</h2>
             <div class="border border-ink/10 rounded-xl overflow-x-auto">
@@ -114,7 +159,7 @@
                                 <td class="py-3 px-4 font-medium text-ink">#{{ sessao.id }}</td>
                                 <td class="py-3 text-ink/80">
                                     {% if sessao.aula %}
-                                        {{ sessao.aula.disciplina.turma.codigo }} ({{ sessao.aula.disciplina.turma.curso }}) - {{ sessao.aula.disciplina.nome }}
+                                        {{ sessao.aula.disciplina.turma.nome }} - {{ sessao.aula.disciplina.nome }}
                                     {% else %}
                                         Chamada Avulsa
                                     {% endif %}
@@ -135,8 +180,8 @@
                                     {% if sessao.id in sessoes_abertas_ids %}
                                         <form method="post" action="{% url 'teacher_panel:encerrar_chamada' sessao.id %}" class="inline">
                                             {% csrf_token %}
-                                            <button type="submit" class="bg-red-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-red-700">
-                                                Encerrar Agora
+                                            <button type="submit" class="inline-flex items-center gap-1.5 bg-red-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-red-700">
+                                                <i data-lucide="square" class="w-3.5 h-3.5"></i> Encerrar Agora
                                             </button>
                                         </form>
                                     {% else %}
@@ -173,6 +218,17 @@
             }
         }
         atualizarLimiteTempos();
+
+        function exigirHorario() {
+            const horario = document.getElementById('input-horario');
+            if (horario && !horario.value) {
+                horario.setCustomValidity('Informe o horário em que a chamada abre.');
+                horario.reportValidity();
+                horario.addEventListener('input', () => horario.setCustomValidity(''), { once: true });
+                return false;
+            }
+            return true;
+        }
 
         const alerta = document.getElementById('mensagens-alerta');
         if (alerta) {

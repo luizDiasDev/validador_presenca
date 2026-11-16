@@ -11,6 +11,7 @@ from apps.audit.models import AuditLog
 from apps.biometrics.domain.services.biometric_service import BiometricService
 from apps.biometrics.models import Biometria
 from apps.privacy.models import AceiteTermo, SolicitacaoLGPD
+from apps.teacher_panel.models import Aluno
 from apps.validator.models import PresencaRecord
 
 DOMINIO_ANONIMO = "anonimizado.adsum"
@@ -19,9 +20,20 @@ TIPOS_ATENDIDOS_AUTOMATICAMENTE = (
     SolicitacaoLGPD.TIPO_EXCLUIR_CONTA,
     SolicitacaoLGPD.TIPO_EXPORTAR_DADOS,
 )
+STATUS_ENCERRADOS = (SolicitacaoLGPD.STATUS_ATENDIDA, SolicitacaoLGPD.STATUS_RECUSADA)
+CAMPOS_DE_EVIDENCIA_PESSOAIS = ("ip", "user_agent")
+PRAZO_DIAS = 15
 
 
 class SolicitacaoNaoAutomatizavelError(Exception):
+    pass
+
+
+class SolicitacaoEncerradaError(Exception):
+    pass
+
+
+class AutoAtendimentoError(Exception):
     pass
 
 
@@ -122,6 +134,16 @@ def anonimizar_conta(usuario, autor_id: int) -> None:
     usuario.set_unusable_password()
     usuario.save()
 
+    Aluno.objects.filter(usuario=usuario).update(matricula=f"anon-{apelido}")
+    for aceite in AceiteTermo.objects.filter(usuario=usuario):
+        evidencia = {
+            chave: valor for chave, valor in (aceite.evidencia or {}).items()
+            if chave not in CAMPOS_DE_EVIDENCIA_PESSOAIS
+        }
+        if evidencia != aceite.evidencia:
+            aceite.evidencia = evidencia
+            aceite.save(update_fields=["evidencia"])
+
     LogRegister().register(
         {
             "autor_id": autor_id,
@@ -134,23 +156,84 @@ def anonimizar_conta(usuario, autor_id: int) -> None:
     )
 
 
-def atender_solicitacao(solicitacao: SolicitacaoLGPD, autor_id: int) -> SolicitacaoLGPD:
-    if solicitacao.tipo not in TIPOS_ATENDIDOS_AUTOMATICAMENTE:
-        raise SolicitacaoNaoAutomatizavelError(
-            "Correção de dados é feita pela Gestão de Usuários. Depois, marque a solicitação como atendida no admin."
+def dias_em_aberto(solicitacao: SolicitacaoLGPD, agora=None) -> int:
+    fim = solicitacao.data_resposta or agora or timezone.now()
+    return (fim - solicitacao.data_solicitacao).days
+
+
+def _garantir_aberta(solicitacao: SolicitacaoLGPD) -> None:
+    if solicitacao.status in STATUS_ENCERRADOS:
+        raise SolicitacaoEncerradaError(
+            f"A solicitação #{solicitacao.id} já foi {solicitacao.get_status_display().lower()}."
         )
 
+
+def _auditar_status(autor_id: int, solicitacao: SolicitacaoLGPD) -> None:
+    LogRegister().register(
+        {
+            "autor_id": autor_id,
+            "origem": "privacy",
+            "acao": "SOLICITACAO_LGPD_STATUS",
+            "tabela": "solicitacao_lgpd",
+            "linha_tabela_id": solicitacao.id,
+            "payload": {"tipo": solicitacao.tipo, "status": solicitacao.status, "titular_id": solicitacao.usuario_id},
+        }
+    )
+
+
+@transaction.atomic
+def atender_solicitacao(solicitacao: SolicitacaoLGPD, autor_id: int, resposta: str = "") -> SolicitacaoLGPD:
+    _garantir_aberta(solicitacao)
+    resposta = resposta.strip()
+
+    if solicitacao.tipo == SolicitacaoLGPD.TIPO_CORRIGIR_DADOS:
+        if not resposta:
+            raise SolicitacaoNaoAutomatizavelError(
+                "Correção de dados é feita pela Gestão de Usuários. Depois, descreva o que foi corrigido na resposta."
+            )
+    elif solicitacao.tipo not in TIPOS_ATENDIDOS_AUTOMATICAMENTE:
+        raise SolicitacaoNaoAutomatizavelError("Tipo de solicitação desconhecido.")
+
+    if solicitacao.tipo == SolicitacaoLGPD.TIPO_EXCLUIR_CONTA and solicitacao.usuario_id == autor_id:
+        raise AutoAtendimentoError("Outro administrador precisa atender a exclusão da sua própria conta.")
+
     if solicitacao.tipo == SolicitacaoLGPD.TIPO_REVOGAR_BIOMETRIA:
-        return BiometricService().fulfill_revocation_request(solicitacao)
-
-    if solicitacao.tipo == SolicitacaoLGPD.TIPO_EXCLUIR_CONTA:
-        anonimizar_conta(solicitacao.usuario, autor_id)
-        resposta = "Conta anonimizada. Registros de presença preservados sem identificação."
+        solicitacao.resposta_dpo = resposta or solicitacao.resposta_dpo
+        BiometricService().fulfill_revocation_request(solicitacao)
     else:
-        resposta = "Dados exportados em JSON e enviados ao titular."
+        if solicitacao.tipo == SolicitacaoLGPD.TIPO_EXCLUIR_CONTA:
+            anonimizar_conta(solicitacao.usuario, autor_id)
+            padrao = "Conta anonimizada. Registros de presença preservados sem identificação."
+        elif solicitacao.tipo == SolicitacaoLGPD.TIPO_EXPORTAR_DADOS:
+            padrao = "Seus dados estão prontos: use o botão Baixar meus dados nesta página."
+        else:
+            padrao = ""
+        solicitacao.status = SolicitacaoLGPD.STATUS_ATENDIDA
+        solicitacao.data_resposta = solicitacao.data_resposta or timezone.now()
+        solicitacao.resposta_dpo = resposta or solicitacao.resposta_dpo or padrao
+        solicitacao.save()
 
-    solicitacao.status = SolicitacaoLGPD.STATUS_ATENDIDA
-    solicitacao.data_resposta = solicitacao.data_resposta or timezone.now()
-    solicitacao.resposta_dpo = solicitacao.resposta_dpo or resposta
+    _auditar_status(autor_id, solicitacao)
+    return solicitacao
+
+
+@transaction.atomic
+def recusar_solicitacao(solicitacao: SolicitacaoLGPD, autor_id: int, resposta: str) -> SolicitacaoLGPD:
+    _garantir_aberta(solicitacao)
+    resposta = resposta.strip()
+    if len(resposta) < 10:
+        raise ValueError("Explique ao titular por que a solicitação foi recusada (mínimo de 10 caracteres).")
+    solicitacao.status = SolicitacaoLGPD.STATUS_RECUSADA
+    solicitacao.resposta_dpo = resposta
+    solicitacao.data_resposta = timezone.now()
     solicitacao.save()
+    _auditar_status(autor_id, solicitacao)
+    return solicitacao
+
+
+def colocar_em_analise(solicitacao: SolicitacaoLGPD, autor_id: int) -> SolicitacaoLGPD:
+    _garantir_aberta(solicitacao)
+    solicitacao.status = SolicitacaoLGPD.STATUS_EM_ANALISE
+    solicitacao.save(update_fields=["status"])
+    _auditar_status(autor_id, solicitacao)
     return solicitacao

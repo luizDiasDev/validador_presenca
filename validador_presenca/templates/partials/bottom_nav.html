@@ -47,6 +47,9 @@
                     <a href="{% url 'teacher_panel:chamadas' %}" class="flex items-center gap-3 px-4 py-3 hover:bg-creme"><i data-lucide="settings" class="w-4 h-4"></i> Configurar Chamada</a>
                 {% endif %}
                 <a href="{% url 'audit:registro' %}" class="flex items-center gap-3 px-4 py-3 hover:bg-creme"><i data-lucide="scroll-text" class="w-4 h-4"></i> Registro de Atividades</a>
+                {% if request.user.administrador %}
+                    <a href="{% url 'privacy:solicitacoes_admin' %}" class="flex items-center gap-3 px-4 py-3 hover:bg-creme"><i data-lucide="file-lock-2" class="w-4 h-4"></i> Solicitações LGPD</a>
+                {% endif %}
                 <a href="{% url 'privacy:central' %}" class="flex items-center gap-3 px-4 py-3 hover:bg-creme"><i data-lucide="shield-check" class="w-4 h-4"></i> Central de Privacidade</a>
                 <form method="post" action="{% url 'accounts:logout' %}">
                     {% csrf_token %}

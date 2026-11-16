@@ -2,6 +2,28 @@ from django.db import models
 
 # Create your models here.
 
+class AgendamentoChamada(models.Model):
+    aula = models.ForeignKey(
+        "teacher_panel.Aula",
+        on_delete=models.CASCADE,
+        related_name="agendamentos",
+    )
+    horario = models.TimeField()
+    duracao_min = models.PositiveSmallIntegerField(default=10)
+    tempos_cobertos = models.PositiveSmallIntegerField(default=2)
+    limite_por_maquina = models.PositiveSmallIntegerField(default=1)
+    data_criacao = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "agendamento_chamada"
+        verbose_name = "Agendamento de Chamada"
+        verbose_name_plural = "Agendamentos de Chamada"
+        ordering = ["aula__dia_semana", "horario"]
+
+    def __str__(self):
+        return f"{self.aula} às {self.horario:%H:%M}"
+
+
 class ChamadaSession(models.Model):
     # Definindo FK
     aula = models.ForeignKey(
@@ -33,6 +55,14 @@ class ChamadaSession(models.Model):
     sequencia = models.IntegerField(default=1)
     tempos_cobertos = models.PositiveSmallIntegerField(default=1)
     limite_por_maquina = models.PositiveSmallIntegerField(default=1)
+    agendamento = models.ForeignKey(
+        "AgendamentoChamada",
+        on_delete=models.SET_NULL,
+        related_name="sessoes",
+        null=True,
+        blank=True,
+    )
+    faltas_registradas = models.BooleanField(default=False)
     abre_em = models.DateTimeField()
     fecha_em = models.DateTimeField()
     duracao_qr_s = models.PositiveSmallIntegerField(default=5)

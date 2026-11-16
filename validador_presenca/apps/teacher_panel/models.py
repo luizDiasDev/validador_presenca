@@ -76,7 +76,7 @@ class Disciplina(models.Model):
         verbose_name_plural = "Disciplinas"
 
     def __str__(self):
-        return f"{self.nome} - {self.turma.codigo}"
+        return f"{self.nome} - {self.turma.nome}"
 
 
 class Aula(models.Model):
@@ -112,4 +112,4 @@ class Aula(models.Model):
     def __str__(self):
         dia_nome = dict(self.DIAS_SEMANA).get(self.dia_semana, "")
         turma = self.disciplina.turma
-        return f"{turma.codigo} ({turma.curso}) - {self.disciplina.nome} ({dia_nome} {self.hora_inicio:%H:%M}-{self.hora_fim:%H:%M})"
+        return f"{turma.nome} - {self.disciplina.nome} ({dia_nome} {self.hora_inicio:%H:%M}-{self.hora_fim:%H:%M})"

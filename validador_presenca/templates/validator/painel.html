@@ -89,12 +89,8 @@
                     <label for="filtro-ate" class="block text-xs font-semibold text-ink/70 mb-1">Até</label>
                     <input id="filtro-ate" type="date" name="ate" value="{{ data_fim|date:'Y-m-d' }}" class="px-3 py-1.5 rounded-lg border border-ink/15 bg-white text-sm text-ink">
                 </div>
-                <button type="submit" class="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-light-blue text-white text-xs font-semibold">
-                    <i data-lucide="filter" class="w-4 h-4"></i> Filtrar
-                </button>
-                {% if filtrando %}
-                    <a href="{% url 'validator:painel' %}" class="px-3 py-1.5 text-xs font-semibold text-ink/60 hover:underline">Limpar filtros</a>
-                {% endif %}
+                {% if filtrando %}{% url 'validator:painel' as limpar_url %}{% endif %}
+                {% include "partials/botoes_filtro.html" with limpar_url=limpar_url %}
             </form>
 
             <!-- Tabela -->
@@ -126,12 +122,7 @@
                                 <td class="py-3 text-center text-ink/70">{{ register.score_vida }}</td>
                                 <td class="py-3 text-center font-medium text-ink">{{ register.score_final }}</td>
                                 <td class="py-3">
-                                    <span class="text-[11px] font-medium px-2.5 py-1 rounded-full whitespace-nowrap
-                                        {% if register.status == 'APPROVED' %}text-green-700 bg-green-50
-                                        {% elif register.status == 'PENDING' %}text-amber-800 bg-amber-50
-                                        {% else %}text-red-700 bg-red-50{% endif %}">
-                                        {% if register.status == 'APPROVED' %}Aprovado{% elif register.status == 'PENDING' %}Pendente{% else %}Recusado{% endif %}
-                                    </span>
+                                    {% include "partials/status_presenca.html" with registro=register %}
                                     {% if register.revisado_por %}<span class="block mt-1 text-[10px] text-ink/40">revisado pelo professor</span>{% endif %}
                                 </td>
                                 <td class="py-3 px-4 text-ink/50">{{ register.motivo|default:"-" }}</td>
