@@ -2,7 +2,7 @@
 
 Simula o pico das 19h em escala de laboratórios: 26 salas com 30 computadores cada (780 máquinas) e um aluno por computador.
 
-- Cada **computador da sala** consulta o QR Code a cada 10 s e, com a chamada aberta, pergunta a cada 3 s se algum aluno leu o QR. Quando há aluno, envia o vetor facial, como o executável faz.
+- Cada **computador da sala** consulta o QR Code a cada 15 s sem chamada e a cada 10 s com a chamada aberta; com a chamada aberta, também pergunta a cada 3 s se algum aluno leu o QR. Quando há aluno, envia o vetor facial, como o executável faz.
 - Cada **aluno** chega em um momento aleatório da janela de chegada, abre o check-in, envia o QR e a localização e acompanha o status até o veredito.
 - A métrica `check-in completo (celular + rosto)` mede o tempo do aluno do início ao fim.
 

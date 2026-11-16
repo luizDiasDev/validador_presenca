@@ -1,0 +1,7 @@
+-r requirements.txt
+
+# Testes
+pytest==9.1.1
+pytest-cov==7.1.0
+pytest-django==4.14.0
+fakeredis==2.37.1
