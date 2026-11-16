@@ -142,6 +142,7 @@ def test_student_cannot_check_in_twice_in_the_same_call(cenario_professor, machi
         return phone.post(reverse("checkin:student_checkin"), {"token": token, **CAMPUS_CENTER}).content.decode()
 
     scan()
+    phone.post(reverse("checkin:consentimento"), {"resposta": "recusado"})
     second = scan()
 
     assert "Você já registrou presença nesta chamada" in second

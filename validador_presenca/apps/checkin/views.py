@@ -3,7 +3,6 @@ from django.conf import settings
 from django.core.cache import cache
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_POST
 from apps.checkin.domain.services.chamada_service import ChamadaService, maquina_lotada
 from apps.checkin.domain.services.faltas_service import registrar_faltas_pendentes
 from apps.checkin.domain.services.qr_service import QrTokenService
@@ -29,6 +28,10 @@ from validador_presenca.pagination import paginar
 @login_required
 @only_student
 def student_checkin(request):
+    registro_pendente = _checkin_waiting_for_consent(request)
+    if registro_pendente:
+        return _render_consent_step(request, registro_pendente)
+
     if request.method != "POST":
         return render(request, "checkin/checkin_aluno.html", {"token": request.GET.get("t", "")})
 
@@ -84,10 +87,40 @@ def _liberar_camera(maquina_id, registro, results_pack, modo):
     )
 
 
+def _checkin_waiting_for_consent(request):
+    pendente = request.session.get("checkin_aguardando_termo")
+    if not pendente:
+        return None
+    registro = (
+        PresencaRecord.objects.select_related("sessao")
+        .filter(pk=pendente["presenca_id"], usuario=request.user, status="PENDING")
+        .first()
+    )
+    if registro is None or registro.sessao is None or not ChamadaService().esta_aberta(registro.sessao):
+        request.session.pop("checkin_aguardando_termo", None)
+        return None
+    return registro
+
+
+def _render_consent_step(request, registro):
+    return render(request, "checkin/checkin_aluno.html", {
+        "enviado": True,
+        "status": registro.status,
+        "token_valido": True,
+        "registro": registro,
+        "etapa_rosto": "consentimento",
+    })
+
+
 @login_required
 @only_student
-@require_POST
 def consentimento_biometrico(request):
+    if request.method != "POST":
+        registro_pendente = _checkin_waiting_for_consent(request)
+        if registro_pendente:
+            return _render_consent_step(request, registro_pendente)
+        return redirect("checkin:student_checkin")
+
     pendente = request.session.pop("checkin_aguardando_termo", None)
     if not pendente:
         return redirect("checkin:student_checkin")
