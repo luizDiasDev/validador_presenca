@@ -61,7 +61,8 @@
                 <p class="text-lg font-bold text-dark-blue text-center">Cadastro do rosto</p>
                 <p class="mt-3 text-sm text-ink/70">QR Code e localização conferidos. Este é o seu primeiro check-in com reconhecimento facial.</p>
                 <p class="mt-2 text-sm text-ink/70">O ADSUM guarda apenas um vetor numérico cifrado do seu rosto, nunca a imagem, e só para confirmar a sua presença. Você pode revogar este consentimento a qualquer momento na Central de Privacidade, e o cadastro é apagado.</p>
-                <a href="{% url 'privacy:termo_biometrico' %}" class="mt-2 inline-block text-sm text-dark-blue underline">Ler o termo de consentimento biométrico</a>
+                <a href="{% url 'privacy:termo_biometrico' %}?origem=checkin" target="_blank" rel="noopener" class="mt-2 inline-block text-sm text-dark-blue underline">Ler o termo de consentimento biométrico</a>
+                <p class="mt-1 text-xs text-ink/50">O termo abre em outra aba; esta tela continua aqui.</p>
                 <form method="post" action="{% url 'checkin:consentimento' %}" class="mt-4 flex flex-col gap-2">
                     {% csrf_token %}
                     <button type="submit" name="resposta" value="aceito" class="w-full rounded-lg bg-dark-blue text-creme py-3 font-semibold">Li e aceito</button>

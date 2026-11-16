@@ -220,6 +220,48 @@ def test_declining_the_term_keeps_the_checkin_for_the_teacher(room):
     assert room["computer"].get(reverse("class_client:autorizacao")).json()["pendente"] is False
 
 
+def test_term_link_opens_in_a_new_tab_with_a_way_back(room):
+    _, phone = make_student(room)
+    html = read_room_qr(room, phone)
+
+    assert 'target="_blank"' in html
+    term_page = phone.get(reverse("privacy:termo_biometrico") + "?origem=checkin").content.decode()
+    assert reverse("checkin:consentimento") in term_page
+    assert "Voltar ao check-in" in term_page
+
+
+def test_student_who_left_the_page_gets_the_consent_step_back(room):
+    user, phone = make_student(room)
+    read_room_qr(room, phone)
+
+    for url in (reverse("checkin:consentimento"), reverse("checkin:student_checkin")):
+        assert "Cadastro do rosto" in phone.get(url).content.decode()
+
+    html = phone.post(reverse("checkin:consentimento"), {"resposta": "aceito"}).content.decode()
+    assert "Olhe para a câmera da sala" in html
+    assert room["computer"].get(reverse("class_client:autorizacao")).json()["pendente"] is True
+
+
+def test_reading_the_qr_again_resumes_the_consent_instead_of_refusing(room):
+    user, phone = make_student(room)
+    read_room_qr(room, phone)
+    html = read_room_qr(room, phone)
+
+    assert "Cadastro do rosto" in html
+    assert "já registrou presença" not in html
+    assert PresencaRecord.objects.filter(usuario=user).count() == 1
+
+
+def test_a_closed_call_no_longer_resumes_the_consent(room):
+    user, phone = make_student(room)
+    read_room_qr(room, phone)
+    ChamadaSession.objects.filter(pk=room["session"].pk).update(fecha_em=timezone.now() - timedelta(minutes=1))
+
+    html = phone.get(reverse("checkin:student_checkin")).content.decode()
+
+    assert "Cadastro do rosto" not in html
+
+
 def test_enrollment_with_two_different_people_is_refused(room):
     user, phone = make_student(room)
     read_room_qr(room, phone)

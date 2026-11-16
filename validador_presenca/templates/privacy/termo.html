@@ -80,7 +80,11 @@
 
     <div class="topbar">
         <a href="{% url 'accounts:login' %}">ADSUM</a>
-        <a href="{% url 'privacy:central' %}" class="voltar">Voltar à Central de Privacidade</a>
+        {% if request.GET.origem == "checkin" %}
+            <a href="{% url 'checkin:consentimento' %}" class="voltar">Voltar ao check-in</a>
+        {% else %}
+            <a href="{% url 'privacy:central' %}" class="voltar">Voltar à Central de Privacidade</a>
+        {% endif %}
     </div>
 
     <main>
