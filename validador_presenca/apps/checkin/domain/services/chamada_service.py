@@ -83,6 +83,15 @@ class ChamadaService:
             return sessao
         return None
 
+    def abrir_agendadas_do_professor(self, professor) -> list[ChamadaSession]:
+        salas = (
+            AgendamentoChamada.objects.filter(aula__disciplina__professor=professor)
+            .values_list("aula__disciplina__turma__sala_id", flat=True)
+            .distinct()
+        )
+        abertas = [self.abrir_agendada(sala_id) for sala_id in salas]
+        return [sessao for sessao in abertas if sessao]
+
     # Garante que se o log ou o banco falharem, desfaz tudo (rollback).
     @transaction.atomic
     def abrir(

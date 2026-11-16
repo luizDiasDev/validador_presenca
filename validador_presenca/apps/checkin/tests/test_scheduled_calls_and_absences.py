@@ -162,3 +162,14 @@ def test_full_machine_stops_showing_the_qr(cenario_professor, machine):
 
     assert answer["ativa"] is True and answer["lotada"] is True
     assert "link" not in answer
+
+
+def test_scheduled_call_opens_when_teacher_visits_calls_page_without_any_machine(client, cenario_professor, all_day_class):
+    agendamento = schedule(all_day_class)
+    client.force_login(cenario_professor["user"])
+
+    html = client.get(reverse("teacher_panel:chamadas")).content.decode()
+
+    sessao = ChamadaSession.objects.get(agendamento=agendamento)
+    assert ChamadaService().esta_aberta(sessao)
+    assert f"#{sessao.id}" in html

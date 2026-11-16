@@ -362,12 +362,19 @@ def excluir_professor_view(request, professor_id: int):
 def chamadas_view(request):
     registrar_faltas_pendentes()
     professor = request.user.professor
+    ChamadaService().abrir_agendadas_do_professor(professor)
     agora = timezone.now()
     data_hoje = timezone.localdate()
     dia_semana_hoje = data_hoje.weekday()
     dia_hoje_nome = dict(Aula.DIAS_SEMANA).get(dia_semana_hoje, "")
 
-    form = AbrirChamadaForm(professor=professor, dia_semana=dia_semana_hoje)
+    form = AbrirChamadaForm(professor=professor)
+    agora_local = timezone.localtime(agora)
+    aulas_de_hoje = [a for a in form.fields["aula"].queryset if a.dia_semana == dia_semana_hoje]
+    aula_em_andamento = next(
+        (a for a in aulas_de_hoje if a.hora_inicio <= agora_local.time() < a.hora_fim), None
+    )
+    aula_sugerida = aula_em_andamento or (aulas_de_hoje[0] if aulas_de_hoje else None)
     agendamentos = AgendamentoChamada.objects.filter(aula__disciplina__professor=professor).select_related(
         "aula__disciplina__turma"
     )
@@ -385,7 +392,7 @@ def chamadas_view(request):
         "sessoes": sessoes,
         "sessoes_abertas_ids": sessoes_abertas_ids,
         "agendamentos": agendamentos,
-        "aulas_do_professor": AgendamentoChamadaForm(professor=professor).fields["aula"].queryset,
+        "aula_sugerida_id": aula_sugerida.id if aula_sugerida else None,
         "data_hoje": data_hoje,
         "dia_hoje_nome": dia_hoje_nome,
     }
@@ -424,9 +431,10 @@ def abrir_chamada_view(request):
             tempos_cobertos=tempos_cobertos,
             limite_por_maquina=limite_por_maquina,
         )
+        aviso = " (ajustada para fechar no fim da aula)" if form.duracao_ajustada else ""
         messages.success(
             request,
-            f"Chamada #{sessao.id} aberta na sala {sala.codigo} por {duracao_min} min.",
+            f"Chamada #{sessao.id} aberta na sala {sala.codigo} por {duracao_min} min{aviso}.",
         )
     except (ChamadaJaAbertaError, ValueError) as exc:
         messages.error(request, str(exc))

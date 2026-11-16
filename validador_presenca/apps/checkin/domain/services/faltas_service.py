@@ -24,7 +24,7 @@ def registrar_faltas_pendentes(clock=timezone.now) -> int:
 @transaction.atomic
 def _registrar_faltas_da_sessao(sessao_id: int, agora) -> int:
     sessao = (
-        ChamadaSession.objects.select_for_update()
+        ChamadaSession.objects.select_for_update(of=("self",))
         .select_related("aula__disciplina__professor__usuario")
         .get(pk=sessao_id)
     )
