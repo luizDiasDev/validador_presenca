@@ -8,6 +8,7 @@ from django.utils import timezone
 from apps.accounts.models import Professor, Usuario
 from apps.audit.models import AuditLog
 from apps.checkin.models import ChamadaSession
+from apps.teacher_panel.models import Aluno
 from apps.teacher_panel.tests.test_teacher_panel import cenario_professor  # noqa: F401
 from apps.validator.models import PresencaRecord
 
@@ -90,3 +91,32 @@ def test_pending_list_shows_why_the_record_is_pending(client, cenario_professor)
     html = client.get(reverse("teacher_panel:pendencias")).content.decode()
 
     assert "Rosto não capturado (falha na webcam ou no executável)" in html
+
+
+def test_history_filters_by_status_student_and_period(client, cenario_professor):
+    session = session_of(cenario_professor["professor"], cenario_professor)
+    maria = Usuario.objects.create_user(email="maria@alunos.umc.br", password="senha-forte-123", first_name="Maria")
+    Aluno.objects.create(usuario=maria, turma=cenario_professor["turma"], matricula="55501")
+    approved = record_in(session, status="APPROVED")
+    approved.usuario = maria
+    approved.save()
+    old = record_in(session, status="REJECTED")
+    PresencaRecord.objects.filter(pk=old.pk).update(data_criacao=timezone.now() - timedelta(days=20))
+    client.force_login(cenario_professor["user"])
+    url = reverse("validator:painel")
+
+    assert list(client.get(url, {"status": "APPROVED"}).context["registers"]) == [approved]
+    assert list(client.get(url, {"busca": "55501"}).context["registers"]) == [approved]
+    recent = client.get(url, {"de": (timezone.localdate() - timedelta(days=7)).isoformat()}).context["registers"]
+    assert old not in list(recent)
+
+
+def test_history_page_has_a_working_filter_and_no_call_shortcut(client, cenario_professor):
+    record_in(session_of(cenario_professor["professor"], cenario_professor))
+    client.force_login(cenario_professor["user"])
+
+    html = client.get(reverse("validator:painel")).content.decode()
+
+    assert "INICIAR CHAMADA" not in html
+    assert 'name="busca"' in html
+    assert "Pendente" in html

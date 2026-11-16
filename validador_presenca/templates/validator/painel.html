@@ -44,55 +44,58 @@
         <!-- Card principal -->
         <div class="bg-white rounded-2xl p-6">
 
-            <div class="flex items-center justify-between mb-6">
-                <h1 class="font-[family-name:var(--font-display)] text-3xl font-bold text-light-blue">
-                    HISTÓRICO DE PRESENÇA
-                </h1>
-                <div class="flex items-center gap-2">
-                    {% if request.user.professor %}
-                    <a href="{% url 'teacher_panel:chamadas' %}" class="flex items-center gap-2 bg-gold text-dark-blue text-xs font-semibold px-4 py-2.5 rounded-lg hover:bg-gold/80">
-                        <i data-lucide="scan-line" class="w-4 h-4"></i> INICIAR CHAMADA
-                    </a>
-                    {% endif %}
-                    <a href="{% url 'validator:painel' %}" class="flex items-center gap-2 bg-light-blue text-white text-xs font-semibold px-4 py-2.5 rounded-lg hover:bg-dark-blue transition-colors">
-                        <i data-lucide="filter" class="w-4 h-4"></i>
-                    </a>
-                    <a href="{% url 'validator:painel' %}" class="flex items-center gap-2 bg-light-blue text-white text-xs font-semibold px-4 py-2.5 rounded-lg hover:bg-dark-blue transition-colors">
-                        <i data-lucide="refresh-ccw" class="w-4 h-4"></i>
-                    </a>
-                </div>
-            </div>
+            <h1 class="font-[family-name:var(--font-display)] text-3xl font-bold text-light-blue mb-6">
+                HISTÓRICO DE PRESENÇA
+            </h1>
 
-            <!-- Cards de estatística -->
-            <div class="grid grid-cols-3 gap-4 mb-6">
-
-                <a href="{% url 'validator:painel' %}"  class="bg-creme rounded-xl p-4 hover:bg-tan">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <a href="{% querystring status=None pagina=None %}" class="bg-creme rounded-xl p-4 hover:bg-tan {% if not status_filter %}ring-2 ring-light-blue/30{% endif %}">
                     <div class="flex items-center justify-between text-[10px] font-semibold text-ink/40 tracking-wide mb-2">
-                        MATRICULADOS <i data-lucide="users" class="w-4 h-4"></i>
+                        CHECK-INS <i data-lucide="list" class="w-4 h-4"></i>
                     </div>
                     <div class="text-3xl font-bold text-light-blue">{{ total }}</div>
                 </a>
-
-                <a href="{% url 'validator:painel' %}?status=APPROVED" class="bg-green-50 rounded-xl p-4 hover:bg-green-100">
+                <a href="{% querystring status='APPROVED' pagina=None %}" class="bg-green-50 rounded-xl p-4 hover:bg-green-100 {% if status_filter == 'APPROVED' %}ring-2 ring-green-600/40{% endif %}">
                     <div class="flex items-center justify-between text-[10px] font-semibold text-green-700 tracking-wide mb-2">
-                        PRESENÇAS <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                        APROVADOS <i data-lucide="check-circle-2" class="w-4 h-4"></i>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <div class="text-3xl font-bold text-green-700">{{ approved }}</div>
-                    </div>
+                    <div class="text-3xl font-bold text-green-700">{{ approved }}</div>
                 </a>
-
-                <a href="{% url 'validator:painel' %}?status=REJECTED"  class="bg-red-50 rounded-xl p-4 hover:bg-red-100">
+                <a href="{% querystring status='PENDING' pagina=None %}" class="bg-amber-50 rounded-xl p-4 hover:bg-amber-100 {% if status_filter == 'PENDING' %}ring-2 ring-amber-600/40{% endif %}">
+                    <div class="flex items-center justify-between text-[10px] font-semibold text-amber-800 tracking-wide mb-2">
+                        PENDENTES <i data-lucide="clock" class="w-4 h-4"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-amber-800">{{ pending }}</div>
+                </a>
+                <a href="{% querystring status='REJECTED' pagina=None %}" class="bg-red-50 rounded-xl p-4 hover:bg-red-100 {% if status_filter == 'REJECTED' %}ring-2 ring-red-600/40{% endif %}">
                     <div class="flex items-center justify-between text-[10px] font-semibold text-red-700 tracking-wide mb-2">
-                        FALTAS <i data-lucide="user-x" class="w-4 h-4"></i>
+                        RECUSADOS <i data-lucide="x-circle" class="w-4 h-4"></i>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <div class="text-3xl font-bold text-red-700">{{ rejected }}</div>
-                    </div>
+                    <div class="text-3xl font-bold text-red-700">{{ rejected }}</div>
                 </a>
-
             </div>
 
+            <form method="get" class="flex flex-wrap items-end gap-3 mb-6">
+                {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+                <div class="flex-1 min-w-48">
+                    <label for="filtro-busca" class="block text-xs font-semibold text-ink/70 mb-1">Aluno</label>
+                    <input id="filtro-busca" type="search" name="busca" value="{{ busca }}" placeholder="Nome, e-mail ou matrícula" class="w-full px-3 py-1.5 rounded-lg border border-ink/15 bg-white text-sm text-ink">
+                </div>
+                <div>
+                    <label for="filtro-de" class="block text-xs font-semibold text-ink/70 mb-1">De</label>
+                    <input id="filtro-de" type="date" name="de" value="{{ data_inicio|date:'Y-m-d' }}" class="px-3 py-1.5 rounded-lg border border-ink/15 bg-white text-sm text-ink">
+                </div>
+                <div>
+                    <label for="filtro-ate" class="block text-xs font-semibold text-ink/70 mb-1">Até</label>
+                    <input id="filtro-ate" type="date" name="ate" value="{{ data_fim|date:'Y-m-d' }}" class="px-3 py-1.5 rounded-lg border border-ink/15 bg-white text-sm text-ink">
+                </div>
+                <button type="submit" class="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-light-blue text-white text-xs font-semibold">
+                    <i data-lucide="filter" class="w-4 h-4"></i> Filtrar
+                </button>
+                {% if filtrando %}
+                    <a href="{% url 'validator:painel' %}" class="px-3 py-1.5 text-xs font-semibold text-ink/60 hover:underline">Limpar filtros</a>
+                {% endif %}
+            </form>
 
             <!-- Tabela -->
             <div class="border border-ink/10 rounded-xl overflow-x-auto">
@@ -100,11 +103,11 @@
                     <thead>
                         <tr class="bg-tan text-ink/50 text-[10px] tracking-wide">
                             <th class="text-left font-semibold py-3 px-4">Aluno</th>
-                            <th class="text-left font-semibold py-3">Hora do Registro</th>
-                            <th class="text-center font-semibold py-3">QR</th>
-                            <th class="text-center font-semibold py-3">Token</th>
+                            <th class="text-left font-semibold py-3">Disciplina</th>
+                            <th class="text-left font-semibold py-3">Data</th>
+                            <th class="text-center font-semibold py-3">Local</th>
                             <th class="text-center font-semibold py-3">Facial</th>
-                            <th class="text-center font-semibold py-3">Live</th>
+                            <th class="text-center font-semibold py-3">Vida</th>
                             <th class="text-center font-semibold py-3">Score</th>
                             <th class="text-left font-semibold py-3">Resultado</th>
                             <th class="text-left font-semibold py-3 px-4">Motivo</th>
@@ -113,42 +116,33 @@
                     <tbody class="divide-y divide-ink/5">
                         {% for register in registers %}
                             <tr class="hover:bg-creme/40">
-                                <td class="py-3 px-4 font-medium text-ink/70">{{ register.usuario.get_full_name|default:register.id }}</td>
-                                <td class="py-3 text-ink/70">{{ register.data_criacao|date:"H:i"}}</td>
-                                <td class="py-3 text-center text-ink/70">-</td>
-                                <td class="py-3 text-center text-ink/70">-</td>
+                                <td class="py-3 px-4 font-medium text-ink/70">{% if register.usuario %}{{ register.usuario.get_full_name|default:register.usuario.email }}{% else %}#{{ register.id }}{% endif %}</td>
+                                <td class="py-3 text-ink/70">{{ register.sessao.aula.disciplina.nome|default:"-" }}</td>
+                                <td class="py-3 text-ink/70 whitespace-nowrap">{{ register.data_criacao|date:"d/m H:i" }}</td>
+                                <td class="py-3 text-center">
+                                    {% if register.geo_valida %}<i data-lucide="map-pin-check" class="w-4 h-4 inline text-green-700"></i>{% else %}<i data-lucide="map-pin-off" class="w-4 h-4 inline text-red-700"></i>{% endif %}
+                                </td>
                                 <td class="py-3 text-center text-ink/70">{{ register.score_facial }}</td>
                                 <td class="py-3 text-center text-ink/70">{{ register.score_vida }}</td>
                                 <td class="py-3 text-center font-medium text-ink">{{ register.score_final }}</td>
                                 <td class="py-3">
-                                    <span class="text-[11px] font-medium px-2.5 py-1 rounded-full
+                                    <span class="text-[11px] font-medium px-2.5 py-1 rounded-full whitespace-nowrap
                                         {% if register.status == 'APPROVED' %}text-green-700 bg-green-50
+                                        {% elif register.status == 'PENDING' %}text-amber-800 bg-amber-50
                                         {% else %}text-red-700 bg-red-50{% endif %}">
-                                        {{ register.status }}
+                                        {% if register.status == 'APPROVED' %}Aprovado{% elif register.status == 'PENDING' %}Pendente{% else %}Recusado{% endif %}
                                     </span>
+                                    {% if register.revisado_por %}<span class="block mt-1 text-[10px] text-ink/40">revisado pelo professor</span>{% endif %}
                                 </td>
-                                <td class="py-3 px-4 text-ink/30">{{ register.motivo|default:"-" }}</td>
+                                <td class="py-3 px-4 text-ink/50">{{ register.motivo|default:"-" }}</td>
                             </tr>
                         {% empty %}
-                            <tr><td colspan="9" class="py-6 text-center text-ink/40">Nenhum registro ainda.</td></tr>
+                            <tr><td colspan="9" class="py-6 text-center text-ink/40">Nenhum registro encontrado.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
             {% include "partials/paginacao.html" with pagina=registers %}
-
-            <!-- Rodapé -->
-            <div class="flex items-center justify-between mt-4 text-xs text-ink/50">
-                <span>Exibindo {{ total }}</span>
-
-                <div class="flex items-center gap-1.5">
-                    <button class="px-3 py-1.5 rounded-lg text-ink/30 cursor-not-allowed">Anterior</button>
-                    <button class="w-7 h-7 flex items-center justify-center rounded-lg bg-light-blue text-white font-medium">1</button>
-                    <button class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-ink/5">2</button>
-                    <button class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-ink/5">3</button>
-                    <button class="px-3 py-1.5 rounded-lg bg-light-blue text-white font-medium">PRÓXIMA</button>
-                </div>
-            </div>
 
         </div>
 
