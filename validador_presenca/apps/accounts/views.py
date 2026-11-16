@@ -3,6 +3,7 @@ from django.contrib import messages
 from .models import Usuario
 from .domain.cipher import Cipher
 from .domain.totp_auth import TotpAuth
+import pyotp
 import qrcode
 import io
 import base64
@@ -143,7 +144,16 @@ def config_totp(request):
     qr_img.save(buffer, format="PNG")
     qr_base64 = base64.b64encode(buffer.getvalue()).decode()
 
-    return render(request, "accounts/config_totp.html", {"qr_base64": qr_base64})
+    secret = pyotp.parse_uri(uri).secret
+    secret_display = " ".join(secret[i:i + 4] for i in range(0, len(secret), 4))
+
+    return render(request, "accounts/config_totp.html", {
+        "qr_base64": qr_base64,
+        "totp_uri": uri,
+        "secret": secret,
+        "secret_display": secret_display,
+        "account_email": user.email,
+    })
 
 def read_totp(request):
     if request.session.get("termos_user"):
