@@ -1,3 +1,6 @@
+import pickle
+from pathlib import Path
+
 import numpy as np
 
 from .models import (
@@ -6,6 +9,9 @@ from .models import (
     LIVENESS_STATUS_UNAVAILABLE,
     FaceModel,
 )
+
+
+MEAN_SHAPE_FILE = "meanshape_68.pkl"
 
 
 class FaceEngine:
@@ -44,7 +50,7 @@ class FaceEngine:
 
         # ctx_id=-1 = rodar na CPU
         self._face_analysis.prepare(ctx_id=-1, det_size=self.detection_size)
-        _ensure_pose_model_is_complete(self._face_analysis)
+        _complete_pose_model(self._face_analysis)
         return self
 
     def analyze(self, frame_bgr) -> list[FaceModel]:
@@ -95,10 +101,19 @@ class FaceEngine:
         )
 
 
-def _ensure_pose_model_is_complete(face_analysis) -> None:
+def _complete_pose_model(face_analysis) -> None:
     for model in getattr(face_analysis, "models", {}).values():
         if getattr(model, "require_pose", False) and getattr(model, "mean_lmk", None) is None:
-            raise RuntimeError(
-                "O InsightFace não encontrou o arquivo meanshape_68.pkl, usado para medir o giro da cabeça. "
-                "Gere o executável de novo com o build_exe.ps1 atualizado."
-            )
+            model.mean_lmk = _load_mean_shape()
+
+
+def _load_mean_shape():
+    import insightface
+
+    path = Path(insightface.__file__).parent / "data" / "objects" / MEAN_SHAPE_FILE
+    if not path.exists():
+        raise RuntimeError(
+            f"O InsightFace não encontrou o arquivo {MEAN_SHAPE_FILE}, usado para medir o giro da cabeça."
+        )
+    with path.open("rb") as file:
+        return pickle.load(file)
