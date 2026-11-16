@@ -102,3 +102,28 @@ def test_dashboard_page_shows_the_absences(client, attendance):
 
     assert "Faltas" in html
     assert "50.0%" in html
+
+
+def test_date_filter_keeps_only_the_calls_inside_the_period(attendance):
+    older = ChamadaSession.objects.order_by("id").first()
+    ChamadaSession.objects.filter(pk=older.pk).update(
+        abre_em=older.abre_em - timedelta(days=30), fecha_em=older.fecha_em - timedelta(days=30)
+    )
+    today = timezone.localdate()
+
+    recent = DashboardService().gerar_dados(professor=attendance["professor"], data_inicio=today - timedelta(days=7))
+    old = DashboardService().gerar_dados(professor=attendance["professor"], data_fim=today - timedelta(days=7))
+
+    assert recent["total_chamadas"] == 1
+    assert old["total_chamadas"] == 1
+
+
+def test_dashboard_page_reads_the_period_and_keeps_it_in_the_class_filter(client, attendance):
+    client.force_login(attendance["user"])
+    today = timezone.localdate().isoformat()
+
+    html = client.get(reverse("teacher_panel:dashboard"), {"de": today, "ate": today}).content.decode()
+
+    assert f'value="{today}"' in html
+    assert f"turma={attendance['turma'].id}" in html and f"de={today}" in html
+    assert client.get(reverse("teacher_panel:dashboard"), {"de": "ontem"}).status_code == 200

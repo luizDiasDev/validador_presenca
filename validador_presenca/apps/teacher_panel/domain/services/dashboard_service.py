@@ -27,7 +27,9 @@ class DashboardService:
     def __init__(self, clock=timezone.now):
         self.clock = clock
 
-    def gerar_dados(self, professor=None, turma_id: int | None = None) -> dict:
+    def gerar_dados(
+        self, professor=None, turma_id: int | None = None, data_inicio=None, data_fim=None
+    ) -> dict:
         disciplinas = Disciplina.objects.select_related("turma").order_by("nome")
         if professor:
             disciplinas = disciplinas.filter(professor=professor)
@@ -39,12 +41,15 @@ class DashboardService:
         if turma_id:
             disciplinas = disciplinas.filter(turma_id=turma_id)
 
-        sessoes = list(
-            ChamadaSession.objects.filter(
-                aula__disciplina__in=disciplinas,
-                fecha_em__lte=self.clock(),
-            ).select_related("aula__disciplina")
-        )
+        sessoes = ChamadaSession.objects.filter(
+            aula__disciplina__in=disciplinas,
+            fecha_em__lte=self.clock(),
+        ).select_related("aula__disciplina")
+        if data_inicio:
+            sessoes = sessoes.filter(abre_em__date__gte=data_inicio)
+        if data_fim:
+            sessoes = sessoes.filter(abre_em__date__lte=data_fim)
+        sessoes = list(sessoes)
 
         alunos = list(
             Aluno.objects.filter(turma__disciplinas__in=disciplinas)
@@ -101,6 +106,8 @@ class DashboardService:
         return {
             "turmas": turmas,
             "turma_selecionada": turma_id,
+            "data_inicio": data_inicio,
+            "data_fim": data_fim,
             "total_chamadas": len(sessoes),
             "presencas_esperadas": sum(chamadas.values()),
             "aprovados": chamadas[PRESENTE],
